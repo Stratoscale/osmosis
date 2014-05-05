@@ -76,6 +76,17 @@ public:
 		return _raw;
 	}
 
+	bool operator == ( const Hash & other ) const
+	{
+		return _raw.hashAlgorithm == other._raw.hashAlgorithm and
+			memcmp( _raw.hash, other._raw.hash, bytesCount() ) == 0;
+	}
+
+	bool operator != ( const Hash & other ) const
+	{
+		return not operator == ( other );
+	}
+
 private:
 	struct Tongue::Hash _raw;
 };

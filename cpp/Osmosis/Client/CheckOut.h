@@ -31,14 +31,18 @@ public:
 
 		ObjectStore::Drafts drafts( _directory );
 		try {
-			for ( auto & entry : labelDirList.entries() )
-				if ( not _digestDirectory.dirList().exists( entry.path ) ) {
+			for ( auto & entry : labelDirList.entries() ) {
+				auto digestedEntry = _digestDirectory.dirList().find( entry.path );
+				if ( digestedEntry == nullptr ) {
 ASSERT( entry.hash );
-					boost::filesystem::path draft = drafts.allocateFilename();
-					getObject( draft, * entry.hash );
-					ToVerify task = { entry.path, * entry.hash, draft };
-					_digestDrafts.toDigestTaskQueue().put( std::move( task ) );
+					fetch( entry, drafts );
+				} else {
+ASSERT( entry.hash );
+ASSERT( digestedEntry->hash );
+					if ( * entry.hash != * digestedEntry->hash )
+						fetch( entry, drafts );
 				}
+			}
 		} catch ( ... ) {
 			try {
 				drafts.eraseDirectory();
@@ -87,6 +91,14 @@ private:
 		transfer.transfer();
 		transfer.ack();
 		TRACE_DEBUG( "Transferred " << hash );
+	}
+
+	void fetch( const DirListEntry & entry, ObjectStore::Drafts & drafts )
+	{
+		boost::filesystem::path draft = drafts.allocateFilename();
+		getObject( draft, * entry.hash );
+		ToVerify task = { entry.path, * entry.hash, draft };
+		_digestDrafts.toDigestTaskQueue().put( std::move( task ) );
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;

@@ -28,9 +28,12 @@ public:
 		_index.at( path )->hash.reset( new Hash( hash ) );
 	}
 
-	bool exists( boost::filesystem::path path ) const
+	const DirListEntry * find( boost::filesystem::path path ) const
 	{
-		return _index.find( path ) != _index.end();
+		auto found = _index.find( path );
+		if ( found == _index.end() )
+			return nullptr;
+		return found->second;
 	}
 
 	friend std::ostream & operator<<( std::ostream & os, const DirList & dirList )
