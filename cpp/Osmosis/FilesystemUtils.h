@@ -19,6 +19,11 @@ static inline bool safeFilename( const std::string & filename )
 		filename.find( "\t" ) == std::string::npos;
 }
 
+static inline void clearUMask()
+{
+	umask( 0 );
+}
+
 } // namespace FilesystemUtils
 } // namespace Osmosis
 

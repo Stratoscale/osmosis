@@ -13,10 +13,10 @@ class DirList
 public:
 	DirList() {}
 
-	void add( boost::filesystem::path path )
+	void add( const boost::filesystem::path & path, const FileStatus & status )
 	{
 		ASSERT( _index.find( path ) == _index.end() );
-		_entries.emplace_back( path );
+		_entries.emplace_back( path, status );
 		_index[ path ] = & _entries.back();
 	}
 

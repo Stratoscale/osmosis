@@ -13,9 +13,9 @@ struct DirListEntry
 	FileStatus               status;
 	std::unique_ptr< Hash >  hash;
 
-	DirListEntry( const boost::filesystem::path path ) :
+	DirListEntry( const boost::filesystem::path & path, const FileStatus & status ) :
 		path( path ),
-		status( path )
+		status( status )
 	{}
 
 	DirListEntry( std::string line )

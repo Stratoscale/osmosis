@@ -4,6 +4,7 @@
 #include "Osmosis/Stream/SocketToBuffer.h"
 #include "Osmosis/Client/DigestDrafts.h"
 #include "Osmosis/Client/FetchFiles.h"
+#include "Osmosis/Client/CreateNonRegular.h"
 
 namespace Osmosis {
 namespace Client
@@ -35,8 +36,12 @@ public:
 		for ( auto & entry : labelDirList.entries() ) {
 			auto digestedEntry = _digestDirectory.dirList().find( entry.path );
 			if ( digestedEntry == nullptr ) {
-ASSERT( entry.hash );
-				fetchFiles.fetch( entry.path, * entry.hash );
+				if ( entry.status.syncContent() ) {
+					if ( not entry.hash )
+						THROW( Error, "No hash for file that should have data - directory listing is defective" );
+					fetchFiles.fetch( entry.path, * entry.hash );
+				} else
+					CreateNonRegular( entry.path, entry.status ).create();
 			} else {
 ASSERT( entry.hash );
 ASSERT( digestedEntry->hash );

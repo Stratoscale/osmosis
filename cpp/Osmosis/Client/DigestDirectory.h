@@ -68,12 +68,13 @@ private:
 				i != boost::filesystem::recursive_directory_iterator();
 				++ i ) {
 			boost::filesystem::path path = i->path();
+			FileStatus status( path );
 			{
 				std::lock_guard< std::mutex > lock( _dirListMutex );
-				_dirList.add( path );
+				_dirList.add( path, status );
 			}
-//TODO: only if not device or symlink
-			_toDigestTaskQueue.put( std::move( path ) );
+			if ( status.syncContent() )
+				_toDigestTaskQueue.put( std::move( path ) );
 		}
 		_toDigestTaskQueue.producerDone();
 	}

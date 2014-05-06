@@ -63,7 +63,7 @@ class Client:
     def fileCount(self):
         count = 0
         for root, dirs, files in os.walk(self._path):
-            count += len(files)
+            count += len(files) + len(dirs)
         return count
 
 

@@ -36,6 +36,7 @@ void checkOut( const boost::program_options::variables_map & options )
 	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
 	bool md5 = options.count( "MD5" ) > 0;
 
+	Osmosis::FilesystemUtils::clearUMask();
 	Osmosis::Client::CheckOut instance( workDir, label, hostname, port, md5 );
 	instance.go();
 }
