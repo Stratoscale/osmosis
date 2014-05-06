@@ -20,6 +20,9 @@ class Client:
     def checkin(self, label):
         return self._run("checkin", self._path, label)
 
+    def failedCheckin(self, label):
+        return self._failedRun("checkin", self._path, label)
+
     def checkout(self, label):
         return self._run("checkout", self._path, label)
 
@@ -32,6 +35,16 @@ class Client:
             logging.exception("\n\n\nClientOutput:\n" + e.output)
             logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
             raise
+
+    def _failedRun(self, *args):
+        try:
+            return subprocess.check_output(
+                ["build/cpp/osmosis.bin", "--serverTCPPort=%d" % self._server.port()] + list(args),
+                close_fds=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            return e.output
+        else:
+            raise Exception("running with args '%s' should have failed" % (args, ))
 
     def abspath(self, relpath):
         return os.path.join(self._path, relpath)

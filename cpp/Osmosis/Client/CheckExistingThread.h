@@ -18,7 +18,7 @@ public:
 	{
 		try {
 			CheckExistingThread( inputQueue, outputQueue, hostname, port ).go();
-		} CATCH_ALL( "Exists checking thread terminated" );
+		} CATCH_ALL_SUICIDE( "Exists checking thread terminated" );
 	}
 
 private:

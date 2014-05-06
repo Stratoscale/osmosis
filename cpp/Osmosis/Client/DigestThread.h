@@ -20,7 +20,7 @@ public:
 	{
 		try {
 			DigestThread( inputQueue, outputQueue, md5, dirList, dirListMutex ).go();
-		} CATCH_ALL( "Hash digestion thread terminated" );
+		} CATCH_ALL_SUICIDE( "Hash digestion thread terminated" );
 	}
 
 private:

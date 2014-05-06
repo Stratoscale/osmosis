@@ -39,7 +39,7 @@ list< string > out1;
 list< string > out2;
 list< string > out3;
 
-int main()
+int testNormal()
 {
 	thread c1( consumer, & out1 );
 	thread t1( producer, "first" );
@@ -55,7 +55,7 @@ int main()
 	c2.join();
 	c3.join();
 
-	unsigned total = out1.size() + out2.size() + out3.size();	
+	unsigned total = out1.size() + out2.size() + out3.size();
 	if ( total != 300 ) {
 		cerr << "Failed on count: " << total;
 		return 1;
@@ -70,7 +70,44 @@ int main()
 				not assertFound( out, string( "second" ) + to_string( i ) ) or
 				not assertFound( out, string( "third" ) + to_string( i ) ) )
 			return 1;
+	return 0;
+}
 
-	cout << "testtaskqueue completed successfully" << endl;
+Queue testedForAbort( 3 );
+
+int testAbort()
+{
+	out1.clear();
+	out2.clear();
+	out3.clear();
+	thread c1( consumer, & out1 );
+	thread c2( consumer, & out2 );
+	thread c3( consumer, & out3 );
+
+	testedForAbort.abort();
+
+	c1.join();
+	c2.join();
+	c3.join();
+
+	unsigned total = out1.size() + out2.size() + out3.size();	
+	if ( total != 0 ) {
+		cerr << "Failed on count not zero: " << total;
+		return 1;
+	}
+
+	return 0;
+}
+
+int main()
+{
+	int result = testNormal();
+	if ( result != 0 )
+		return result;
+	cout << "testtaskqueue normal completed successfully" << endl;
+	result = testAbort();
+	if ( result != 0 )
+		return result;
+	cout << "testtaskqueue abort completed successfully" << endl;
 	return 0;
 }

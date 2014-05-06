@@ -28,6 +28,15 @@ public:
 		_threads.push_back( std::thread( & DigestDirectory::threadEntryPoint, this ) );
 	}
 
+	~DigestDirectory()
+	{
+		_toDigestTaskQueue.abort();
+		_digestedQueue.abort();
+		for ( auto & i : _threads )
+			if ( i.joinable() )
+				i.join();
+	}
+
 	void join()
 	{
 		for ( auto & i : _threads )
@@ -49,7 +58,7 @@ private:
 	{
 		try {
 			traverseDirectoryAndFillUpDigestionQueue();
-		} CATCH_ALL( "Digest directory walking thread terminated" )
+		} CATCH_ALL_SUICIDE( "Digest directory walking thread terminated" )
 	}
 
 	void traverseDirectoryAndFillUpDigestionQueue()

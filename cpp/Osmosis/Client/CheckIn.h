@@ -32,6 +32,14 @@ public:
 		_threads.push_back( std::thread( PutThread::task, std::ref( _putQueue ), std::ref( _putConnection ) ) );
 	}
 
+	~CheckIn()
+	{
+		_putQueue.abort();
+		for ( auto & i : _threads )
+			if ( i.joinable() )
+				i.join();
+	}
+
 	void go()
 	{
 		_digestDirectory.join();

@@ -13,7 +13,7 @@ public:
 	{
 		try {
 			PutThread( inputQueue, connection ).go();
-		} CATCH_ALL( "Put thread terminated" )
+		} CATCH_ALL_SUICIDE( "Put thread terminated" )
 	}
 
 private:

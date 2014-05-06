@@ -29,11 +29,24 @@ public:
 		bool finished;
 		{
 			std::lock_guard< std::mutex > lock( _mutex );
+			if ( _producers == 0 )
+				return;
 			-- _producers;
 			finished = _producers == 0;
 		}
 		if ( finished )
 			_wait.notify_all();
+	}
+
+	void abort()
+	{
+		{
+			std::lock_guard< std::mutex > lock( _mutex );
+			if ( _producers == 0 )
+				return;
+			_producers = 0;
+		}
+		_wait.notify_all();
 	}
 
 	EXCEPTION_CLASS( NoMoreTasksError );

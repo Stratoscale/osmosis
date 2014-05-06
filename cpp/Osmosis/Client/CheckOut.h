@@ -46,7 +46,7 @@ ASSERT( digestedEntry->hash );
 		} catch ( ... ) {
 			try {
 				drafts.eraseDirectory();
-			} CATCH_ALL( "Unable to erase drafts directory" );
+			} CATCH_ALL_IGNORE( "Unable to erase drafts directory" );
 			throw;
 		}
 		_digestDrafts.toDigestTaskQueue().producerDone();

@@ -61,7 +61,7 @@ private:
 			handshake();
 			while ( work() );
 			TRACE_INFO( "Server thread for " << endpoint << " done serving" );
-		} CATCH_ALL( "Server thread for " << endpoint << " terminated" );
+		} CATCH_ALL_IGNORE( "Server thread for " << endpoint << " aborted" );
 	}
 
 	bool work()

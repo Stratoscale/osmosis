@@ -16,6 +16,15 @@ public:
 			_threads.push_back( std::thread( & DigestDrafts::threadsEntryPoint, this ) );
 	}
 
+	~DigestDrafts()
+	{
+		_toDigestTaskQueue.abort();
+		_digestedTaskQueue.abort();
+		for ( auto & i : _threads )
+			if ( i.joinable() )
+				i.join();
+	}
+
 	void join()
 	{
 		for ( auto & i : _threads )
@@ -40,7 +49,7 @@ private:
 				_digestedTaskQueue.producerDone();
 				TRACE_DEBUG( "DigestThread done" );
 			}
-		} CATCH_ALL( "Hash digestion thread terminated" );
+		} CATCH_ALL_SUICIDE( "Hash digestion thread terminated" );
 	}
 
 	void work()
