@@ -114,6 +114,18 @@ public:
 		}
 	}
 
+	static bool verify( const void * buffer, unsigned length, const Hash & hash )
+	{
+		if ( hash.algorithm() == Tongue::HashAlgorithm::MD5 ) {
+			Hash calculated = MD5( buffer, length );
+			return memcmp( calculated.bytes(), hash.bytes(), hash.bytesCount() ) == 0;
+		} else {
+			ASSERT( hash.algorithm() == Tongue::HashAlgorithm::SHA1 );
+			Hash calculated = SHA1( buffer, length );
+			return memcmp( calculated.bytes(), hash.bytes(), hash.bytesCount() ) == 0;
+		}
+	}
+
 private:
 	CalculateHash( const CalculateHash & rhs ) = delete;
 	CalculateHash & operator= ( const CalculateHash & rhs ) = delete;

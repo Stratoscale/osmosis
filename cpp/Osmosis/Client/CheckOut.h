@@ -3,6 +3,7 @@
 
 #include "Osmosis/Stream/SocketToBuffer.h"
 #include "Osmosis/Client/DigestDrafts.h"
+#include "Osmosis/Client/FetchFiles.h"
 
 namespace Osmosis {
 namespace Client
@@ -18,8 +19,9 @@ public:
 			bool                             md5 ) :
 		_directory( directory ),
 		_label( label ),
-		_digestDirectory( directory, md5 ),
-		_getConnection( hostname, port )
+		_hostname( hostname ),
+		_port( port ),
+		_digestDirectory( directory, md5 )
 	{}
 
 	void go()
@@ -29,74 +31,44 @@ public:
 		dirListText >> labelDirList;
 		_digestDirectory.join();
 
-		ObjectStore::Drafts drafts( _directory );
-		try {
-			for ( auto & entry : labelDirList.entries() ) {
-				auto digestedEntry = _digestDirectory.dirList().find( entry.path );
-				if ( digestedEntry == nullptr ) {
+		FetchFiles fetchFiles( _directory, _hostname, _port );
+		for ( auto & entry : labelDirList.entries() ) {
+			auto digestedEntry = _digestDirectory.dirList().find( entry.path );
+			if ( digestedEntry == nullptr ) {
 ASSERT( entry.hash );
-					fetch( entry, drafts );
-				} else {
+				fetchFiles.fetch( entry.path, * entry.hash );
+			} else {
 ASSERT( entry.hash );
 ASSERT( digestedEntry->hash );
-					if ( * entry.hash != * digestedEntry->hash )
-						fetch( entry, drafts );
-				}
+				if ( * entry.hash != * digestedEntry->hash )
+					fetchFiles.fetch( entry.path, * entry.hash );
 			}
-		} catch ( ... ) {
-			try {
-				drafts.eraseDirectory();
-			} CATCH_ALL_IGNORE( "Unable to erase drafts directory" );
-			throw;
 		}
-		_digestDrafts.toDigestTaskQueue().producerDone();
-
-		try {
-			while ( true ) {
-				auto task = _digestDrafts.digestedTaskQueue().get();
-				boost::filesystem::rename( task.draft, task.path );
-			}
-		} catch ( ToVerifyTaskQueue::NoMoreTasksError & ) {
-			TRACE_DEBUG( "Finished moving drafts into place" );
-		}
-		_digestDrafts.join();
-		drafts.eraseDirectory();
+		fetchFiles.noMoreFilesToFetch();
+		fetchFiles.join();
 		TRACE_DEBUG( "Checkout Complete" );
 	}
 
 private:
 	const boost::filesystem::path  _directory;
 	const std::string              _label;
+	const std::string              _hostname;
+	unsigned short                 _port; 
 	DigestDirectory                _digestDirectory;
-	Connect                        _getConnection;
-	DigestDrafts                   _digestDrafts;
 
 	std::string getLabelDirList()
 	{
-		Hash hash = LabelOps( _getConnection.socket() ).get( _label );
+		Connect connect( _hostname, _port );
+		Hash hash = LabelOps( connect.socket() ).get( _label );
 		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
-		_getConnection.socket().sendAllConcated( header, hash.raw() );
-		Stream::SocketToBuffer transfer( _getConnection.socket() );
+		connect.socket().sendAllConcated( header, hash.raw() );
+		Stream::SocketToBuffer transfer( connect.socket() );
 		transfer.transfer();
+		std::string result = transfer.data();
+		if ( not CalculateHash::verify( result.c_str(), result.size(), hash ) )
+			THROW( Error, "Dir list hash did not match contents" );
 		TRACE_DEBUG( "Transferred dirList" );
-		return std::move( transfer.data() );
-	}
-
-	void getObject( const boost::filesystem::path & path, const Hash & hash )
-	{
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
-		_getConnection.socket().sendAllConcated( header, hash.raw() );
-		Stream::SocketToFile transfer( _getConnection.socket(), path.string().c_str() );
-		transfer.transfer();
-		TRACE_DEBUG( "Transferred " << hash );
-	}
-
-	void fetch( const DirListEntry & entry, ObjectStore::Drafts & drafts )
-	{
-		boost::filesystem::path draft = drafts.allocateFilename();
-		getObject( draft, * entry.hash );
-		ToVerify task = { entry.path, * entry.hash, draft };
-		_digestDrafts.toDigestTaskQueue().put( std::move( task ) );
+		return std::move( result );
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;

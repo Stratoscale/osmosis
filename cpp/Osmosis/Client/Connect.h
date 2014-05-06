@@ -8,7 +8,7 @@ namespace Client
 class Connect
 {
 public:
-	Connect( const std::string & hostname, unsigned short port ) :
+	Connect( const std::string & hostname, unsigned short port ):
 		_socket( _ioService ),
 		_tcpSocket( _socket )
 	{
@@ -20,9 +20,8 @@ public:
 		_socket.connect( * first );
 		ASSERT( _socket.is_open() );
 		TRACE_INFO( "Connected to " << _socket.remote_endpoint() );
-		boost::asio::ip::tcp::no_delay option( true );
-		_socket.set_option(option);
 
+		setTCPNoDelay();
 		sendHandshake();
 	}
 
@@ -43,6 +42,12 @@ private:
 			static_cast< unsigned >( Tongue::Compression::UNCOMPRESSED ) };
 		_tcpSocket.sendAll( handshake );
 		Stream::AckOps( _tcpSocket ).wait( "Handshake" );
+	}
+
+	void setTCPNoDelay()
+	{
+		boost::asio::ip::tcp::no_delay option( true );
+		_socket.set_option(option);
 	}
 
 	Connect( const Connect & rhs ) = delete;

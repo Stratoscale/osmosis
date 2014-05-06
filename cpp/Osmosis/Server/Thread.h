@@ -26,7 +26,8 @@ public:
 		_drafts( drafts ),
 		_labels( labels ),
 		_boostSocket( _ioService ),
-		_socket( _boostSocket )
+		_socket( _boostSocket ),
+		_tcpNoDelay( false )
 	{}
 
 	boost::asio::ip::tcp::socket & socketForAccept()
@@ -39,8 +40,7 @@ public:
 	{
 		ASSERT( _boostSocket.is_open() );
 		TRACE_INFO( "Connected to " << _boostSocket.remote_endpoint() << ", starting server thread" );
-		boost::asio::ip::tcp::no_delay option( true );
-		_boostSocket.set_option(option);
+		setTCPNoDelay( true );
 		std::thread thread( & Thread::thread, shared_from_this() );
 		thread.detach();
 	}
@@ -53,6 +53,7 @@ private:
 	boost::asio::io_service       _ioService;
 	boost::asio::ip::tcp::socket  _boostSocket;
 	TCPSocket                     _socket; 
+	bool                          _tcpNoDelay;
 
 	void thread()
 	{
@@ -76,6 +77,9 @@ private:
 		}
 		switch ( static_cast< Tongue::Opcode >( header.opcode ) ) {
 			case Tongue::Opcode::GET:
+// TODO: Test for large transfers to decide if worth it
+//				if ( _tcpNoDelay )
+//					setTCPNoDelay( false );
 				GetOp( _socket, _store ).go();
 				break;
 			case Tongue::Opcode::PUT:
@@ -110,6 +114,13 @@ private:
 		if ( handshake.compression != static_cast< unsigned >( Tongue::Compression::UNCOMPRESSED ) )
 			THROW( Error, "Compression not yet implemented" );
 		Stream::AckOps( _socket ).sendAck();
+	}
+
+	void setTCPNoDelay( bool value )
+	{
+		boost::asio::ip::tcp::no_delay option( value );
+		_boostSocket.set_option(option);
+		_tcpNoDelay = value;
 	}
 
 	Thread( const Thread & rhs ) = delete;
