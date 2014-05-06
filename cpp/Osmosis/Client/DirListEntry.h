@@ -1,34 +1,46 @@
 #ifndef __OSMOSIS_CLIENT_DIR_LIST_ENTRY_H__
 #define __OSMOSIS_CLIENT_DIR_LIST_ENTRY_H__
 
+#include "Osmosis/FileStatus.h"
+
 namespace Osmosis {
 namespace Client
 {
 
 struct DirListEntry
 {
-	boost::filesystem::path path;
-	std::unique_ptr< Hash > hash;
+	boost::filesystem::path  path;
+	FileStatus               status;
+	std::unique_ptr< Hash >  hash;
 
 	DirListEntry( const boost::filesystem::path path ) :
-		path( path )
+		path( path ),
+		status( path )
 	{}
 
 	DirListEntry( std::string line )
 	{
 		boost::trim( line );
-		std::vector< std::string > split;
-		boost::split( split, line, boost::is_any_of( "\t" ) );
-		if ( split.size() != 2 )
-			THROW( Error, "Line '" << line << "' must contain exactly 2 tab-sparated fields" );
-		path = boost::trim_copy_if( split[ 0 ], boost::is_any_of( "\"" ) );
-		if ( split[ 1 ] != "nohash" )
-			hash.reset( new Hash( Hash::fromHex( split[ 1 ] ) ) );
+		SplitString split( line, '\t' );
+		path = boost::trim_copy_if( split.asString(), boost::is_any_of( "\"" ) );
+		split.next();
+		if ( split.done() )
+			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
+		status = FileStatus( split.asString() );
+		split.next();
+		if ( split.done() )
+			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
+		std::string hashString = split.asString();
+		if ( hashString != "nohash" )
+			hash.reset( new Hash( Hash::fromHex( hashString ) ) );
+		split.next();
+		if ( not split.done() )
+			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
 	}
 
 	friend std::ostream & operator<<( std::ostream & os, const DirListEntry & entry )
 	{
-		os << entry.path << '\t';
+		os << entry.path << '\t' << entry.status << '\t';
 		if ( entry.hash )
 			os << * entry.hash;
 		else

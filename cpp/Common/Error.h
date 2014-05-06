@@ -18,19 +18,19 @@ public:
 	const unsigned line;
 };
 
-#define EXCEPTION_SUBCLASS( name, superclass ) \
-	class name : public superclass \
+#define EXCEPTION_SUBCLASS( __name, __superclass ) \
+	class __name : public __superclass \
 	{ \
 	public: \
 		using ::Error::Error; \
 	}
 
-#define EXCEPTION_CLASS( name ) EXCEPTION_SUBCLASS( name, ::Error )
+#define EXCEPTION_CLASS( __name ) EXCEPTION_SUBCLASS( __name, ::Error )
 
-#define THROW( name, serialize ) do { \
-		std::ostringstream __serialize; \
-		__serialize << serialize; \
-		throw name( __serialize.str(), __FILE__, __LINE__ ); \
+#define THROW( __name, __serialize ) do { \
+		std::ostringstream __serialized; \
+		__serialized << __serialize; \
+		throw __name( __serialized.str(), __FILE__, __LINE__ ); \
 	} while( 0 )
 
 #endif // __COMMON_ERROR_H__

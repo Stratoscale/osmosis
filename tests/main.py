@@ -71,6 +71,15 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "1234567777")
 
+    def test_CheckInOneFile_MD5(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu", md5=True)
+        self.client.writeFile("aFile", "1234567")
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+
+
 # test checkout non existing does not work
 # test checkin double does not work
 # test emptyfile

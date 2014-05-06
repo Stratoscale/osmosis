@@ -17,8 +17,11 @@ class Client:
     def path(self):
         return self._path
 
-    def checkin(self, label):
-        return self._run("checkin", self._path, label)
+    def checkin(self, label, md5=False):
+        moreArgs = []
+        if md5:
+            moreArgs.append("--MD5")
+        return self._run("checkin", self._path, label, * moreArgs)
 
     def failedCheckin(self, label):
         return self._failedRun("checkin", self._path, label)
