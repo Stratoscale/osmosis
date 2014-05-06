@@ -14,8 +14,7 @@ public:
 		_socket( socket ),
 		_buffer( static_cast< const unsigned char * >( buffer ) ),
 		_left( size ),
-		_send( socket ),
-		_waitForAck( socket )
+		_send( socket )
 	{}
 
 	void transfer()
@@ -29,7 +28,6 @@ public:
 			offset += chunkLength;
 		}
 		_send.sendEOF();
-		_waitForAck.wait( "sent buffer / dirlist" );
 	}
 
 private:
@@ -37,7 +35,6 @@ private:
 	const unsigned char *  _buffer;
 	size_t                 _left;
 	Outgoing               _send;
-	WaitForAck             _waitForAck; 
 
 	BufferToSocket( const BufferToSocket & rhs ) = delete;
 	BufferToSocket & operator= ( const BufferToSocket & rhs ) = delete;

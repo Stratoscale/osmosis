@@ -22,6 +22,8 @@ public:
 		TRACE_INFO( "Connected to " << _socket.remote_endpoint() );
 		boost::asio::ip::tcp::no_delay option( true );
 		_socket.set_option(option);
+
+		sendHandshake();
 	}
 
 	TCPSocket & socket()
@@ -33,6 +35,15 @@ private:
 	boost::asio::io_service       _ioService;
 	boost::asio::ip::tcp::socket  _socket;
 	TCPSocket                     _tcpSocket; 
+
+	void sendHandshake()
+	{
+		struct Tongue::Handshake handshake = {
+			static_cast< unsigned >( Tongue::PROTOCOL_VERSION ),
+			static_cast< unsigned >( Tongue::Compression::UNCOMPRESSED ) };
+		_tcpSocket.sendAll( handshake );
+		Stream::AckOps( _tcpSocket ).wait( "Handshake" );
+	}
 
 	Connect( const Connect & rhs ) = delete;
 	Connect & operator= ( const Connect & rhs ) = delete;

@@ -78,7 +78,6 @@ private:
 		_getConnection.socket().sendAllConcated( header, hash.raw() );
 		Stream::SocketToBuffer transfer( _getConnection.socket() );
 		transfer.transfer();
-		transfer.ack();
 		TRACE_DEBUG( "Transferred dirList" );
 		return std::move( transfer.data() );
 	}
@@ -89,7 +88,6 @@ private:
 		_getConnection.socket().sendAllConcated( header, hash.raw() );
 		Stream::SocketToFile transfer( _getConnection.socket(), path.string().c_str() );
 		transfer.transfer();
-		transfer.ack();
 		TRACE_DEBUG( "Transferred " << hash );
 	}
 

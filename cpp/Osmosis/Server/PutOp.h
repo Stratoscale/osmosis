@@ -28,7 +28,7 @@ public:
 		if ( not CalculateHash::verify( filename, hash ) )
 			THROW( Error, "Incoming draft did not match hash: " << hash );
 		_store.putExistingFile( hash, filename );
-		transfer.ack();
+		Stream::AckOps( _socket ).sendAck();
 	}
 
 private:

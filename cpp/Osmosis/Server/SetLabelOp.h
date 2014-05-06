@@ -25,18 +25,12 @@ public:
 			THROW( Error, "Label '" << label << "' already exists, can not set" );
 		auto rawHash = _socket.recieveAll< struct Tongue::Hash >();
 		_labels.label( Hash( rawHash ), label );
-		ack();
+		Stream::AckOps( _socket ).sendAck();
 	}
 
 private:
 	TCPSocket &            _socket;
 	ObjectStore::Labels &  _labels; 
-
-	void ack()
-	{
-		struct Tongue::Header ack = { static_cast< unsigned char >( Tongue::Opcode::ACK ) };
-		_socket.sendAll( ack );
-	}
 
 	SetLabelOp( const SetLabelOp & rhs ) = delete;
 	SetLabelOp & operator= ( const SetLabelOp & rhs ) = delete;

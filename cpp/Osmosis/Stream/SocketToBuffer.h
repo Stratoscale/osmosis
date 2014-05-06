@@ -31,12 +31,6 @@ public:
 		return std::move( _buffer.str() );
 	}
 
-	void ack()
-	{
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::ACK ) };
-		_socket.sendAll( header );
-	}
-
 private:
 	TCPSocket &         _socket;
 	Incoming            _incoming;

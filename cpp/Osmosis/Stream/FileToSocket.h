@@ -3,7 +3,7 @@
 
 #include "Osmosis/Stream/ReadFile.h"
 #include "Osmosis/Stream/Outgoing.h"
-#include "Osmosis/Stream/WaitForAck.h"
+#include "Osmosis/Stream/AckOps.h"
 
 namespace Osmosis {
 namespace Stream
@@ -15,8 +15,7 @@ public:
 	FileToSocket( const char * filename, TCPSocket & socket ) :
 		_socket( socket ),
 		_read( filename ),
-		_send( socket ),
-		_waitForAck( socket )
+		_send( socket )
 	{}
 
 	void transfer()
@@ -31,14 +30,12 @@ public:
 		if ( lastReadWasHole )
 			sendZeroCharacterAtLastOffset();
 		_send.sendEOF();
-		_waitForAck.wait( "sent file" );
 	}
 
 private:
 	TCPSocket &  _socket;
 	ReadFile     _read;
 	Outgoing     _send;
-	WaitForAck   _waitForAck; 
 
 	void sendZeroCharacterAtLastOffset()
 	{

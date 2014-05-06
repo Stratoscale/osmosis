@@ -30,6 +30,7 @@ private:
 		_connect.socket().sendAllConcated( header, task.hash.raw() );
 		Stream::FileToSocket transfer( task.path.string().c_str(), _connect.socket() );
 		transfer.transfer();
+		Stream::AckOps( _connect.socket() ).wait( "Put object" );
 		TRACE_DEBUG( "Transferred file " << task.path );
 	}
 

@@ -8,6 +8,7 @@
 #include "Osmosis/Server/IsExistsOp.h"
 #include "Osmosis/Server/GetLabelOp.h"
 #include "Osmosis/Server/SetLabelOp.h"
+#include "Osmosis/Debug.h"
 
 namespace Osmosis {
 namespace Server
@@ -55,23 +56,12 @@ private:
 
 	void thread()
 	{
+		auto endpoint = _boostSocket.remote_endpoint();
 		try {
+			handshake();
 			while ( work() );
-			TRACE_INFO( "Server thread for " << _boostSocket.remote_endpoint() << " done serving" );
-		} catch ( boost::exception & e ) {
-			TRACE_BOOST_EXCEPTION( e, "Server thread for " << _boostSocket.remote_endpoint() <<
-					" terminated on a boost exception" );
-		} catch ( Error & e ) {
-			TRACE_ERROR( "Server thread for " << _boostSocket.remote_endpoint() <<
-					" terminated on 'Error' exception: '" << e.what() <<
-					"' at " << e.filename << ':' << e.line );
-		} catch ( std::exception & e ) {
-			TRACE_ERROR( "Server thread for " << _boostSocket.remote_endpoint() << 
-					" terminated on std::exception: '" << e.what() << "'" );
-		} catch ( ... ) {
-			TRACE_ERROR( "Server thread for " << _boostSocket.remote_endpoint() <<
-					" terminated on unknown exception" );
-		}
+			TRACE_INFO( "Server thread for " << endpoint << " done serving" );
+		} CATCH_ALL( "Server thread for " << endpoint << " terminated" );
 	}
 
 	bool work()
@@ -108,6 +98,18 @@ private:
 				break;
 		}
 		return true;
+	}
+
+	void handshake()
+	{
+		auto handshake = _socket.recieveAll< struct Tongue::Handshake >();
+		if ( handshake.protocolVersion != static_cast< unsigned >( Tongue::PROTOCOL_VERSION ) )
+			THROW( Error, "Client with protocol version " << handshake.protocolVersion <<
+					" attempted to connect to us, but our protocol version is " <<
+					Tongue::PROTOCOL_VERSION );
+		if ( handshake.compression != static_cast< unsigned >( Tongue::Compression::UNCOMPRESSED ) )
+			THROW( Error, "Compression not yet implemented" );
+		Stream::AckOps( _socket ).sendAck();
 	}
 
 	Thread( const Thread & rhs ) = delete;

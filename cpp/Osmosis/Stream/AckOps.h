@@ -1,14 +1,14 @@
-#ifndef __OSMOSIS_STREAM_WAIT_FOR_ACK_H__
-#define __OSMOSIS_STREAM_WAIT_FOR_ACK_H__
+#ifndef __OSMOSIS_STREAM_ACK_OPS_H__
+#define __OSMOSIS_STREAM_ACK_OPS_H__
 
 namespace Osmosis {
 namespace Stream
 {
 
-class WaitForAck
+class AckOps
 {
 public:
-	WaitForAck( TCPSocket & socket ):
+	AckOps( TCPSocket & socket ):
 		_socket( socket )
 	{}
 
@@ -25,14 +25,20 @@ public:
 		}
 	}
 
+	void sendAck()
+	{
+		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::ACK ) };
+		_socket.sendAll( header );
+	}
+
 private:
 	TCPSocket &            _socket;
 
-	WaitForAck( const WaitForAck & rhs ) = delete;
-	WaitForAck & operator= ( const WaitForAck & rhs ) = delete;
+	AckOps( const AckOps & rhs ) = delete;
+	AckOps & operator= ( const AckOps & rhs ) = delete;
 };
 
 } // namespace Stream
 } // namespace Osmosis
 
-#endif // __OSMOSIS_STREAM_WAIT_FOR_ACK_H__
+#endif // __OSMOSIS_STREAM_ACK_OPS_H__

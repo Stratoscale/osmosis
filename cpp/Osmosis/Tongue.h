@@ -5,6 +5,22 @@ namespace Osmosis {
 namespace Tongue
 {
 
+enum { PROTOCOL_VERSION = 1000000 };
+
+enum class Compression
+{
+	UNCOMPRESSED = 0,
+	LZO = 1,
+	GZIP = 2,
+	XZ = 3,
+};
+
+struct Handshake
+{
+	unsigned protocolVersion;
+	unsigned compression;
+};
+
 enum class Opcode
 {
 	GET = 1,

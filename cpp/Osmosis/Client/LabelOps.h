@@ -9,8 +9,7 @@ class LabelOps
 {
 public:
 	LabelOps( TCPSocket & socket ):
-		_socket( socket ),
-		_waitForAck( socket )
+		_socket( socket )
 	{}
 
 	void set( const Hash & hash, const std::string & label )
@@ -29,7 +28,7 @@ public:
 		* rawHash = hash.raw();
 		size_t size = reinterpret_cast< unsigned char * >( rawHash + 1 ) - buffer;
 		_socket.sendAll( buffer, size );
-		_waitForAck.wait( "setting label" );
+		Stream::AckOps( _socket ).wait( "setting label" );
 	}
 
 	Hash get( const std::string & label )
@@ -52,7 +51,6 @@ public:
 
 private:
 	TCPSocket &  _socket; 
-	Stream::WaitForAck _waitForAck;
 
 	LabelOps( const LabelOps & rhs ) = delete;
 	LabelOps & operator= ( const LabelOps & rhs ) = delete;
