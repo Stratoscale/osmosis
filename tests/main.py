@@ -168,8 +168,14 @@ class Test(unittest.TestCase):
         self.assertTrue(stat.S_ISCHR(os.stat(self.client.abspath("aDevice")).st_mode))
         self.assertEquals(os.stat(self.client.abspath("aDevice")).st_rdev, os.makedev(123, 45))
 
-# test checkin double does not work
-# test emptyfile
+    def test_EmptyFile(self):
+        self.client.writeFile("emptyFile", "")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("emptyFile"))
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("emptyFile"), "")
 
 if __name__ == '__main__':
     unittest.main()
