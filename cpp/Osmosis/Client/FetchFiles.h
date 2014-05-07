@@ -1,6 +1,8 @@
 #ifndef __OSMOSIS_CLIENT_FETCH_FILES_H__
 #define __OSMOSIS_CLIENT_FETCH_FILES_H__
 
+#include "Osmosis/ApplyFileStatus.h"
+
 namespace Osmosis {
 namespace Client
 {
@@ -42,9 +44,10 @@ public:
 		_fetchQueue.producerDone();
 	}
 
-	void fetch( const boost::filesystem::path & path, const Hash & hash )
+	void fetch( const boost::filesystem::path & path, const FileStatus & status, const Hash & hash )
 	{
-		struct Digested task = { path, hash };
+		ASSERT( status.syncContent() );
+		struct ToVerify task = { path, status, hash };
 		_fetchQueue.put( std::move( task ) );
 		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
 		_getConnection.socket().sendAllConcated( header, hash.raw() );
@@ -55,7 +58,7 @@ private:
 	Connect                        _getConnection;
 	ObjectStore::Drafts            _drafts;
 	DigestDrafts                   _digestDrafts;
-	DigestedTaskQueue              _fetchQueue;
+	ToVerifyTaskQueue              _fetchQueue;
 	std::vector< std::thread >     _threads;
 
 	void fetchThreadEntryPoint()
@@ -63,7 +66,7 @@ private:
 		try {
 			while ( true )
 				fetchOne();
-		} catch( DigestedTaskQueue::NoMoreTasksError & ) {
+		} catch( ToVerifyTaskQueue::NoMoreTasksError & ) {
 			_digestDrafts.toDigestTaskQueue().producerDone();
 			TRACE_DEBUG( "Fetch thread done" );
 		} CATCH_ALL_SUICIDE( "Fetch thread terminates" );
@@ -71,12 +74,11 @@ private:
 
 	void fetchOne()
 	{
-		struct Digested entry = _fetchQueue.get();
-		boost::filesystem::path draft = _drafts.allocateFilename();
-		Stream::SocketToFile transfer( _getConnection.socket(), draft.string().c_str() );
+		struct ToVerify entry = _fetchQueue.get();
+		entry.draft = _drafts.allocateFilename();
+		Stream::SocketToFile transfer( _getConnection.socket(), entry.draft.string().c_str() );
 		transfer.transfer();
-		ToVerify task = { entry.path, entry.hash, draft };
-		_digestDrafts.toDigestTaskQueue().put( std::move( task ) );
+		_digestDrafts.toDigestTaskQueue().put( std::move( entry ) );
 	}
 
 	void afterVerifiedThreadEntryPoint()
@@ -94,6 +96,7 @@ private:
 		auto task = _digestDrafts.digestedTaskQueue().get();
 		boost::filesystem::path absolute = _directory / task.path;
 		boost::filesystem::rename( task.draft, absolute );
+		ApplyFileStatus( absolute, task.status ).applyExistingRegular();
 	}
 
 	FetchFiles( const FetchFiles & rhs ) = delete;

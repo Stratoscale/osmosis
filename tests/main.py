@@ -99,8 +99,51 @@ class Test(unittest.TestCase):
         self.client.checkout("yuvu")
         self.assertEquals(os.stat(self.client.abspath("theFile")).st_mode & 0777, 0741)
 
-# restore elsewhere
-# restore permissions content did change
+    def test_RestoresPermission_ContentDidChange(self):
+        self.client.writeFile("theFile", "theContents")
+        os.chmod(self.client.abspath("theFile"), 0741)
+        self.client.checkin("yuvu")
+        self.client.writeFile("theFile", "the other Contents")
+        os.chmod(self.client.abspath("theFile"), 0777)
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.readFile("theFile"), "theContents")
+        self.assertEquals(os.stat(self.client.abspath("theFile")).st_mode & 0777, 0741)
+
+    def test_RestoreInADifferentDirectory(self):
+        self.client.writeFile("theFile", "theContents")
+        os.chmod(self.client.abspath("theFile"), 0741)
+        self.client.checkin("yuvu")
+
+        client = osmosiswrapper.Client(self.server)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(client.readFile("theFile"), "theContents")
+            self.assertEquals(os.stat(client.abspath("theFile")).st_mode & 0777, 0741)
+        finally:
+            client.clean()
+
+    def test_DoesNotRemoveOtherExistingFiles(self):
+        self.client.writeFile("theFile", "theContents")
+        os.chmod(self.client.abspath("theFile"), 0741)
+        self.client.checkin("yuvu")
+
+        self.client.writeFile("another", "other contents")
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 2)
+        self.assertEquals(self.client.readFile("theFile"), "theContents")
+        self.assertEquals(self.client.readFile("another"), "other contents")
+
+    def test_RemoveOtherExistingFiles(self):
+        self.client.writeFile("theFile", "theContents")
+        os.chmod(self.client.abspath("theFile"), 0741)
+        self.client.checkin("yuvu")
+
+        self.client.writeFile("another", "other contents")
+        self.client.checkout("yuvu", removeUnknownFiles=True)
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("theFile"), "theContents")
+
+
 # remove existing
 # not remove existing
 # test checkout non existing does not work

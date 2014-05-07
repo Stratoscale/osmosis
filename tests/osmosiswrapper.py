@@ -26,8 +26,11 @@ class Client:
     def failedCheckin(self, label):
         return self._failedRun("checkin", self._path, label)
 
-    def checkout(self, label):
-        return self._run("checkout", self._path, label)
+    def checkout(self, label, removeUnknownFiles=False):
+        moreArgs = []
+        if removeUnknownFiles:
+            moreArgs.append("--removeUnknownFiles")
+        return self._run("checkout", self._path, label, * moreArgs)
 
     def _run(self, *args):
         try:

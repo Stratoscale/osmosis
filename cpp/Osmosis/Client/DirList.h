@@ -54,7 +54,7 @@ public:
 	}
 
 	typedef std::list< DirListEntry > List;
-	const List & entries() { return _entries; }
+	const List & entries() const { return _entries; }
 
 private:
 	typedef std::map< boost::filesystem::path, struct DirListEntry * > Index;

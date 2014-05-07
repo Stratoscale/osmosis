@@ -17,11 +17,13 @@ public:
 			const std::string &              label,
 			const std::string &              hostname,
 			unsigned short                   port,
-			bool                             md5 ) :
+			bool                             md5,
+			bool                             removeUnknownFiles ) :
 		_directory( directory ),
 		_label( label ),
 		_hostname( hostname ),
 		_port( port ),
+		_removeUnknownFiles( removeUnknownFiles ),
 		_digestDirectory( directory, md5 )
 	{}
 
@@ -40,21 +42,21 @@ public:
 				if ( entry.status.syncContent() ) {
 					if ( not entry.hash )
 						THROW( Error, "No hash for file that should have data - directory listing is defective" );
-					fetchFiles.fetch( entry.path, * entry.hash );
+					fetchFiles.fetch( entry.path, entry.status, * entry.hash );
 				} else
 					ApplyFileStatus( absolute, entry.status ).createNonRegular();
 			} else {
 				if ( entry.status.syncContent() ) {
 					if ( digestedEntry->status.syncContent() ) {
 						if ( * entry.hash != * digestedEntry->hash )
-							fetchFiles.fetch( entry.path, * entry.hash );
+							fetchFiles.fetch( entry.path, entry.status, * entry.hash );
 						else if ( entry.status != digestedEntry->status ) {
 							ApplyFileStatus( absolute, entry.status ).applyExistingRegular();
 							ASSERT( FileStatus( absolute ) == entry.status );
 						}
 					} else {
 						boost::filesystem::remove( absolute );
-						fetchFiles.fetch( entry.path, * entry.hash );
+						fetchFiles.fetch( entry.path, entry.status, * entry.hash );
 					}
 				} else {
 					if ( entry.status != digestedEntry->status ) {
@@ -65,6 +67,7 @@ public:
 			}
 		}
 		fetchFiles.noMoreFilesToFetch();
+		removeUnknownFiles( _digestDirectory.dirList(), labelDirList );
 		fetchFiles.join();
 		TRACE_DEBUG( "Checkout Complete" );
 	}
@@ -73,8 +76,9 @@ private:
 	const boost::filesystem::path  _directory;
 	const std::string              _label;
 	const std::string              _hostname;
-	unsigned short                 _port; 
-	DigestDirectory                _digestDirectory;
+	const unsigned short           _port;
+	const bool                     _removeUnknownFiles;
+	DigestDirectory                _digestDirectory; 
 
 	std::string getLabelDirList()
 	{
@@ -89,6 +93,18 @@ private:
 			THROW( Error, "Dir list hash did not match contents" );
 		TRACE_DEBUG( "Transferred dirList" );
 		return std::move( result );
+	}
+
+	void removeUnknownFiles( const DirList & digested, const DirList & label )
+	{
+		if ( not _removeUnknownFiles )
+			return;
+		for ( auto entry = digested.entries().rbegin();
+				entry != digested.entries().rend(); ++ entry )
+			if ( label.find( entry->path ) == nullptr ) {
+				boost::filesystem::path absolute = _directory / entry->path;
+				boost::filesystem::remove( absolute );
+			}
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;

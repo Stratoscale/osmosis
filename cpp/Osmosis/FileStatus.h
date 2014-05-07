@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <boost/algorithm/string/trim.hpp>
 #include "Common/SplitString.h"
 
 namespace Osmosis
