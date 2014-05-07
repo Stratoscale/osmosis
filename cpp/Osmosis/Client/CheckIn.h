@@ -29,7 +29,7 @@ public:
 		for ( unsigned i = 0; i < CHECK_EXISTING_THREADS; ++ i )
 			_threads.push_back( std::thread(
 				CheckExistingThread::task, std::ref( _digestDirectory.digestedQueue() ), std::ref( _putQueue ), hostname, port ) );
-		_threads.push_back( std::thread( PutThread::task, std::ref( _putQueue ), std::ref( _putConnection ) ) );
+		_threads.push_back( std::thread( PutThread::task, std::ref( _putQueue ), std::ref( _putConnection ), std::ref( directory ) ) );
 	}
 
 	~CheckIn()

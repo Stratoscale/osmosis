@@ -91,7 +91,16 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 3)
         self.assertEquals(self.client.readFile("first/second/theFile"), "theContents")
 
+    def test_RestoresPermission_ContentDidNotChange(self):
+        self.client.writeFile("theFile", "theContents")
+        os.chmod(self.client.abspath("theFile"), 0741)
+        self.client.checkin("yuvu")
+        os.chmod(self.client.abspath("theFile"), 0777)
+        self.client.checkout("yuvu")
+        self.assertEquals(os.stat(self.client.abspath("theFile")).st_mode & 0777, 0741)
 
+# restore elsewhere
+# restore permissions content did change
 # remove existing
 # not remove existing
 # test checkout non existing does not work

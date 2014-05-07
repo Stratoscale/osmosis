@@ -92,7 +92,8 @@ private:
 	void commitOne()
 	{
 		auto task = _digestDrafts.digestedTaskQueue().get();
-		boost::filesystem::rename( task.draft, task.path );
+		boost::filesystem::path absolute = _directory / task.path;
+		boost::filesystem::rename( task.draft, absolute );
 	}
 
 	FetchFiles( const FetchFiles & rhs ) = delete;

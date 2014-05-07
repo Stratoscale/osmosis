@@ -1,22 +1,26 @@
-#ifndef __OSMOSIS_CLIENT_CREATE_NON_REGULAR_H__
-#define __OSMOSIS_CLIENT_CREATE_NON_REGULAR_H__
+#ifndef __OSMOSIS_APPLY_FILE_STATUS_H__
+#define __OSMOSIS_APPLY_FILE_STATUS_H__
 
-namespace Osmosis {
-namespace Client
+namespace Osmosis
 {
 
-class CreateNonRegular
+class ApplyFileStatus
 {
 public:
-	CreateNonRegular( const boost::filesystem::path & path, const FileStatus & status ):
+	ApplyFileStatus( const boost::filesystem::path & path, const FileStatus & status ):
 		_path( path ),
 		_status( status )
+	{}
+
+	void applyExistingRegular()
 	{
-		ASSERT( not status.syncContent() );
+		chmod();
+		chown();
 	}
 
-	void create()
+	void createNonRegular()
 	{
+		ASSERT( not _status.syncContent() );
 		if ( _status.isSymlink() )
 			boost::filesystem::create_symlink( _status.symlink(), _path );
 		else if ( _status.isDirectory() ) {
@@ -60,11 +64,10 @@ private:
 			THROW_BOOST_ERRNO_EXCEPTION( errno, "Unable to chmod " << _path );
 	}
 
-	CreateNonRegular( const CreateNonRegular & rhs ) = delete;
-	CreateNonRegular & operator= ( const CreateNonRegular & rhs ) = delete;
+	ApplyFileStatus( const ApplyFileStatus & rhs ) = delete;
+	ApplyFileStatus & operator= ( const ApplyFileStatus & rhs ) = delete;
 };
 
-} // namespace Client
 } // namespace Osmosis
 
-#endif // __OSMOSIS_CLIENT_CREATE_NON_REGULAR_H__
+#endif // __OSMOSIS_APPLY_FILE_STATUS_H__

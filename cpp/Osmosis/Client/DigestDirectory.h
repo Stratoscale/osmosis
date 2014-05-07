@@ -24,7 +24,8 @@ public:
 				std::ref( _digestedQueue ),
 				md5,
 				std::ref( _dirList ),
-				std::ref( _dirListMutex ) ) );
+				std::ref( _dirListMutex ),
+				directory ) );
 		_threads.push_back( std::thread( & DigestDirectory::threadEntryPoint, this ) );
 	}
 
@@ -63,18 +64,20 @@ private:
 
 	void traverseDirectoryAndFillUpDigestionQueue()
 	{
-		std::string prefix = ( _directory / "" ).string();
+		static const unsigned DELIMITER_SIZE = 1;
+		unsigned prefixLength = _directory.string().size() + DELIMITER_SIZE;
 		for ( boost::filesystem::recursive_directory_iterator i( _directory );
 				i != boost::filesystem::recursive_directory_iterator();
 				++ i ) {
 			boost::filesystem::path path = i->path();
 			FileStatus status( path );
+			boost::filesystem::path relative = path.string().substr( prefixLength );
 			{
 				std::lock_guard< std::mutex > lock( _dirListMutex );
-				_dirList.add( path, status );
+				_dirList.add( relative, status );
 			}
 			if ( status.syncContent() )
-				_toDigestTaskQueue.put( std::move( path ) );
+				_toDigestTaskQueue.put( std::move( relative ) );
 		}
 		_toDigestTaskQueue.producerDone();
 	}

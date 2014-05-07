@@ -12,34 +12,38 @@ namespace Client
 class DigestThread
 {
 public:
-	static void task(       PathTaskQueue &      inputQueue,
-				DigestedTaskQueue &  outputQueue,
-				bool                 md5,
-				DirList &            dirList,
-				std::mutex &         dirListMutex )
+	static void task(       PathTaskQueue &                  inputQueue,
+				DigestedTaskQueue &              outputQueue,
+				bool                             md5,
+				DirList &                        dirList,
+				std::mutex &                     dirListMutex,
+				const boost::filesystem::path &  directory )
 	{
 		try {
-			DigestThread( inputQueue, outputQueue, md5, dirList, dirListMutex ).go();
+			DigestThread( inputQueue, outputQueue, md5, dirList, dirListMutex, directory ).go();
 		} CATCH_ALL_SUICIDE( "Hash digestion thread terminated" );
 	}
 
 private:
-	DigestThread(   PathTaskQueue &      inputQueue,
-			DigestedTaskQueue &  outputQueue,
-			bool                 md5,
-			DirList &            dirList,
-			std::mutex &         dirListMutex ) :
+	DigestThread(   PathTaskQueue &                  inputQueue,
+			DigestedTaskQueue &              outputQueue,
+			bool                             md5,
+			DirList &                        dirList,
+			std::mutex &                     dirListMutex,
+			const boost::filesystem::path &  directory ) :
 		_inputQueue( inputQueue ),
 		_outputQueue( outputQueue ),
 		_md5( md5 ),
 		_dirList( dirList ),
-		_dirListMutex( dirListMutex )
+		_dirListMutex( dirListMutex ),
+		_directory( directory )
 	{}
 
 	void work()
 	{
 		boost::filesystem::path task = _inputQueue.get();
-		Hash hash = _md5 ? CalculateHash::MD5( task ) : CalculateHash::SHA1( task );
+		boost::filesystem::path absolute = _directory / task;
+		Hash hash = _md5 ? CalculateHash::MD5( absolute ) : CalculateHash::SHA1( absolute );
 		Digested result = { task, hash };
 		_outputQueue.put( std::move( result ) );
 		std::lock_guard< std::mutex > lock( _dirListMutex );
@@ -57,11 +61,12 @@ private:
 		}
 	}
 
-	PathTaskQueue &      _inputQueue;
-	DigestedTaskQueue &  _outputQueue;
-	bool                 _md5;
-	DirList &            _dirList;
-	std::mutex &         _dirListMutex; 
+	PathTaskQueue &                _inputQueue;
+	DigestedTaskQueue &            _outputQueue;
+	const bool                     _md5;
+	DirList &                      _dirList;
+	std::mutex &                   _dirListMutex;
+	const boost::filesystem::path  _directory; 
 
 	DigestThread( const DigestThread & rhs ) = delete;
 	DigestThread & operator= ( const DigestThread & rhs ) = delete;

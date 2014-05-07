@@ -4,7 +4,7 @@
 #include "Osmosis/Stream/SocketToBuffer.h"
 #include "Osmosis/Client/DigestDrafts.h"
 #include "Osmosis/Client/FetchFiles.h"
-#include "Osmosis/Client/CreateNonRegular.h"
+#include "Osmosis/ApplyFileStatus.h"
 
 namespace Osmosis {
 namespace Client
@@ -34,6 +34,7 @@ public:
 
 		FetchFiles fetchFiles( _directory, _hostname, _port );
 		for ( auto & entry : labelDirList.entries() ) {
+			boost::filesystem::path absolute = _directory / entry.path;
 			auto digestedEntry = _digestDirectory.dirList().find( entry.path );
 			if ( digestedEntry == nullptr ) {
 				if ( entry.status.syncContent() ) {
@@ -41,12 +42,26 @@ public:
 						THROW( Error, "No hash for file that should have data - directory listing is defective" );
 					fetchFiles.fetch( entry.path, * entry.hash );
 				} else
-					CreateNonRegular( entry.path, entry.status ).create();
+					ApplyFileStatus( absolute, entry.status ).createNonRegular();
 			} else {
-ASSERT( entry.hash );
-ASSERT( digestedEntry->hash );
-				if ( * entry.hash != * digestedEntry->hash )
-					fetchFiles.fetch( entry.path, * entry.hash );
+				if ( entry.status.syncContent() ) {
+					if ( digestedEntry->status.syncContent() ) {
+						if ( * entry.hash != * digestedEntry->hash )
+							fetchFiles.fetch( entry.path, * entry.hash );
+						else if ( entry.status != digestedEntry->status ) {
+							ApplyFileStatus( absolute, entry.status ).applyExistingRegular();
+							ASSERT( FileStatus( absolute ) == entry.status );
+						}
+					} else {
+						boost::filesystem::remove( absolute );
+						fetchFiles.fetch( entry.path, * entry.hash );
+					}
+				} else {
+					if ( entry.status != digestedEntry->status ) {
+						boost::filesystem::remove( absolute );
+						ApplyFileStatus( absolute, entry.status ).createNonRegular();
+					}
+				}
 			}
 		}
 		fetchFiles.noMoreFilesToFetch();
