@@ -76,7 +76,7 @@ class Test(unittest.TestCase):
         self.client.writeFile("aFile", "123456")
         self.client.checkin("yuvu", md5=True)
         self.client.writeFile("aFile", "1234567")
-        self.client.checkout("yuvu")
+        self.client.checkout("yuvu", md5=True)
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
 
@@ -143,10 +143,10 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("theFile"), "theContents")
 
+    def test_CheckoutNonexistingDoesNotWork(self):
+        message = self.client.failedCheckout("yuvu")
+        self.assertIn("not exist", message.lower())
 
-# remove existing
-# not remove existing
-# test checkout non existing does not work
 # test checkin double does not work
 # test emptyfile
 

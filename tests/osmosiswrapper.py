@@ -17,20 +17,25 @@ class Client:
     def path(self):
         return self._path
 
-    def checkin(self, label, md5=False):
-        moreArgs = []
-        if md5:
-            moreArgs.append("--MD5")
-        return self._run("checkin", self._path, label, * moreArgs)
+    def checkin(self, label, **kwargs):
+        return self._run("checkin", self._path, label, * self._moreArgs(kwargs))
 
-    def failedCheckin(self, label):
-        return self._failedRun("checkin", self._path, label)
+    def failedCheckin(self, label, **kwargs):
+        return self._failedRun("checkin", self._path, label, * self._moreArgs(kwargs))
 
-    def checkout(self, label, removeUnknownFiles=False):
+    def checkout(self, label, **kwargs):
+        return self._run("checkout", self._path, label, * self._moreArgs(kwargs))
+
+    def failedCheckout(self, label, **kwargs):
+        return self._failedRun("checkout", self._path, label, * self._moreArgs(kwargs))
+
+    def _moreArgs(self, kwargs):
         moreArgs = []
-        if removeUnknownFiles:
+        if kwargs.get('removeUnknownFiles', False):
             moreArgs.append("--removeUnknownFiles")
-        return self._run("checkout", self._path, label, * moreArgs)
+        if kwargs.get('md5', False):
+            moreArgs.append("--MD5")
+        return moreArgs
 
     def _run(self, *args):
         try:

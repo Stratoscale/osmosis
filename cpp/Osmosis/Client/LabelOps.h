@@ -45,8 +45,15 @@ public:
 		labelHeader->length = static_cast< unsigned short >( label.size() );
 		memcpy( labelText, label.c_str(), label.size() );
 		_socket.sendAll( buffer, size );
-		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
-		return hash;
+		try {
+			Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
+			return hash;
+		} catch ( boost::system::system_error & e ) {
+			if ( e.code() == boost::asio::error::eof )
+				THROW( Error, "Peer terminated connection instead of sending ack, when getting label '" <<
+						label << " hash: maybe the label does not exist?" );
+			throw;
+		}
 	}
 
 private:
