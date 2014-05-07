@@ -1,6 +1,7 @@
 import unittest
 import osmosiswrapper
 import os
+import stat
 import fakeservers
 import shutil
 
@@ -146,6 +147,26 @@ class Test(unittest.TestCase):
     def test_CheckoutNonexistingDoesNotWork(self):
         message = self.client.failedCheckout("yuvu")
         self.assertIn("not exist", message.lower())
+
+    def test_FifoFile(self):
+        os.mkfifo(self.client.abspath("aFifo"))
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("aFifo"))
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertTrue(stat.S_ISFIFO(os.stat(self.client.abspath("aFifo")).st_mode))
+
+    def test_SpecialFile(self):
+        if (os.getuid() != 0):
+            print "SKIPPING test that requires root permissions"
+            return
+        os.mknod(self.client.abspath("aDevice"), 0600 | stat.S_IFCHR, os.makedev(123, 45))
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("aDevice"))
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertTrue(stat.S_ISCHR(os.stat(self.client.abspath("aDevice")).st_mode))
+        self.assertEquals(os.stat(self.client.abspath("aDevice")).st_rdev, os.makedev(123, 45))
 
 # test checkin double does not work
 # test emptyfile

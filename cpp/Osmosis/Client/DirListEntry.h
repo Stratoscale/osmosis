@@ -26,7 +26,8 @@ struct DirListEntry
 		split.next();
 		if ( split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
-		status = FileStatus( split.asString() );
+		FileStatus unserializedStatus( split.asString() );
+		status = unserializedStatus;
 		split.next();
 		if ( split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );

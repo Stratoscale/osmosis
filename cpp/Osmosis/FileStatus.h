@@ -61,7 +61,7 @@ public:
 	bool isSocket() const { return S_ISSOCK( _stat.st_mode ); }
 
 	mode_t mode() const { return _stat.st_mode; }
-	dev_t dev() const { return _stat.st_dev; }
+	dev_t dev() const { return _stat.st_rdev; }
 	uid_t uid() const { return _stat.st_uid; }
 	gid_t gid() const { return _stat.st_gid; }
 

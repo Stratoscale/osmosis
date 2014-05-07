@@ -71,6 +71,10 @@ private:
 				++ i ) {
 			boost::filesystem::path path = i->path();
 			FileStatus status( path );
+			if ( not status.isSymlink() and status.isSocket() ) {
+				TRACE_WARNING( "Will not digest socket file: " << path );
+				continue;
+			}
 			boost::filesystem::path relative = path.string().substr( prefixLength );
 			{
 				std::lock_guard< std::mutex > lock( _dirListMutex );

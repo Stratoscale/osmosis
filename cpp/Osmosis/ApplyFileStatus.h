@@ -26,11 +26,12 @@ public:
 		else if ( _status.isDirectory() ) {
 			boost::filesystem::create_directory( _path );
 			chmod();
-		} else if ( _status.isCharacter() or
-				_status.isBlock() or
-				_status.isFIFO() or
-				_status.isSocket() )
+		} else if ( _status.isCharacter() or _status.isBlock() )
 			mknod();
+		else if ( _status.isFIFO() )
+			mkfifo();
+		else if ( _status.isSocket() )
+			THROW( Error, "Socket files can not be created" );
 		else
 			ASSERT_VERBOSE( false, "Unknown non regular file" );
 
@@ -47,6 +48,14 @@ private:
 		int result = ::mknod( _path.string().c_str(), _status.mode(), _status.dev() );
 		if ( result != 0 )
 			THROW_BOOST_ERRNO_EXCEPTION( errno, "Unable to mknod " << _path );
+	}
+
+	void mkfifo()
+	{
+		ASSERT( _status.isFIFO() );
+		int result = ::mkfifo( _path.string().c_str(), _status.mode() );
+		if ( result != 0 )
+			THROW_BOOST_ERRNO_EXCEPTION( errno, "Unable to mkfifo " << _path );
 	}
 
 	void chown()
