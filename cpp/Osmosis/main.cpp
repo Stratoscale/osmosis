@@ -3,6 +3,8 @@
 #include "Osmosis/Client/CheckIn.h"
 #include "Osmosis/Client/CheckOut.h"
 
+std::mutex globalTraceLock;
+
 void server( const boost::program_options::variables_map & options )
 {
 	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
@@ -42,15 +44,25 @@ void checkOut( const boost::program_options::variables_map & options )
 	instance.go();
 }
 
+void testHash( const boost::program_options::variables_map & options )
+{
+	boost::filesystem::path fileToHash = options[ "workDir" ].as< std::string >();
+	bool md5 = options.count( "MD5" ) > 0;
+
+	Osmosis::Hash hash = md5 ? Osmosis::CalculateHash::MD5( fileToHash ) : Osmosis::CalculateHash::SHA1( fileToHash );
+	std::cout << hash << std::endl;
+}
+
 void usage( const boost::program_options::options_description & optionsDescription )
 {
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
-	std::cout << "  command: can be 'server', 'checkin' or 'checkout'" << std::endl;
-	std::cout << "  workDir: must be present if command is 'checkin' or 'checkout'" << std::endl;
-	std::cout << "           workDir is the path to check in from or check out to" << std::endl;
-	std::cout << "  label:   must be present if command is 'checkin' or 'checkout'" << std::endl;
-	std::cout << "           label is the name of the dirlist to checkin or checkout" << std::endl;
+	std::cout << "  command:  can be 'server', 'checkin' or 'checkout'" << std::endl;
+	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
+	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
+	std::cout << "  label:    must be present if command is 'checkin' or 'checkout'" << std::endl;
+	std::cout << "            label is the name of the dirlist to checkin or checkout" << std::endl;
+	std::cout << "  testhash: just hash a localfile" << std::endl;
 	std::cout << std::endl;
 	std::cout << optionsDescription << std::endl;
 }
@@ -114,6 +126,8 @@ int main( int argc, char * argv [] )
 			checkIn( options );
 		else if ( command == "checkout" )
 			checkOut( options );
+		else if ( command == "testhash" )
+			testHash( options );
 		else {
 			TRACE_ERROR( "Unknown command '" << command << "'" );
 			usage( optionsDescription );

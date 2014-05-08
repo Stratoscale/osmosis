@@ -4,6 +4,8 @@
 #include <iostream>
 #include "Common/TaskQueue.h"
 
+std::mutex globalTraceLock;
+
 using namespace std;
 
 typedef TaskQueue< string > Queue;

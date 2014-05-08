@@ -177,5 +177,20 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("emptyFile"), "")
 
+    def test_SparseFile(self):
+        with open(self.client.abspath("sparseFile"), "wb") as f:
+            f.write("something")
+            f.seek(128*1024)
+            f.write("something else")
+        self.client.testHash("sparseFile")
+        self.assertLessEqual(os.stat(self.client.abspath("sparseFile")).st_blocks * 512, 16 * 1024)
+        self.client.checkin("pash")
+        os.unlink(self.client.abspath("sparseFile"))
+        self.client.checkout("pash")
+        self.assertLessEqual(os.stat(self.client.abspath("sparseFile")).st_blocks * 512, 16 * 1024)
+        self.assertEquals(
+            self.client.readFile("sparseFile"),
+            "something" + ("\0" * (128 * 1024 - len("something"))) + "something else")
+
 if __name__ == '__main__':
     unittest.main()

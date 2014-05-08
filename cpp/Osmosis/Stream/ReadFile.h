@@ -65,7 +65,7 @@ public:
 		static unsigned char zero[ sizeof( _buffer ) ] = { 0 };
 		if ( _bytesInBuffer != sizeof( _buffer ) )
 			return false;
-		return memcmp( _buffer, zero, sizeof( _buffer ) );
+		return memcmp( _buffer, zero, sizeof( _buffer ) ) == 0;
 	}
 
 private:

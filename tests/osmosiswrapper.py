@@ -29,6 +29,13 @@ class Client:
     def failedCheckout(self, label, **kwargs):
         return self._failedRun("checkout", self._path, label, * self._moreArgs(kwargs))
 
+    def testHash(self, filename):
+        absolute = os.path.join(self._path, filename)
+        hash1 = self._run("testhash", absolute).strip()
+        hash2 = self._runAny("sha1sum", absolute).strip().split(" ")[0]
+        if hash1 != hash2:
+            raise Exception("Hashes not equal:\n" + hash1 + "\n" + hash2)
+
     def _moreArgs(self, kwargs):
         moreArgs = []
         if kwargs.get('removeUnknownFiles', False):
@@ -36,6 +43,14 @@ class Client:
         if kwargs.get('md5', False):
             moreArgs.append("--MD5")
         return moreArgs
+
+    def _runAny(self, *args):
+        try:
+            return subprocess.check_output(
+                args, close_fds=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            logging.exception("\n\n\nOutput:\n" + e.output)
+            raise
 
     def _run(self, *args):
         try:

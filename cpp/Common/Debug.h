@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <mutex>
 #include <boost/exception/diagnostic_information.hpp> 
 
 #ifdef UNITTEST
@@ -44,9 +45,11 @@
 #   endif // DEBUG
 #endif // UNITTEST
 
+extern std::mutex globalTraceLock;
 #   define _TRACE( __level, __serialize, __stream ) do { \
 	struct timeval timeValue; \
 	gettimeofday( & timeValue, nullptr ); \
+	std::lock_guard< std::mutex > lock( globalTraceLock ); \
 	__stream << timeValue.tv_sec << '.' << std::setfill( '0' ) << std::setw( 6 ) << timeValue.tv_usec << ':' << \
 		__level << ':' << ' ' << __serialize << ' ' << '(' << __FILE__ << ':' << __LINE__ << \
 		')' << std::endl; \
