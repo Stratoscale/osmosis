@@ -4,6 +4,7 @@ import os
 import stat
 import fakeservers
 import shutil
+import time
 
 
 class Test(unittest.TestCase):
@@ -191,6 +192,19 @@ class Test(unittest.TestCase):
         self.assertEquals(
             self.client.readFile("sparseFile"),
             "something" + ("\0" * (128 * 1024 - len("something"))) + "something else")
+
+    def test_mtime(self):
+        self.client.writeFile("emptyFile", "")
+        originalMtime = int(os.stat(self.client.abspath("emptyFile")).st_mtime)
+        self.assertEquals(self.client.fileCount(), 1)
+        self.client.checkin("yuvu")
+        time.sleep(1)
+        self.client.writeFile("emptyFile", "")
+        self.assertNotEquals(os.stat(self.client.abspath("emptyFile")).st_mtime, originalMtime)
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("emptyFile"), "")
+        self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_mtime, originalMtime)
 
 if __name__ == '__main__':
     unittest.main()

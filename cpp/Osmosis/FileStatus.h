@@ -64,6 +64,7 @@ public:
 	dev_t dev() const { return _stat.st_rdev; }
 	uid_t uid() const { return _stat.st_uid; }
 	gid_t gid() const { return _stat.st_gid; }
+	time_t mtime() const { return _stat.st_mtime; }
 
 	bool operator == ( const FileStatus & other ) const
 	{
@@ -73,7 +74,7 @@ public:
 			_stat.st_rdev == other._stat.st_rdev and
 //			_stat.st_atime == other._stat.st_atime and
 			_stat.st_mtime == other._stat.st_mtime and
-			_stat.st_ctime == other._stat.st_ctime and
+//			_stat.st_ctime == other._stat.st_ctime and
 			_symlink == other._symlink;
 	}
 	bool operator != ( const FileStatus & other ) const { return not operator == ( other ); }
@@ -87,7 +88,7 @@ public:
 			status._stat.st_rdev << '*' <<
 //			status._stat.st_atime << '*' <<
 			status._stat.st_mtime << '*' <<
-			status._stat.st_ctime << '*' <<
+//			status._stat.st_ctime << '*' <<
 			status._symlink;
 		return os;
 	}
@@ -120,10 +121,7 @@ private:
 		split.next();
 		if ( split.done() )
 			THROW( Error, "'" << serialized << "' is in an invalid format for a file status" );
-		_stat.st_ctime = boost::lexical_cast< time_t >( split.asString() );
-		split.next();
-		if ( split.done() )
-			THROW( Error, "'" << serialized << "' is in an invalid format for a file status" );
+//		_stat.st_ctime = boost::lexical_cast< time_t >( split.asString() );
 		_symlink = boost::trim_copy_if( split.asString(), boost::is_any_of( "\"" ) );
 		split.next();
 		if ( not split.done() )

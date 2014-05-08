@@ -97,6 +97,8 @@ private:
 		boost::filesystem::path absolute = _directory / task.path;
 		boost::filesystem::rename( task.draft, absolute );
 		ApplyFileStatus( absolute, task.status ).applyExistingRegular();
+		ASSERT_VERBOSE( FileStatus( absolute ) == task.status,
+				FileStatus( absolute ) << " != " << task.status );
 	}
 
 	FetchFiles( const FetchFiles & rhs ) = delete;

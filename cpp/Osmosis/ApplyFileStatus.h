@@ -16,6 +16,7 @@ public:
 	{
 		chmod();
 		chown();
+		setmtime();
 	}
 
 	void createNonRegular()
@@ -41,6 +42,19 @@ public:
 private:
 	const boost::filesystem::path &  _path;
 	const FileStatus &               _status;
+
+	void setmtime()
+	{
+		static const int NO_FD = -1;
+		struct timespec times[ 2 ];
+		times[ 0 ].tv_sec = UTIME_OMIT;
+		times[ 0 ].tv_nsec = UTIME_OMIT;
+		times[ 1 ].tv_sec = _status.mtime();
+		times[ 1 ].tv_nsec = 0;
+		int result = ::utimensat( NO_FD, _path.string().c_str(), times, AT_SYMLINK_NOFOLLOW );
+		if ( result != 0 )
+			THROW_BOOST_ERRNO_EXCEPTION( errno, "Unable to utimensat " << _path );
+	}
 
 	void mknod()
 	{

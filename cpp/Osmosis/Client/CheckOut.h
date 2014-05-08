@@ -52,7 +52,8 @@ public:
 							fetchFiles.fetch( entry.path, entry.status, * entry.hash );
 						else if ( entry.status != digestedEntry->status ) {
 							ApplyFileStatus( absolute, entry.status ).applyExistingRegular();
-							ASSERT( FileStatus( absolute ) == entry.status );
+							ASSERT_VERBOSE( FileStatus( absolute ) == entry.status,
+									FileStatus( absolute ) << " != " << entry.status );
 						}
 					} else {
 						boost::filesystem::remove( absolute );
