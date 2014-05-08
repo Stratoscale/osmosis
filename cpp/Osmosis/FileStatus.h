@@ -66,6 +66,12 @@ public:
 	gid_t gid() const { return _stat.st_gid; }
 	time_t mtime() const { return _stat.st_mtime; }
 
+	void setUIDGID( uid_t uid, gid_t gid )
+	{
+		_stat.st_uid = uid;
+		_stat.st_gid = gid;
+	}
+
 	bool operator == ( const FileStatus & other ) const
 	{
 		return _stat.st_mode == other._stat.st_mode and

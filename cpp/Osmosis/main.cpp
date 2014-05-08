@@ -38,9 +38,10 @@ void checkOut( const boost::program_options::variables_map & options )
 	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
 	bool md5 = options.count( "MD5" ) > 0;
 	bool removeUnknownFiles = options.count( "removeUnknownFiles" ) > 0;
+	bool myUIDandGIDcheckout = options.count( "myUIDandGIDcheckout" ) > 0;
 
 	Osmosis::FilesystemUtils::clearUMask();
-	Osmosis::Client::CheckOut instance( workDir, label, hostname, port, md5, removeUnknownFiles );
+	Osmosis::Client::CheckOut instance( workDir, label, hostname, port, md5, removeUnknownFiles, myUIDandGIDcheckout );
 	instance.go();
 }
 
@@ -79,7 +80,8 @@ int main( int argc, char * argv [] )
 		("serverHostname", boost::program_options::value< std::string >()->default_value( "localhost" ),
 			"the hostname to connect to, if client" )
 		( "MD5", "use MD5, not SHA1 for hash in 'checkin' operation" )
-		( "removeUnknownFiles", "for checkout: remove files from disk that are not in the dirlist being checked out" );
+		( "removeUnknownFiles", "for checkout: remove files from disk that are not in the dirlist being checked out" )
+		( "myUIDandGIDcheckout", "for checkout: use my uid and gid" );
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()

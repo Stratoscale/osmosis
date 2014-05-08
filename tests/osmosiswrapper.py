@@ -42,6 +42,8 @@ class Client:
             moreArgs.append("--removeUnknownFiles")
         if kwargs.get('md5', False):
             moreArgs.append("--MD5")
+        if kwargs.get('myUIDandGIDcheckout', False):
+            moreArgs.append("--myUIDandGIDcheckout")
         return moreArgs
 
     def _runAny(self, *args):

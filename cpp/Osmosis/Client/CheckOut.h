@@ -5,6 +5,7 @@
 #include "Osmosis/Client/DigestDrafts.h"
 #include "Osmosis/Client/FetchFiles.h"
 #include "Osmosis/ApplyFileStatus.h"
+#include "Osmosis/OSUtils.h"
 
 namespace Osmosis {
 namespace Client
@@ -18,12 +19,14 @@ public:
 			const std::string &              hostname,
 			unsigned short                   port,
 			bool                             md5,
-			bool                             removeUnknownFiles ) :
+			bool                             removeUnknownFiles,
+			bool                             myUIDandGIDcheckout ) :
 		_directory( directory ),
 		_label( label ),
 		_hostname( hostname ),
 		_port( port ),
 		_removeUnknownFiles( removeUnknownFiles ),
+		_myUIDandGIDcheckout( myUIDandGIDcheckout ),
 		_digestDirectory( directory, md5 )
 	{}
 
@@ -35,38 +38,21 @@ public:
 		_digestDirectory.join();
 
 		FetchFiles fetchFiles( _directory, _hostname, _port );
-		for ( auto & entry : labelDirList.entries() ) {
-			boost::filesystem::path absolute = _directory / entry.path;
-			auto digestedEntry = _digestDirectory.dirList().find( entry.path );
-			if ( digestedEntry == nullptr ) {
-				if ( entry.status.syncContent() ) {
-					if ( not entry.hash )
-						THROW( Error, "No hash for file that should have data - directory listing is defective" );
-					fetchFiles.fetch( entry.path, entry.status, * entry.hash );
-				} else
-					ApplyFileStatus( absolute, entry.status ).createNonRegular();
-			} else {
-				if ( entry.status.syncContent() ) {
-					if ( digestedEntry->status.syncContent() ) {
-						if ( * entry.hash != * digestedEntry->hash )
-							fetchFiles.fetch( entry.path, entry.status, * entry.hash );
-						else if ( entry.status != digestedEntry->status ) {
-							ApplyFileStatus( absolute, entry.status ).applyExistingRegular();
-							ASSERT_VERBOSE( FileStatus( absolute ) == entry.status,
-									FileStatus( absolute ) << " != " << entry.status );
-						}
-					} else {
-						boost::filesystem::remove( absolute );
-						fetchFiles.fetch( entry.path, entry.status, * entry.hash );
-					}
-				} else {
-					if ( entry.status != digestedEntry->status ) {
-						boost::filesystem::remove( absolute );
-						ApplyFileStatus( absolute, entry.status ).createNonRegular();
-					}
-				}
-			}
-		}
+		for ( auto & entry : labelDirList.entries() )
+			if ( _myUIDandGIDcheckout ) {
+				FileStatus modifiedStatus( entry.status );
+				modifiedStatus.setUIDGID( OSUtils::uid(), OSUtils::gid() );
+				decideWhatToDo( fetchFiles,
+						entry.path,
+						modifiedStatus,
+						entry.hash.get(),
+						labelDirList );
+			} else
+				decideWhatToDo( fetchFiles,
+						entry.path,
+						entry.status,
+						entry.hash.get(),
+						labelDirList );
 		fetchFiles.noMoreFilesToFetch();
 		removeUnknownFiles( _digestDirectory.dirList(), labelDirList );
 		fetchFiles.join();
@@ -79,6 +65,7 @@ private:
 	const std::string              _hostname;
 	const unsigned short           _port;
 	const bool                     _removeUnknownFiles;
+	const bool                     _myUIDandGIDcheckout;
 	DigestDirectory                _digestDirectory; 
 
 	std::string getLabelDirList()
@@ -106,6 +93,50 @@ private:
 				boost::filesystem::path absolute = _directory / entry->path;
 				boost::filesystem::remove( absolute );
 			}
+	}
+
+	void decideWhatToDo(    FetchFiles &                     fetchFiles,
+				const boost::filesystem::path &  path,
+				const FileStatus &               status,
+				const Hash *                     hash,
+				const DirList &                  labelDirList )
+	{
+		boost::filesystem::path absolute = _directory / path;
+		auto digestedEntry = _digestDirectory.dirList().find( path );
+		if ( digestedEntry == nullptr ) {
+			if ( status.syncContent() ) {
+				if ( hash == nullptr )
+					THROW( Error, "No hash for file that should have data - directory listing is defective" );
+				fetchFiles.fetch( path, status, * hash );
+			} else
+				ApplyFileStatus( absolute, status ).createNonRegular();
+		} else {
+			if ( status.syncContent() ) {
+				if ( digestedEntry->status.syncContent() ) {
+					if ( hash == nullptr )
+						THROW( Error, "No hash for file that should have data - directory listing is defective" );
+					if ( ! digestedEntry->hash )
+						THROW( Error, "No hash for file that should have data - directory listing is defective" );
+					if ( * hash != * digestedEntry->hash )
+						fetchFiles.fetch( path, status, * hash );
+					else if ( status != digestedEntry->status ) {
+						ApplyFileStatus( absolute, status ).applyExistingRegular();
+						ASSERT_VERBOSE( FileStatus( absolute ) == status,
+								FileStatus( absolute ) << " != " << status );
+					}
+				} else {
+					if ( hash == nullptr )
+						THROW( Error, "No hash for file that should have data - directory listing is defective" );
+					boost::filesystem::remove( absolute );
+					fetchFiles.fetch( path, status, * hash );
+				}
+			} else {
+				if ( status != digestedEntry->status ) {
+					boost::filesystem::remove( absolute );
+					ApplyFileStatus( absolute, status ).createNonRegular();
+				}
+			}
+		}
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;

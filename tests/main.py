@@ -206,5 +206,31 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("emptyFile"), "")
         self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_mtime, originalMtime)
 
+    def test_chwon(self):
+        if (os.getuid() != 0):
+            print "SKIPPING test that requires root permissions"
+            return
+        self.client.writeFile("emptyFile", "")
+        os.chown(self.client.abspath("emptyFile"), 10, 11)
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("emptyFile"))
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.readFile("emptyFile"), "")
+        self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_uid, 10)
+        self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_gid, 11)
+
+    def test_chwon_useMyUIDGID(self):
+        if (os.getuid() != 0):
+            print "SKIPPING test that requires root permissions"
+            return
+        self.client.writeFile("emptyFile", "")
+        os.chown(self.client.abspath("emptyFile"), 10, 11)
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("emptyFile"))
+        self.client.checkout("yuvu", myUIDandGIDcheckout=True)
+        self.assertEquals(self.client.readFile("emptyFile"), "")
+        self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_uid, 0)
+        self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_gid, 0)
+
 if __name__ == '__main__':
     unittest.main()
