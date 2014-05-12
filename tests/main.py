@@ -158,7 +158,7 @@ class Test(unittest.TestCase):
         self.assertTrue(stat.S_ISFIFO(os.stat(self.client.abspath("aFifo")).st_mode))
 
     def test_SpecialFile(self):
-        if (os.getuid() != 0):
+        if os.getuid() != 0:
             print "SKIPPING test that requires root permissions"
             return
         os.mknod(self.client.abspath("aDevice"), 0600 | stat.S_IFCHR, os.makedev(123, 45))
@@ -207,7 +207,7 @@ class Test(unittest.TestCase):
         self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_mtime, originalMtime)
 
     def test_chwon(self):
-        if (os.getuid() != 0):
+        if os.getuid() != 0:
             print "SKIPPING test that requires root permissions"
             return
         self.client.writeFile("emptyFile", "")
@@ -220,7 +220,7 @@ class Test(unittest.TestCase):
         self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_gid, 11)
 
     def test_chwon_useMyUIDGID(self):
-        if (os.getuid() != 0):
+        if os.getuid() != 0:
             print "SKIPPING test that requires root permissions"
             return
         self.client.writeFile("emptyFile", "")
@@ -231,6 +231,23 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("emptyFile"), "")
         self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_uid, 0)
         self.assertEquals(os.stat(self.client.abspath("emptyFile")).st_gid, 0)
+
+    def test_bugfix_CheckInMultipleCopies(self):
+        self.client.writeFile("empty1", "")
+        self.client.writeFile("empty2", "")
+        self.client.writeFile("contents1", "the contents")
+        self.client.writeFile("contents2", "the contents")
+        self.client.checkin("yuvu")
+        for filename in ['empty1', 'empty2', 'contents1', 'contents2']:
+            os.unlink(self.client.abspath(filename))
+
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 4)
+        self.assertEquals(self.client.readFile("empty1"), "")
+        self.assertEquals(self.client.readFile("empty2"), "")
+        self.assertEquals(self.client.readFile("contents1"), "the contents")
+        self.assertEquals(self.client.readFile("contents2"), "the contents")
+
 
 if __name__ == '__main__':
     unittest.main()

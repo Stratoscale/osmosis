@@ -28,7 +28,8 @@ public:
 	{
 		for ( unsigned i = 0; i < CHECK_EXISTING_THREADS; ++ i )
 			_threads.push_back( std::thread(
-				CheckExistingThread::task, std::ref( _digestDirectory.digestedQueue() ), std::ref( _putQueue ), hostname, port ) );
+				CheckExistingThread::task, std::ref( _digestDirectory.digestedQueue() ), std::ref( _putQueue ), hostname, port,
+				std::ref( _checkExistingAlreadyProcessed ), std::ref( _checkExistingAlreadyProcessedLock ) ) );
 		_threads.push_back( std::thread( PutThread::task, std::ref( _putQueue ), std::ref( _putConnection ), std::ref( directory ) ) );
 	}
 
@@ -54,12 +55,14 @@ private:
 		CHECK_EXISTING_THREADS = 10,
 	};
 
-	const std::string              _label;
-	const bool                     _md5;
-	DigestDirectory                _digestDirectory;
-	Connect                        _putConnection;
-	DigestedTaskQueue              _putQueue; 
-	std::vector< std::thread >     _threads; 
+	const std::string                      _label;
+	const bool                             _md5;
+	CheckExistingThread::AlreadyProcessed  _checkExistingAlreadyProcessed;
+	std::mutex                             _checkExistingAlreadyProcessedLock;
+	DigestDirectory                        _digestDirectory;
+	Connect                                _putConnection;
+	DigestedTaskQueue                      _putQueue;
+	std::vector< std::thread >             _threads;
 
 	Hash putDirList()
 	{

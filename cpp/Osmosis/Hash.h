@@ -87,8 +87,18 @@ public:
 		return not operator == ( other );
 	}
 
+	bool operator < ( const Hash & other ) const
+	{
+		return value() < other.value();
+	}
+
 private:
 	struct Tongue::Hash _raw;
+
+	unsigned long value() const
+	{
+		return * reinterpret_cast< const unsigned long * >( & _raw );
+	}
 };
 
 } // namespace Osmosis
