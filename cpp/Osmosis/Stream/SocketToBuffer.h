@@ -22,6 +22,7 @@ public:
 			handleOffsetGaps();
 			_buffer.write( reinterpret_cast< const char * >( _incoming.buffer() ),
 					_incoming.bufferLength() );
+			_offset += _incoming.bufferLength();
 			_incoming.next();
 		}
 	}
@@ -44,6 +45,7 @@ private:
 				THROW( Error, "Incoming offset goes backwards, not implemented" );
 			for ( ; _offset < _incoming.offset(); ++ _offset )
 				_buffer << '\0';
+			_offset = _incoming.offset();
 		}
 	}
 

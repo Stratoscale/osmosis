@@ -248,6 +248,27 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("contents1"), "the contents")
         self.assertEquals(self.client.readFile("contents2"), "the contents")
 
+    def test_bugfix_BigDirList(self):
+        for i in xrange(1000):
+            self.client.writeFile("empty%d" % i, "")
+        self.client.checkin("yuvu")
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1000)
+        for i in xrange(1000):
+            self.assertEquals(self.client.readFile("empty%d" % i), "")
+
+    def test_DirectoryChangedPermissions(self):
+        os.makedirs(self.client.abspath("directory"))
+        self.client.writeFile("directory/theFile", "theContents")
+        self.client.checkin("yuvu")
+        before = os.stat(self.client.abspath("directory")).st_mode
+        self.assertNotEquals(before & 0777, 0700)
+        os.chmod(self.client.abspath("directory"), 0700)
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 2)
+        self.assertEquals(self.client.readFile("directory/theFile"), "theContents")
+        self.assertEquals(os.stat(self.client.abspath("directory")).st_mode, before)
+
 
 if __name__ == '__main__':
     unittest.main()

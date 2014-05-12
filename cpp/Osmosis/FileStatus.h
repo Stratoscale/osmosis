@@ -61,6 +61,7 @@ public:
 	bool isSocket() const { return S_ISSOCK( _stat.st_mode ); }
 
 	mode_t mode() const { return _stat.st_mode; }
+	mode_t type() const { return _stat.st_mode & S_IFMT; }
 	dev_t dev() const { return _stat.st_rdev; }
 	uid_t uid() const { return _stat.st_uid; }
 	gid_t gid() const { return _stat.st_gid; }
@@ -79,7 +80,7 @@ public:
 			_stat.st_gid == other._stat.st_gid and
 			_stat.st_rdev == other._stat.st_rdev and
 //			_stat.st_atime == other._stat.st_atime and
-			_stat.st_mtime == other._stat.st_mtime and
+			( isDirectory() or _stat.st_mtime == other._stat.st_mtime ) and
 //			_stat.st_ctime == other._stat.st_ctime and
 			_symlink == other._symlink;
 	}

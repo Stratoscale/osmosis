@@ -131,10 +131,8 @@ private:
 					fetchFiles.fetch( path, status, * hash );
 				}
 			} else {
-				if ( status != digestedEntry->status ) {
-					boost::filesystem::remove( absolute );
-					ApplyFileStatus( absolute, status ).createNonRegular();
-				}
+				if ( status != digestedEntry->status )
+					ApplyFileStatus( absolute, status ).applyNonRegular( digestedEntry->status );
 			}
 		}
 	}
