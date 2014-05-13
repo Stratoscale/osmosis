@@ -17,3 +17,16 @@ whiteboxtest: build
 
 check_convention:
 	pep8 . --max-line-length=109
+
+install:
+	sudo cp build/cpp/osmosis.bin /usr/bin/osmosis
+	sudo cp osmosis.service /usr/lib/systemd/system/osmosis.service
+	sudo systemctl enable osmosis
+	sudo systemctl start osmosis
+
+uninstall:
+	sudo systemctl stop osmosis
+	sudo systemctl disable osmosis
+	sudo rm -f /usr/bin/osmosis
+	sudo rm -f /usr/lib/systemd/system/osmosis.service
+	echo "CONSIDER ERASING /var/lib/osmosis"

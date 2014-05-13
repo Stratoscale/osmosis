@@ -1,0 +1,10 @@
+[Unit]
+Description=Osmosis Object Store Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/osmosis server
+
+[Install]
+WantedBy=multi-user.target
