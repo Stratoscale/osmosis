@@ -122,7 +122,7 @@ private:
 					else if ( status != digestedEntry->status ) {
 						ApplyFileStatus( absolute, status ).applyExistingRegular();
 						ASSERT_VERBOSE( FileStatus( absolute ) == status,
-								FileStatus( absolute ) << " != " << status );
+								absolute << ": " << FileStatus( absolute ) << " != " << status );
 					}
 				} else {
 					if ( hash == nullptr )

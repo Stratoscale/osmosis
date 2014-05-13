@@ -98,7 +98,7 @@ private:
 		boost::filesystem::rename( task.draft, absolute );
 		ApplyFileStatus( absolute, task.status ).applyExistingRegular();
 		ASSERT_VERBOSE( FileStatus( absolute ) == task.status,
-				FileStatus( absolute ) << " != " << task.status );
+				absolute << ": " << FileStatus( absolute ) << " != " << task.status );
 	}
 
 	FetchFiles( const FetchFiles & rhs ) = delete;

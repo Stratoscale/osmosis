@@ -14,9 +14,11 @@ public:
 
 	void applyExistingRegular()
 	{
-		chmod();
 		chown();
 		setmtime();
+		chmod();
+		ASSERT_VERBOSE( FileStatus( _path ) == _status,
+				_path << ": " << FileStatus( _path ) << " != " << _status );
 	}
 
 	void createNonRegular()
@@ -37,16 +39,25 @@ public:
 			ASSERT_VERBOSE( false, "Unknown non regular file" );
 
 		chown();
+		ASSERT_VERBOSE( FileStatus( _path ) == _status,
+				_path << ": " << FileStatus( _path ) << " != " << _status );
 	}
 
 	void applyNonRegular( const FileStatus & existingStatus )
 	{
 		if ( _status.type() == existingStatus.type() ) {
-			applyExistingRegular();
+			if ( not _status.isSymlink() )
+				chmod();
+			chown();
+			ASSERT_VERBOSE( FileStatus( _path ) == _status,
+					_path << ": " << FileStatus( _path ) << " != " << _status );
 			return;
+		} else {
+			boost::filesystem::remove_all( _path );
+			createNonRegular();
+			ASSERT_VERBOSE( FileStatus( _path ) == _status,
+					_path << ": " << FileStatus( _path ) << " != " << _status );
 		}
-		boost::filesystem::remove_all( _path );
-		createNonRegular();
 	}
 
 private:
@@ -90,6 +101,7 @@ private:
 
 	void chmod()
 	{
+		//chown and setmtime turn off setguid bit - this must be last
 		ASSERT( not _status.isSymlink() );
 		int result = ::chmod( _path.string().c_str(), _status.mode() );
 		if ( result != 0 )
