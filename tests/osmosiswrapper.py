@@ -29,6 +29,16 @@ class Client:
     def failedCheckout(self, label, **kwargs):
         return self._failedRun("checkout", self._path, label, * self._moreArgs(kwargs))
 
+    def listLabels(self, regex=None):
+        args = []
+        if regex is not None:
+            args.append(regex)
+        result = self._run("listlabels", * args)
+        labels = result.strip().split("\n")
+        if "" in labels:
+            labels.remove("")
+        return labels
+
     def testHash(self, filename):
         absolute = os.path.join(self._path, filename)
         hash1 = self._run("testhash", absolute).strip()

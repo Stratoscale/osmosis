@@ -2,6 +2,7 @@
 #include "Osmosis/Server/Server.h"
 #include "Osmosis/Client/CheckIn.h"
 #include "Osmosis/Client/CheckOut.h"
+#include "Osmosis/Client/ListLabels.h"
 
 std::mutex globalTraceLock;
 
@@ -45,6 +46,21 @@ void checkOut( const boost::program_options::variables_map & options )
 	instance.go();
 }
 
+void listLabels( const boost::program_options::variables_map & options )
+{
+	std::string labelRegex = ".*";
+	if ( options.count( "workDir" ) > 0 )
+		labelRegex = options[ "workDir" ].as< std::string >();
+	boost::regex testExpression( labelRegex );
+	std::string hostname = options[ "serverHostname" ].as< std::string >();
+	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
+
+	Osmosis::Client::ListLabels instance( labelRegex, hostname, port );
+	instance.go();
+	for ( auto i = instance.result().begin(); i != instance.result().end(); ++ i )
+		std::cout << * i << std::endl;
+}
+
 void testHash( const boost::program_options::variables_map & options )
 {
 	boost::filesystem::path fileToHash = options[ "workDir" ].as< std::string >();
@@ -58,11 +74,13 @@ void usage( const boost::program_options::options_description & optionsDescripti
 {
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
-	std::cout << "  command:  can be 'server', 'checkin' or 'checkout'" << std::endl;
+	std::cout << "  command:  can be 'server', 'checkin', 'checkout' or 'listlabels'" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
 	std::cout << "  label:    must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            label is the name of the dirlist to checkin or checkout" << std::endl;
+	std::cout << "            optional for 'listlabels' command, in which case is " << std::endl;
+	std::cout << "            treated as a regex" << std::endl;
 	std::cout << "  testhash: just hash a localfile" << std::endl;
 	std::cout << std::endl;
 	std::cout << optionsDescription << std::endl;
@@ -128,6 +146,8 @@ int main( int argc, char * argv [] )
 			checkIn( options );
 		else if ( command == "checkout" )
 			checkOut( options );
+		else if ( command == "listlabels" )
+			listLabels( options );
 		else if ( command == "testhash" )
 			testHash( options );
 		else {

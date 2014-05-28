@@ -19,7 +19,6 @@ public:
 			THROW( Error, "Unable to resolve the hostname '" << hostname << "'" );
 		_socket.connect( * first );
 		ASSERT( _socket.is_open() );
-		TRACE_INFO( "Connected to " << _socket.remote_endpoint() );
 
 		setTCPNoDelay();
 		sendHandshake();

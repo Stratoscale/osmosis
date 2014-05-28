@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include "Osmosis/FilesystemUtils.h"
+#include "Osmosis/ObjectStore/LabelsIterator.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -46,6 +47,12 @@ public:
 		std::string hex;
 		hashFile >> hex;
 		return Hash::fromHex( hex );
+	}
+
+	LabelsIterator list( const std::string & regex ) const
+	{
+		LabelsIterator iterator( _labelsPath, regex );
+		return std::move( iterator );
 	}
 
 private:

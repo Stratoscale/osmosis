@@ -269,6 +269,15 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("directory/theFile"), "theContents")
         self.assertEquals(os.stat(self.client.abspath("directory")).st_mode, before)
 
+    def test_ListLabels(self):
+        self.assertEquals(self.client.listLabels(), [])
+        self.assertEquals(self.client.listLabels("yu.*"), [])
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        self.assertEquals(self.client.listLabels(), ["yuvu"])
+        self.assertEquals(self.client.listLabels("yu.*"), ["yuvu"])
+        self.assertEquals(self.client.listLabels(".*nothing.*"), [])
+
 
 if __name__ == '__main__':
     unittest.main()

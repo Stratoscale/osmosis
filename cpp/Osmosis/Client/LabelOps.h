@@ -33,18 +33,7 @@ public:
 
 	Hash get( const std::string & label )
 	{
-		unsigned char buffer[ 1024 ];
-		struct Tongue::Header * header = reinterpret_cast< struct Tongue::Header * >( buffer );
-		struct Tongue::Label * labelHeader = reinterpret_cast< struct Tongue::Label * >( header + 1 );
-		unsigned char * labelText = reinterpret_cast< unsigned char * >( labelHeader + 1 );
-		size_t size = reinterpret_cast< unsigned char * >( labelText + label.size() ) - buffer;
-		if ( size > sizeof( buffer ) ) 
-			THROW( Error, "Label too long" );
-		header->opcode = static_cast< unsigned char >( Tongue::Opcode::GET_LABEL );
-		ASSERT( label.size() < ( 1 << 16 ) );
-		labelHeader->length = static_cast< unsigned short >( label.size() );
-		memcpy( labelText, label.c_str(), label.size() );
-		_socket.sendAll( buffer, size );
+		sendLabelCommand( label, Tongue::Opcode::GET_LABEL );
 		try {
 			Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
 			return hash;
@@ -54,6 +43,22 @@ public:
 						label << " hash: maybe the label does not exist?" );
 			throw;
 		}
+	}
+
+	void sendLabelCommand( const std::string & label, Tongue::Opcode opcode )
+	{
+		unsigned char buffer[ 1024 ];
+		struct Tongue::Header * header = reinterpret_cast< struct Tongue::Header * >( buffer );
+		struct Tongue::Label * labelHeader = reinterpret_cast< struct Tongue::Label * >( header + 1 );
+		unsigned char * labelText = reinterpret_cast< unsigned char * >( labelHeader + 1 );
+		size_t size = reinterpret_cast< unsigned char * >( labelText + label.size() ) - buffer;
+		if ( size > sizeof( buffer ) ) 
+			THROW( Error, "Label too long" );
+		header->opcode = static_cast< unsigned char >( opcode );
+		ASSERT( label.size() < ( 1 << 16 ) );
+		labelHeader->length = static_cast< unsigned short >( label.size() );
+		memcpy( labelText, label.c_str(), label.size() );
+		_socket.sendAll( buffer, size );
 	}
 
 private:

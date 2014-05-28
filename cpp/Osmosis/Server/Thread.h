@@ -8,6 +8,7 @@
 #include "Osmosis/Server/IsExistsOp.h"
 #include "Osmosis/Server/GetLabelOp.h"
 #include "Osmosis/Server/SetLabelOp.h"
+#include "Osmosis/Server/ListLabelsOp.h"
 #include "Osmosis/Debug.h"
 
 namespace Osmosis {
@@ -93,6 +94,9 @@ private:
 				break;
 			case Tongue::Opcode::GET_LABEL:
 				GetLabelOp( _socket, _labels ).go();
+				break;
+			case Tongue::Opcode::LIST_LABELS:
+				ListLabelsOp( _socket, _labels ).go();
 				break;
 			case Tongue::Opcode::ACK:
 				THROW( Error, "Unexpected ack" );

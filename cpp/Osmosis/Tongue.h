@@ -28,6 +28,7 @@ enum class Opcode
 	IS_EXISTS = 3,
 	SET_LABEL = 4,
 	GET_LABEL = 5,
+	LIST_LABELS = 6,
 	ACK = 0xAC,
 };
 
