@@ -4,6 +4,7 @@
 #include <fstream>
 #include "Osmosis/FilesystemUtils.h"
 #include "Osmosis/ObjectStore/LabelsIterator.h"
+#include "Osmosis/ObjectStore/DirectoryNames.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -15,7 +16,7 @@ public:
 	Labels( const boost::filesystem::path & rootPath, const Store & store ) :
 		_rootPath( rootPath ),
 		_store( store ),
-		_labelsPath( rootPath / "labels" )
+		_labelsPath( rootPath / DirectoryNames::LABELS )
 	{
 		if ( not boost::filesystem::is_directory( _labelsPath ) )
 			boost::filesystem::create_directories( _labelsPath );
@@ -47,6 +48,13 @@ public:
 		std::string hex;
 		hashFile >> hex;
 		return Hash::fromHex( hex );
+	}
+
+	void erase( const std::string & label )
+	{
+		if ( not FilesystemUtils::safeFilename( label ) )
+			THROW( Error, "Label '" << label << "' contains forbidden characters" );
+		boost::filesystem::remove( absoluteFilename( label ) );
 	}
 
 	LabelsIterator list( const std::string & regex ) const

@@ -1,11 +1,10 @@
-#ifndef __OSMOSIS_CLIENT_DIR_LIST_H__
-#define __OSMOSIS_CLIENT_DIR_LIST_H__
+#ifndef __OSMOSIS_DIR_LIST_H__
+#define __OSMOSIS_DIR_LIST_H__
 
 #include <boost/algorithm/string.hpp>
-#include "Osmosis/Client/DirListEntry.h"
+#include "Osmosis/DirListEntry.h"
 
-namespace Osmosis {
-namespace Client
+namespace Osmosis
 {
 
 class DirList
@@ -66,7 +65,6 @@ private:
 	DirList & operator= ( const DirList & rhs ) = delete;
 };
 
-} // namespace Client
 } // namespace Osmosis
 
-#endif // __OSMOSIS_CLIENT_DIR_LIST_H__
+#endif // __OSMOSIS_DIR_LIST_H__

@@ -278,6 +278,23 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.listLabels("yu.*"), ["yuvu"])
         self.assertEquals(self.client.listLabels(".*nothing.*"), [])
 
+    def test_DeleteALabel(self):
+        self.assertEquals(self.client.listLabels(), [])
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        self.assertEquals(self.client.listLabels(), ["yuvu"])
+        self.client.writeFile("anotherFile", "778899")
+        self.client.checkin("pash")
+        self.assertEquals(set(self.client.listLabels()), set(["yuvu", "pash"]))
+        before = self.server.fileCount()
+        self.client.eraseLabel("pash")
+        self.assertEquals(self.client.listLabels(), ["yuvu"])
+        self.client.checkout("yuvu", removeUnknownFiles=True)
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+        after = self.server.fileCount()
+        self.assertEquals(after, before - 3)
+
 
 if __name__ == '__main__':
     unittest.main()

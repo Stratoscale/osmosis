@@ -3,6 +3,7 @@
 
 #include "Osmosis/Hash.h"
 #include "Osmosis/CalculateHash.h"
+#include "Osmosis/ObjectStore/ObjectsIterator.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -33,6 +34,18 @@ public:
 		boost::filesystem::path absolute = absoluteFilename( hash );
 		boost::filesystem::create_directories( absolute.parent_path() );
 		boost::filesystem::rename( filename, absolute );
+	}
+
+	void erase( const Hash & hash )
+	{
+		boost::filesystem::path absolute = absoluteFilename( hash );
+		boost::filesystem::remove( absolute );
+	}
+
+	ObjectsIterator list() const
+	{
+		ObjectsIterator iterator( _rootPath );
+		return std::move( iterator );
 	}
 
 private:

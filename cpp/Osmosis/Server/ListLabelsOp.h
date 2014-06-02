@@ -18,12 +18,7 @@ public:
 
 	void go()
 	{
-		char regexBuffer[ 1024 ];
-		auto raw = _socket.recieveAll< struct Tongue::Label >();
-		if ( raw.length > sizeof( regexBuffer ) )
-			THROW( Error, "Label glob expression maximum size of " << sizeof( regexBuffer ) << " exceeded" );
-		_socket.recieveAll( regexBuffer, raw.length );
-		std::string regex( regexBuffer, raw.length );
+		std::string regex( ReceiveLabel( _socket ).label() );
 		for ( auto i = _labels.list( regex ); not i.done(); i.next() ) {
 			std::string label = * i;
 			_outgoing.send( 0, label.c_str(), label.size() );

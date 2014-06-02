@@ -12,7 +12,7 @@ class Drafts
 public:
 	Drafts( const boost::filesystem::path & rootPath ) :
 		_rootPath( rootPath ),
-		_draftsPath( rootPath / "osmosis_drafts_dir" ),
+		_draftsPath( rootPath / DirectoryNames::DRAFTS ),
 		_counter( 0 )
 	{
 		if ( not boost::filesystem::is_directory( _draftsPath ) )

@@ -29,6 +29,7 @@ enum class Opcode
 	SET_LABEL = 4,
 	GET_LABEL = 5,
 	LIST_LABELS = 6,
+	ERASE_LABEL = 7,
 	ACK = 0xAC,
 };
 

@@ -3,6 +3,7 @@
 #include "Osmosis/Client/CheckIn.h"
 #include "Osmosis/Client/CheckOut.h"
 #include "Osmosis/Client/ListLabels.h"
+#include "Osmosis/Client/EraseLabel.h"
 
 std::mutex globalTraceLock;
 
@@ -61,6 +62,16 @@ void listLabels( const boost::program_options::variables_map & options )
 		std::cout << * i << std::endl;
 }
 
+void eraseLabel( const boost::program_options::variables_map & options )
+{
+	std::string label = options[ "workDir" ].as< std::string >();
+	std::string hostname = options[ "serverHostname" ].as< std::string >();
+	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
+
+	Osmosis::Client::EraseLabel instance( label, hostname, port );
+	instance.go();
+}
+
 void testHash( const boost::program_options::variables_map & options )
 {
 	boost::filesystem::path fileToHash = options[ "workDir" ].as< std::string >();
@@ -74,11 +85,13 @@ void usage( const boost::program_options::options_description & optionsDescripti
 {
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
-	std::cout << "  command:  can be 'server', 'checkin', 'checkout' or 'listlabels'" << std::endl;
+	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'listlabels'" << std::endl;
+	std::cout << "            or 'eraselabel'" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
-	std::cout << "  label:    must be present if command is 'checkin' or 'checkout'" << std::endl;
-	std::cout << "            label is the name of the dirlist to checkin or checkout" << std::endl;
+	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
+	std::cout << "            'eraselabel'. label is the name of the dirlist to checkin" << std::endl;
+	std::cout << "            or checkout." << std::endl;
 	std::cout << "            optional for 'listlabels' command, in which case is " << std::endl;
 	std::cout << "            treated as a regex" << std::endl;
 	std::cout << "  testhash: just hash a localfile" << std::endl;
@@ -93,7 +106,7 @@ int main( int argc, char * argv [] )
 		("help", "produce help message")
 		("objectStoreRootPath", boost::program_options::value< std::string >()->default_value( "/var/lib/osmosis/objectstore" ),
 			"Path where osmosis will store objects. relevant for 'server' command, or if local object store is used" )
-		("serverTCPPort", boost::program_options::value< unsigned short >()->default_value( 7600 ),
+		("serverTCPPort", boost::program_options::value< unsigned short >()->default_value( 1010 ),
 			"the TCP port to bind to, if command is 'server', or TCP port to connect to, if client")
 		("serverHostname", boost::program_options::value< std::string >()->default_value( "localhost" ),
 			"the hostname to connect to, if client" )
@@ -148,6 +161,8 @@ int main( int argc, char * argv [] )
 			checkOut( options );
 		else if ( command == "listlabels" )
 			listLabels( options );
+		else if ( command == "eraselabel" )
+			eraseLabel( options );
 		else if ( command == "testhash" )
 			testHash( options );
 		else {

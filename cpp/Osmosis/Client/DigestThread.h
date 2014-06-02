@@ -2,7 +2,7 @@
 #define __OSMOSIS_CLIENT_DIGEST_THREAD_H__
 
 #include "Osmosis/Client/Typedefs.h"
-#include "Osmosis/Client/DirList.h"
+#include "Osmosis/DirList.h"
 #include "Osmosis/Debug.h"
 
 namespace Osmosis {

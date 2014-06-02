@@ -15,12 +15,7 @@ public:
 
 	void go()
 	{
-		char buffer[ 1024 ];
-		auto raw = _socket.recieveAll< struct Tongue::Label >();
-		if ( raw.length > sizeof( buffer ) )
-			THROW( Error, "Label maximum size of " << sizeof( buffer ) << " exceeded" );
-		_socket.recieveAll( buffer, raw.length );
-		std::string label( buffer, raw.length );
+		std::string label( ReceiveLabel( _socket ).label() );
 		if ( _labels.exists( label ) )
 			THROW( Error, "Label '" << label << "' already exists, can not set" );
 		auto rawHash = _socket.recieveAll< struct Tongue::Hash >();

@@ -2,6 +2,7 @@
 #define __OSMOSIS_SERVER_GET_LABEL_OP_H__
 
 #include "Osmosis/ObjectStore/Labels.h"
+#include "Osmosis/Server/ReceiveLabel.h"
 
 namespace Osmosis {
 namespace Server
@@ -17,12 +18,7 @@ public:
 
 	void go()
 	{
-		char buffer[ 1024 ];
-		auto raw = _socket.recieveAll< struct Tongue::Label >();
-		if ( raw.length > sizeof( buffer ) )
-			THROW( Error, "Label maximum size of " << sizeof( buffer ) << " exceeded" );
-		_socket.recieveAll( buffer, raw.length );
-		std::string label( buffer, raw.length );
+		std::string label( ReceiveLabel( _socket ).label() );
 		if ( not _labels.exists( label ) )
 			THROW( Error, "Label '" << label << "' does not exist, can not get" );
 		Hash hash = _labels.readLabel( label );

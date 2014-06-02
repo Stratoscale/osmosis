@@ -1,10 +1,9 @@
-#ifndef __OSMOSIS_CLIENT_DIR_LIST_ENTRY_H__
-#define __OSMOSIS_CLIENT_DIR_LIST_ENTRY_H__
+#ifndef __OSMOSIS_DIR_LIST_ENTRY_H__
+#define __OSMOSIS_DIR_LIST_ENTRY_H__
 
 #include "Osmosis/FileStatus.h"
 
-namespace Osmosis {
-namespace Client
+namespace Osmosis
 {
 
 struct DirListEntry
@@ -55,7 +54,6 @@ private:
 	DirListEntry & operator= ( const DirListEntry & rhs ) = delete;
 };
 
-} // namespace Client
 } // namespace Osmosis
 
-#endif // __OSMOSIS_CLIENT_DIR_LIST_ENTRY_H__
+#endif // __OSMOSIS_DIR_LIST_ENTRY_H__

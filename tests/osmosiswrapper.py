@@ -39,6 +39,9 @@ class Client:
             labels.remove("")
         return labels
 
+    def eraseLabel(self, label, **kwargs):
+        return self._run("eraselabel", label, * self._moreArgs(kwargs))
+
     def testHash(self, filename):
         absolute = os.path.join(self._path, filename)
         hash1 = self._run("testhash", absolute).strip()
@@ -130,3 +133,9 @@ class Server:
             return sock.getsockname()[1]
         finally:
             sock.close()
+
+    def fileCount(self):
+        count = 0
+        for root, dirs, files in os.walk(self._path):
+            count += len(files) + len(dirs)
+        return count
