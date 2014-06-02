@@ -22,7 +22,7 @@ public:
 		takeOutAllLabels();
 		size_t after = _staleHashes.size();
 		TRACE_INFO( "Purge found " << after << " objects to purge (" <<
-				before << " remain)" );
+				( before - after ) << " remain)" );
 		for ( auto & hash : _staleHashes )
 			boost::filesystem::remove( _store.filenameForExisting( hash ) );
 	}
