@@ -4,6 +4,7 @@
 #include "Osmosis/Stream/SocketToBuffer.h"
 #include "Osmosis/Client/DigestDrafts.h"
 #include "Osmosis/Client/FetchFiles.h"
+#include "Osmosis/Client/DelayedLabel.h"
 #include "Osmosis/ApplyFileStatus.h"
 #include "Osmosis/OSUtils.h"
 
@@ -32,6 +33,7 @@ public:
 
 	void go()
 	{
+		_label.fetch();
 		std::istringstream dirListText( getLabelDirList() );
 		DirList labelDirList;
 		dirListText >> labelDirList;
@@ -61,17 +63,17 @@ public:
 
 private:
 	const boost::filesystem::path  _directory;
-	const std::string              _label;
+	DelayedLabel                   _label;
 	const std::string              _hostname;
 	const unsigned short           _port;
 	const bool                     _removeUnknownFiles;
 	const bool                     _myUIDandGIDcheckout;
-	DigestDirectory                _digestDirectory; 
+	DigestDirectory                _digestDirectory;
 
 	std::string getLabelDirList()
 	{
 		Connect connect( _hostname, _port );
-		Hash hash = LabelOps( connect.socket() ).get( _label );
+		Hash hash = LabelOps( connect.socket() ).get( _label.label() );
 		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
 		connect.socket().sendAllConcated( header, hash.raw() );
 		Stream::SocketToBuffer transfer( connect.socket() );

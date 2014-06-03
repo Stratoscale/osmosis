@@ -295,6 +295,14 @@ class Test(unittest.TestCase):
         after = self.server.fileCount()
         self.assertEquals(after, before - 3)
 
+    def test_CheckoutUsingDelayedLabel(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("aFile"))
+        self.client.checkoutUsingDelayedLabel("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+
 
 if __name__ == '__main__':
     unittest.main()

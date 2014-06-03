@@ -4,6 +4,7 @@ import subprocess
 import socket
 import logging
 import os
+import time
 
 
 class Client:
@@ -28,6 +29,29 @@ class Client:
 
     def failedCheckout(self, label, **kwargs):
         return self._failedRun("checkout", self._path, label, * self._moreArgs(kwargs))
+
+    def checkoutUsingDelayedLabel(self, label):
+        popen = subprocess.Popen(
+            ["build/cpp/osmosis.bin",
+                "--serverTCPPort=%d" % self._server.port(),
+                "checkout",
+                self._path,
+                "+"],
+            close_fds=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT)
+        time.sleep(0.5)
+        popen.stdin.write(label + "\n")
+        output = popen.stdout.read()
+        result = popen.wait()
+        popen.stdin.close()
+        popen.stdout.close()
+        if result != 0:
+            logging.error("\n\n\nClientOutput:\n" + output)
+            logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
+            raise Exception("checkoutUsingDelayedLabel failed")
+        return output
 
     def listLabels(self, regex=None):
         args = []

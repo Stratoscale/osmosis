@@ -92,6 +92,11 @@ void usage( const boost::program_options::options_description & optionsDescripti
 	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
 	std::cout << "            'eraselabel'. label is the name of the dirlist to checkin" << std::endl;
 	std::cout << "            or checkout." << std::endl;
+	std::cout << "            for checkout operation, the special value of '+' means" << std::endl;
+	std::cout << "            to read the label name from the first line of standard" << std::endl;
+	std::cout << "            input. This is efficient as a form of standby mode, since" << std::endl;
+	std::cout << "            hashing of the local working directory is performed while" << std::endl;
+	std::cout << "            waiting for the label name." << std::endl;
 	std::cout << "            optional for 'listlabels' command, in which case is " << std::endl;
 	std::cout << "            treated as a regex" << std::endl;
 	std::cout << "  testhash: just hash a localfile" << std::endl;
