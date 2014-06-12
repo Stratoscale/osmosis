@@ -4,6 +4,7 @@
 #include "Osmosis/Client/CheckOut.h"
 #include "Osmosis/Client/ListLabels.h"
 #include "Osmosis/Client/EraseLabel.h"
+#include "Osmosis/Client/RenameLabel.h"
 
 std::mutex globalTraceLock;
 
@@ -72,6 +73,17 @@ void eraseLabel( const boost::program_options::variables_map & options )
 	instance.go();
 }
 
+void renameLabel( const boost::program_options::variables_map & options )
+{
+	std::string currentLabel = options[ "workDir" ].as< std::string >();
+	std::string renameLabelTo = options[ "label" ].as< std::string >();
+	std::string hostname = options[ "serverHostname" ].as< std::string >();
+	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
+
+	Osmosis::Client::RenameLabel instance( currentLabel, renameLabelTo, hostname, port );
+	instance.go();
+}
+
 void testHash( const boost::program_options::variables_map & options )
 {
 	boost::filesystem::path fileToHash = options[ "workDir" ].as< std::string >();
@@ -85,8 +97,8 @@ void usage( const boost::program_options::options_description & optionsDescripti
 {
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
-	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'listlabels'" << std::endl;
-	std::cout << "            or 'eraselabel'" << std::endl;
+	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'listlabels'," << std::endl;
+	std::cout << "            'eraselabel' or 'renamelabel'" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
 	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
@@ -97,8 +109,10 @@ void usage( const boost::program_options::options_description & optionsDescripti
 	std::cout << "            input. This is efficient as a form of standby mode, since" << std::endl;
 	std::cout << "            hashing of the local working directory is performed while" << std::endl;
 	std::cout << "            waiting for the label name." << std::endl;
-	std::cout << "            optional for 'listlabels' command, in which case is " << std::endl;
+	std::cout << "            optional for 'listlabels' command, in which case is" << std::endl;
 	std::cout << "            treated as a regex" << std::endl;
+	std::cout << "            for 'renamelabel', two labels are expected: current and" << std::endl;
+	std::cout << "            target label. target label must not already exist." << std::endl;
 	std::cout << "  testhash: just hash a localfile" << std::endl;
 	std::cout << std::endl;
 	std::cout << optionsDescription << std::endl;
@@ -168,6 +182,8 @@ int main( int argc, char * argv [] )
 			listLabels( options );
 		else if ( command == "eraselabel" )
 			eraseLabel( options );
+		else if ( command == "renamelabel" )
+			renameLabel( options );
 		else if ( command == "testhash" )
 			testHash( options );
 		else {

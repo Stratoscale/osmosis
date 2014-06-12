@@ -57,6 +57,15 @@ public:
 		boost::filesystem::remove( absoluteFilename( label ) );
 	}
 
+	void rename( const std::string & from, const std::string & to )
+	{
+		ASSERT( exists( from ) );
+		ASSERT( not exists( to ) );
+		ASSERT( FilesystemUtils::safeFilename( from ) );
+		ASSERT( FilesystemUtils::safeFilename( to ) );
+		boost::filesystem::rename( absoluteFilename( from ), absoluteFilename( to ) );
+	}
+
 	LabelsIterator list( const std::string & regex ) const
 	{
 		LabelsIterator iterator( _labelsPath, regex );

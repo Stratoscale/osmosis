@@ -10,6 +10,7 @@
 #include "Osmosis/Server/SetLabelOp.h"
 #include "Osmosis/Server/ListLabelsOp.h"
 #include "Osmosis/Server/EraseLabelOp.h"
+#include "Osmosis/Server/RenameLabelOp.h"
 #include "Osmosis/Debug.h"
 
 namespace Osmosis {
@@ -102,6 +103,8 @@ private:
 			case Tongue::Opcode::ERASE_LABEL:
 				EraseLabelOp( _socket, _store, _labels ).go();
 				break;
+			case Tongue::Opcode::RENAME_LABEL:
+				RenameLabelOp( _socket, _labels ).go();
 			case Tongue::Opcode::ACK:
 				THROW( Error, "Unexpected ack" );
 				break;

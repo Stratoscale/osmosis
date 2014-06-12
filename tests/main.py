@@ -303,6 +303,23 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
 
+    def test_RenameLabel(self):
+        self.client.writeFile("aFile", "123456")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.client.checkin("yuvu")
+
+        self.client.renameLabel("yuvu", "pash")
+        os.unlink(self.client.abspath("aFile"))
+        self.assertEquals(self.client.fileCount(), 0)
+        self.client.checkout("pash")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+
+        self.assertEquals(self.client.listLabels(), ["pash"])
+        message = self.client.failedCheckout("yuvu")
+        self.assertIn("not exist", message.lower())
+        self.client.eraseLabel("pash")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -66,6 +66,9 @@ class Client:
     def eraseLabel(self, label, **kwargs):
         return self._run("eraselabel", label, * self._moreArgs(kwargs))
 
+    def renameLabel(self, labelBefore, labelAfter):
+        return self._run("renamelabel", labelBefore, labelAfter)
+
     def testHash(self, filename):
         absolute = os.path.join(self._path, filename)
         hash1 = self._run("testhash", absolute).strip()
