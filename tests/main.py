@@ -320,6 +320,54 @@ class Test(unittest.TestCase):
         self.assertIn("not exist", message.lower())
         self.client.eraseLabel("pash")
 
+    def test_joinedCheckout(self):
+        self.client.writeFile("first", "1")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("first"))
+
+        self.client.writeFile("second", "2")
+        self.client.checkin("pash")
+        os.unlink(self.client.abspath("second"))
+
+        self.client.writeFile("third", "3")
+        self.client.checkin("mushu")
+        os.unlink(self.client.abspath("third"))
+
+        self.client.checkout("yuvu+pash+mushu")
+        self.assertEquals(self.client.fileCount(), 3)
+        self.assertEquals(self.client.readFile("first"), "1")
+        self.assertEquals(self.client.readFile("second"), "2")
+        self.assertEquals(self.client.readFile("third"), "3")
+
+    def test_joinedCheckout_SomeFilesExistsInBoth(self):
+        self.client.writeFile("first", "1")
+        self.client.checkin("yuvu")
+
+        self.client.writeFile("second", "2")
+        self.client.checkin("pash")
+        os.unlink(self.client.abspath("second"))
+        os.unlink(self.client.abspath("first"))
+
+        self.client.checkout("yuvu+pash")
+        self.assertEquals(self.client.fileCount(), 2)
+        self.assertEquals(self.client.readFile("first"), "1")
+        self.assertEquals(self.client.readFile("second"), "2")
+
+    def test_joinedCheckout_SomeFilesExistsInBoth_ButWithDifferentContents_CheckoutFails(self):
+        self.client.writeFile("first", "1")
+        self.client.checkin("yuvu")
+
+        self.client.writeFile("first", "2")
+        self.client.writeFile("second", "2")
+        self.client.checkin("pash")
+        os.unlink(self.client.abspath("second"))
+        os.unlink(self.client.abspath("first"))
+
+        message = self.client.failedCheckout("yuvu+pash")
+        self.assertIn("join", message.lower())
+
+# joined checkout with the same files
+# joined checkout with conflicting files
 
 if __name__ == '__main__':
     unittest.main()

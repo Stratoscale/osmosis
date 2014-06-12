@@ -16,6 +16,7 @@ static inline bool safeFilename( const std::string & filename )
 		filename.find( ":" ) == std::string::npos and
 		filename.find( "?" ) == std::string::npos and
 		filename.find( "*" ) == std::string::npos and
+		filename.find( "+" ) == std::string::npos and
 		filename.find( "\t" ) == std::string::npos;
 }
 

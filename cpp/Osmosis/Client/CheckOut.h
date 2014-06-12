@@ -4,7 +4,8 @@
 #include "Osmosis/Stream/SocketToBuffer.h"
 #include "Osmosis/Client/DigestDrafts.h"
 #include "Osmosis/Client/FetchFiles.h"
-#include "Osmosis/Client/DelayedLabel.h"
+#include "Osmosis/Client/DelayedLabels.h"
+#include "Osmosis/Client/FetchJointDirlistFromLabels.h"
 #include "Osmosis/ApplyFileStatus.h"
 #include "Osmosis/OSUtils.h"
 
@@ -23,7 +24,7 @@ public:
 			bool                             removeUnknownFiles,
 			bool                             myUIDandGIDcheckout ) :
 		_directory( directory ),
-		_label( label ),
+		_labels( label ),
 		_hostname( hostname ),
 		_port( port ),
 		_removeUnknownFiles( removeUnknownFiles ),
@@ -33,14 +34,12 @@ public:
 
 	void go()
 	{
-		_label.fetch();
-		std::istringstream dirListText( getLabelDirList() );
-		DirList labelDirList;
-		dirListText >> labelDirList;
+		_labels.fetch();
+		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _hostname, _port ).joined() );
 		_digestDirectory.join();
 
 		FetchFiles fetchFiles( _directory, _hostname, _port );
-		for ( auto & entry : labelDirList.entries() )
+		for ( auto & entry : labelsDirList.entries() )
 			if ( _myUIDandGIDcheckout ) {
 				FileStatus modifiedStatus( entry.status );
 				modifiedStatus.setUIDGID( OSUtils::uid(), OSUtils::gid() );
@@ -48,42 +47,27 @@ public:
 						entry.path,
 						modifiedStatus,
 						entry.hash.get(),
-						labelDirList );
+						labelsDirList );
 			} else
 				decideWhatToDo( fetchFiles,
 						entry.path,
 						entry.status,
 						entry.hash.get(),
-						labelDirList );
+						labelsDirList );
 		fetchFiles.noMoreFilesToFetch();
-		removeUnknownFiles( _digestDirectory.dirList(), labelDirList );
+		removeUnknownFiles( _digestDirectory.dirList(), labelsDirList );
 		fetchFiles.join();
 		TRACE_DEBUG( "Checkout Complete" );
 	}
 
 private:
 	const boost::filesystem::path  _directory;
-	DelayedLabel                   _label;
+	DelayedLabels                  _labels;
 	const std::string              _hostname;
 	const unsigned short           _port;
 	const bool                     _removeUnknownFiles;
 	const bool                     _myUIDandGIDcheckout;
 	DigestDirectory                _digestDirectory;
-
-	std::string getLabelDirList()
-	{
-		Connect connect( _hostname, _port );
-		Hash hash = LabelOps( connect.socket() ).get( _label.label() );
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
-		connect.socket().sendAllConcated( header, hash.raw() );
-		Stream::SocketToBuffer transfer( connect.socket() );
-		transfer.transfer();
-		std::string result = transfer.data();
-		if ( not CalculateHash::verify( result.c_str(), result.size(), hash ) )
-			THROW( Error, "Dir list hash did not match contents" );
-		TRACE_DEBUG( "Transferred dirList" );
-		return std::move( result );
-	}
 
 	void removeUnknownFiles( const DirList & digested, const DirList & label )
 	{

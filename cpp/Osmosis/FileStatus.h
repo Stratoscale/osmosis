@@ -73,16 +73,21 @@ public:
 		_stat.st_gid = gid;
 	}
 
-	bool operator == ( const FileStatus & other ) const
+	bool equalsButTime( const FileStatus & other ) const
 	{
 		return _stat.st_mode == other._stat.st_mode and
 			_stat.st_uid == other._stat.st_uid and
 			_stat.st_gid == other._stat.st_gid and
 			_stat.st_rdev == other._stat.st_rdev and
-//			_stat.st_atime == other._stat.st_atime and
-			( not isRegular() or _stat.st_mtime == other._stat.st_mtime ) and
-//			_stat.st_ctime == other._stat.st_ctime and
 			_symlink == other._symlink;
+	}
+
+	bool operator == ( const FileStatus & other ) const
+	{
+		return equalsButTime( other ) and
+//			_stat.st_atime == other._stat.st_atime and
+			( not isRegular() or _stat.st_mtime == other._stat.st_mtime );
+//			_stat.st_ctime == other._stat.st_ctime and
 	}
 
 	bool operator != ( const FileStatus & other ) const { return not operator == ( other ); }

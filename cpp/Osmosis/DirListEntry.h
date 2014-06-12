@@ -31,8 +31,16 @@ struct DirListEntry
 		if ( split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
 		std::string hashString = split.asString();
-		if ( hashString != "nohash" )
+		if ( unserializedStatus.isRegular() ) {
+			if ( hashString == "nohash" )
+				THROW( Error, "'" << line << "' is in an invalid format for a dir list entry: " <<
+						"regular files must have a hash" );
 			hash.reset( new Hash( Hash::fromHex( hashString ) ) );
+		} else {
+			if ( hashString != "nohash" )
+				THROW( Error, "'" << line << "' is in an invalid format for a dir list entry: " <<
+						"non regular files must not have a hash" );
+		}
 		split.next();
 		if ( not split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );

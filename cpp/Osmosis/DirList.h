@@ -12,6 +12,11 @@ class DirList
 public:
 	DirList() {}
 
+	DirList( DirList && rhs ) :
+		_entries( std::move( rhs._entries ) ),
+		_index( std::move( rhs._index ) )
+	{}
+
 	void add( const boost::filesystem::path & path, const FileStatus & status )
 	{
 		ASSERT( _index.find( path ) == _index.end() );
