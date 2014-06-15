@@ -68,6 +68,8 @@ private:
 		out << _digestDirectory.dirList();
 		std::string text( out.str() );
 		Hash hash = CalculateHash::SHA1( text.c_str(), text.size() );
+		if ( _putConnection->exists( hash ) )
+			return hash;
 		_putConnection->putString( text, hash );
 		return hash;
 	}

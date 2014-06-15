@@ -421,6 +421,11 @@ class Test(unittest.TestCase):
             client.clean()
             server2.exit()
 
+    def test_bugfix_checkinTwiceWithDifferentLabels_LabelIsPutEvenThoughDirListObjectAlreadyExists(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        self.client.checkin("pash")
+
 
 if __name__ == '__main__':
     unittest.main()
