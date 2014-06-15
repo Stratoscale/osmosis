@@ -8,9 +8,14 @@ import time
 
 
 class Client:
-    def __init__(self, server):
+    def __init__(self, server, server2=None):
         self._server = server
+        self._server2 = server2
         self._path = tempfile.mkdtemp()
+        self.objectStores = ["127.0.0.1:%d" % server.port()]
+        self.additionalObjectStoresForCheckout = []
+        if server2 is not None:
+            self.additionalObjectStoresForCheckout.append("127.0.0.1:%d" % server2.port())
 
     def clean(self):
         shutil.rmtree(self._path, ignore_errors=True)
@@ -33,7 +38,7 @@ class Client:
     def checkoutUsingDelayedLabel(self, label):
         popen = subprocess.Popen(
             ["build/cpp/osmosis.bin",
-                "--serverTCPPort=%d" % self._server.port(),
+                "--objectStores=" + "+".join(self.objectStores + self.additionalObjectStoresForCheckout),
                 "checkout",
                 self._path,
                 "+"],
@@ -50,6 +55,8 @@ class Client:
         if result != 0:
             logging.error("\n\n\nClientOutput:\n" + output)
             logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
+            if self._server2 is not None:
+                logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
             raise Exception("checkoutUsingDelayedLabel failed")
         return output
 
@@ -84,6 +91,8 @@ class Client:
             moreArgs.append("--MD5")
         if kwargs.get('myUIDandGIDcheckout', False):
             moreArgs.append("--myUIDandGIDcheckout")
+        if kwargs.get('putIfMissing', False):
+            moreArgs.append("--putIfMissing")
         return moreArgs
 
     def _runAny(self, *args):
@@ -94,20 +103,28 @@ class Client:
             logging.exception("\n\n\nOutput:\n" + e.output)
             raise
 
-    def _run(self, *args):
+    def _run(self, cmd, *args):
+        objectStores = list(self.objectStores)
+        if cmd == "checkout":
+            objectStores += self.additionalObjectStoresForCheckout
         try:
             return subprocess.check_output(
-                ["build/cpp/osmosis.bin", "--serverTCPPort=%d" % self._server.port()] + list(args),
+                ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args),
                 close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             logging.exception("\n\n\nClientOutput:\n" + e.output)
             logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
+            if self._server2 is not None:
+                logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
             raise
 
-    def _failedRun(self, *args):
+    def _failedRun(self, cmd, *args):
+        objectStores = list(self.objectStores)
+        if cmd == "checkout":
+            objectStores += self.additionalObjectStoresForCheckout
         try:
             return subprocess.check_output(
-                ["build/cpp/osmosis.bin", "--serverTCPPort=%d" % self._server.port()] + list(args),
+                ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args),
                 close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             return e.output
@@ -143,6 +160,7 @@ class Server:
 
     def exit(self):
         self._proc.terminate()
+        self._proc.wait()
         shutil.rmtree(self._path, ignore_errors=True)
 
     def readLog(self):

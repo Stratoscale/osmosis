@@ -2,9 +2,7 @@
 #include "Osmosis/Server/Server.h"
 #include "Osmosis/Client/CheckIn.h"
 #include "Osmosis/Client/CheckOut.h"
-#include "Osmosis/Client/ListLabels.h"
-#include "Osmosis/Client/EraseLabel.h"
-#include "Osmosis/Client/RenameLabel.h"
+#include "Osmosis/Client/LabelOps.h"
 
 std::mutex globalTraceLock;
 
@@ -23,70 +21,72 @@ void server( const boost::program_options::variables_map & options )
 
 void checkIn( const boost::program_options::variables_map & options )
 {
-	boost::filesystem::path workDir = options[ "workDir" ].as< std::string >();
-	std::string label = options[ "label" ].as< std::string >();
-	std::string hostname = options[ "serverHostname" ].as< std::string >();
-	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
+	boost::filesystem::path workDir = options[ "arg1" ].as< std::string >();
+	std::string label = options[ "arg2" ].as< std::string >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
+	if ( chain.count() > 1 )
+		THROW( Error, "--objectStores must contain one object store in a checkin operation" );
 	bool md5 = options.count( "MD5" ) > 0;
 
-	Osmosis::Client::CheckIn instance( workDir, label, hostname, port, md5 );
+	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5 );
 	instance.go();
 }
 
 void checkOut( const boost::program_options::variables_map & options )
 {
-	boost::filesystem::path workDir = options[ "workDir" ].as< std::string >();
-	std::string label = options[ "label" ].as< std::string >();
-	std::string hostname = options[ "serverHostname" ].as< std::string >();
-	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
+	boost::filesystem::path workDir = options[ "arg1" ].as< std::string >();
+	std::string label = options[ "arg2" ].as< std::string >();
+	bool putIfMissing = options.count( "putIfMissing" ) > 0;
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing );
 	bool md5 = options.count( "MD5" ) > 0;
 	bool removeUnknownFiles = options.count( "removeUnknownFiles" ) > 0;
 	bool myUIDandGIDcheckout = options.count( "myUIDandGIDcheckout" ) > 0;
 
 	Osmosis::FilesystemUtils::clearUMask();
-	Osmosis::Client::CheckOut instance( workDir, label, hostname, port, md5, removeUnknownFiles, myUIDandGIDcheckout );
+	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout );
 	instance.go();
 }
 
 void listLabels( const boost::program_options::variables_map & options )
 {
 	std::string labelRegex = ".*";
-	if ( options.count( "workDir" ) > 0 )
-		labelRegex = options[ "workDir" ].as< std::string >();
+	if ( options.count( "arg1" ) > 0 )
+		labelRegex = options[ "arg1" ].as< std::string >();
 	boost::regex testExpression( labelRegex );
-	std::string hostname = options[ "serverHostname" ].as< std::string >();
-	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
+	if ( chain.count() > 1 )
+		THROW( Error, "--objectStores must contain one object store in a list operation" );
 
-	Osmosis::Client::ListLabels instance( labelRegex, hostname, port );
-	instance.go();
-	for ( auto i = instance.result().begin(); i != instance.result().end(); ++ i )
-		std::cout << * i << std::endl;
+	Osmosis::Client::LabelOps instance( chain.single() );
+	std::list< std::string > result = instance.listLabels( labelRegex );
+	for ( auto & i : result )
+		std::cout << i << std::endl;
 }
 
 void eraseLabel( const boost::program_options::variables_map & options )
 {
-	std::string label = options[ "workDir" ].as< std::string >();
-	std::string hostname = options[ "serverHostname" ].as< std::string >();
-	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
-
-	Osmosis::Client::EraseLabel instance( label, hostname, port );
-	instance.go();
+	std::string label = options[ "arg1" ].as< std::string >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
+	if ( chain.count() > 1 )
+		THROW( Error, "--objectStores must contain one object store in a erase operation" );
+	Osmosis::Client::LabelOps instance( chain.single() );
+	instance.eraseLabel( label );
 }
 
 void renameLabel( const boost::program_options::variables_map & options )
 {
-	std::string currentLabel = options[ "workDir" ].as< std::string >();
-	std::string renameLabelTo = options[ "label" ].as< std::string >();
-	std::string hostname = options[ "serverHostname" ].as< std::string >();
-	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
-
-	Osmosis::Client::RenameLabel instance( currentLabel, renameLabelTo, hostname, port );
-	instance.go();
+	std::string currentLabel = options[ "arg1" ].as< std::string >();
+	std::string renameLabelTo = options[ "arg2" ].as< std::string >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
+	if ( chain.count() > 1 )
+		THROW( Error, "--objectStores must contain one object store in a rename operation" );
+	Osmosis::Client::LabelOps instance( chain.single() );
+	instance.renameLabel( currentLabel, renameLabelTo );
 }
 
 void testHash( const boost::program_options::variables_map & options )
 {
-	boost::filesystem::path fileToHash = options[ "workDir" ].as< std::string >();
+	boost::filesystem::path fileToHash = options[ "arg1" ].as< std::string >();
 	bool md5 = options.count( "MD5" ) > 0;
 
 	Osmosis::Hash hash = md5 ? Osmosis::CalculateHash::MD5( fileToHash ) : Osmosis::CalculateHash::SHA1( fileToHash );
@@ -124,23 +124,25 @@ int main( int argc, char * argv [] )
 	optionsDescription.add_options()
 		("help", "produce help message")
 		("objectStoreRootPath", boost::program_options::value< std::string >()->default_value( "/var/lib/osmosis/objectstore" ),
-			"Path where osmosis will store objects. relevant for 'server' command, or if local object store is used" )
+			"Path where osmosis will store objects. relevant for 'server' command" )
 		("serverTCPPort", boost::program_options::value< unsigned short >()->default_value( 1010 ),
-			"the TCP port to bind to, if command is 'server', or TCP port to connect to, if client")
-		("serverHostname", boost::program_options::value< std::string >()->default_value( "localhost" ),
-			"the hostname to connect to, if client" )
+			"the TCP port to bind to, if command is 'server'")
+		( "objectStores", boost::program_options::value< std::string >()->default_value( "127.0.0.1:1010" ),
+			"the object store to act againt. May be a '+' seperated list for 'checkout' command" )
 		( "MD5", "use MD5, not SHA1 for hash in 'checkin' operation" )
+		( "putIfMissing", "when command is 'checkout' this flag will cause any objects received not from the "
+		        "nearest object store to be put into all objects stores up to the one it was fetched from" )
 		( "removeUnknownFiles", "for checkout: remove files from disk that are not in the dirlist being checked out" )
 		( "myUIDandGIDcheckout", "for checkout: use my uid and gid" );
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()
 		( "command", boost::program_options::value< std::string >() )
-		( "workDir", boost::program_options::value< std::string >() )
-		( "label", boost::program_options::value< std::string >() );
+		( "arg1", boost::program_options::value< std::string >() )
+		( "arg2", boost::program_options::value< std::string >() );
 
 	boost::program_options::positional_options_description positionalMapping;
-	positionalMapping.add( "command", 1 ).add( "workDir", 1 ).add( "label", 1 );
+	positionalMapping.add( "command", 1 ).add( "arg1", 1 ).add( "arg2", 1 );
 
 	boost::program_options::options_description allOptions;
 	allOptions.add( optionsDescription ).add( positionalDescription );
@@ -167,7 +169,7 @@ int main( int argc, char * argv [] )
 	try {
 		std::string command = options[ "command" ].as< std::string >();
 		if ( command == "server" ) {
-			if ( options.count( "workDir" ) > 0 or options.count( "label" ) > 0 ) {
+			if ( options.count( "arg1" ) > 0 or options.count( "arg2" ) > 0 ) {
 				TRACE_ERROR( "'workDir' or 'label' must not be present in command line"
 						"if 'server' is specified as the command" );
 				usage( optionsDescription );

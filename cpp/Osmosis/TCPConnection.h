@@ -1,14 +1,13 @@
-#ifndef __OSMOSIS_CLIENT_CONNECT_H__
-#define __OSMOSIS_CLIENT_CONNECT_H__
+#ifndef __OSMOSIS_TCP_CONNECTION_H__
+#define __OSMOSIS_TCP_CONNECTION_H__
 
-namespace Osmosis {
-namespace Client
+namespace Osmosis
 {
 
-class Connect
+class TCPConnection
 {
 public:
-	Connect( const std::string & hostname, unsigned short port ):
+	TCPConnection( const std::string & hostname, unsigned short port ):
 		_socket( _ioService ),
 		_tcpSocket( _socket )
 	{
@@ -49,11 +48,10 @@ private:
 		_socket.set_option(option);
 	}
 
-	Connect( const Connect & rhs ) = delete;
-	Connect & operator= ( const Connect & rhs ) = delete;
+	TCPConnection( const TCPConnection & rhs ) = delete;
+	TCPConnection & operator= ( const TCPConnection & rhs ) = delete;
 };
 
-} // namespace Client
 } // namespace Osmosis
 
-#endif // __OSMOSIS_CLIENT_CONNECT_H__
+#endif // __OSMOSIS_TCP_CONNECTION_H__

@@ -8,11 +8,9 @@ namespace Client
 class FetchJointDirlistFromLabels
 {
 public:
-	FetchJointDirlistFromLabels(    const std::vector< std::string > &  labels,
-					const std::string &                 hostname,
-					unsigned short                      port ):
+	FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain ):
 		_labels( labels ),
-		_connection( hostname, port )
+		_checkOut( chain.checkOut() )
 	{}
 
 	DirList joined()
@@ -46,8 +44,8 @@ public:
 	}
 
 private:
-	const std::vector< std::string > _labels;
-	Connect _connection;
+	const std::vector< std::string >  _labels;
+	Chain::CheckOut                   _checkOut;
 
 	DirList getLabelDirList( const std::string & label )
 	{
@@ -59,12 +57,8 @@ private:
 
 	std::string getLabelDirListText( const std::string & label )
 	{
-		Hash hash = LabelOps( _connection.socket() ).get( label );
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
-		_connection.socket().sendAllConcated( header, hash.raw() );
-		Stream::SocketToBuffer transfer( _connection.socket() );
-		transfer.transfer();
-		std::string dirListText = transfer.data();
+		Hash hash = _checkOut.getLabel( label );
+		std::string dirListText = _checkOut.getString( hash );
 		if ( not CalculateHash::verify( dirListText.c_str(), dirListText.size(), hash ) )
 			THROW( Error, "Dir list hash did not match contents" );
 		TRACE_DEBUG( "Transferred dirList '" << label << "'" );

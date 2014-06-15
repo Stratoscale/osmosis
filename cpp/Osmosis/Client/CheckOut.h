@@ -18,15 +18,13 @@ class CheckOut
 public:
 	CheckOut(       const boost::filesystem::path &  directory,
 			const std::string &              label,
-			const std::string &              hostname,
-			unsigned short                   port,
+			Chain::Chain &                   chain,
 			bool                             md5,
 			bool                             removeUnknownFiles,
 			bool                             myUIDandGIDcheckout ) :
 		_directory( directory ),
 		_labels( label ),
-		_hostname( hostname ),
-		_port( port ),
+		_chain( chain ),
 		_removeUnknownFiles( removeUnknownFiles ),
 		_myUIDandGIDcheckout( myUIDandGIDcheckout ),
 		_digestDirectory( directory, md5 )
@@ -35,10 +33,10 @@ public:
 	void go()
 	{
 		_labels.fetch();
-		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _hostname, _port ).joined() );
+		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain ).joined() );
 		_digestDirectory.join();
 
-		FetchFiles fetchFiles( _directory, _hostname, _port );
+		FetchFiles fetchFiles( _directory, _chain );
 		for ( auto & entry : labelsDirList.entries() )
 			if ( _myUIDandGIDcheckout ) {
 				FileStatus modifiedStatus( entry.status );
@@ -63,8 +61,7 @@ public:
 private:
 	const boost::filesystem::path  _directory;
 	DelayedLabels                  _labels;
-	const std::string              _hostname;
-	const unsigned short           _port;
+	Chain::Chain &                 _chain;
 	const bool                     _removeUnknownFiles;
 	const bool                     _myUIDandGIDcheckout;
 	DigestDirectory                _digestDirectory;

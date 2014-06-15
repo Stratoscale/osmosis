@@ -81,7 +81,7 @@ private:
 		switch ( static_cast< Tongue::Opcode >( header.opcode ) ) {
 			case Tongue::Opcode::GET:
 // TODO: Test for large transfers to decide if worth it
-//				if ( _tcpNoDelay )
+//				if ( not _tcpNoDelay )
 //					setTCPNoDelay( false );
 				GetOp( _socket, _store ).go();
 				break;

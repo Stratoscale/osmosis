@@ -2,6 +2,7 @@
 #define __OSMOSIS_CLIENT_FETCH_FILES_H__
 
 #include "Osmosis/ApplyFileStatus.h"
+#include "Osmosis/Chain/Chain.h"
 
 namespace Osmosis {
 namespace Client
@@ -10,11 +11,9 @@ namespace Client
 class FetchFiles
 {
 public:
-	FetchFiles(     const boost::filesystem::path &  directory,
-			const std::string &              hostname,
-			unsigned short                   port ) :
+	FetchFiles( const boost::filesystem::path & directory, Chain::Chain & chain ) :
 		_directory( directory ),
-		_getConnection( hostname, port ),
+		_checkOut( chain.checkOut() ),
 		_drafts( directory ),
 		_fetchQueue( 1 )
 	{
@@ -49,13 +48,11 @@ public:
 		ASSERT( status.syncContent() );
 		struct ToVerify task = { path, status, hash };
 		_fetchQueue.put( std::move( task ) );
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::GET ) };
-		_getConnection.socket().sendAllConcated( header, hash.raw() );
 	}
 
 private:
 	const boost::filesystem::path  _directory;
-	Connect                        _getConnection;
+	Chain::CheckOut                _checkOut;
 	ObjectStore::Drafts            _drafts;
 	DigestDrafts                   _digestDrafts;
 	ToVerifyTaskQueue              _fetchQueue;
@@ -76,8 +73,7 @@ private:
 	{
 		struct ToVerify entry = _fetchQueue.get();
 		entry.draft = _drafts.allocateFilename();
-		Stream::SocketToFile transfer( _getConnection.socket(), entry.draft.string().c_str() );
-		transfer.transfer();
+		_checkOut.getFile( entry.draft, entry.hash );
 		_digestDrafts.toDigestTaskQueue().put( std::move( entry ) );
 	}
 

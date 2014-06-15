@@ -366,8 +366,61 @@ class Test(unittest.TestCase):
         message = self.client.failedCheckout("yuvu+pash")
         self.assertIn("join", message.lower())
 
-# joined checkout with the same files
-# joined checkout with conflicting files
+    def test_checkoutWithBackupServerThatIsNotReallyUsed(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(self.server, server2)
+        try:
+            client.checkout("yuvu")
+        finally:
+            client.clean()
+            server2.exit()
+
+    def test_checkoutWithBackupServerThatIsNotReallyUsed_ActuallyBackupIsDead(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(self.server, server2)
+        server2.exit()
+        try:
+            client.checkout("yuvu")
+        finally:
+            client.clean()
+
+    def test_checkoutWithBackupServer(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(server2, self.server)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(client.listLabels(), [])
+        finally:
+            client.clean()
+            server2.exit()
+
+    def test_checkoutWithBackupServer_PutIfMissing(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(server2, self.server)
+        try:
+            client.checkout("yuvu", putIfMissing=True)
+            self.assertEquals(client.listLabels(), ["yuvu"])
+            client2 = osmosiswrapper.Client(server2)
+            try:
+                client2.checkout("yuvu")
+            finally:
+                client2.clean()
+        finally:
+            client.clean()
+            server2.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -8,9 +8,9 @@ namespace Client
 class PutThread
 {
 public:
-	static void task(       DigestedTaskQueue &              inputQueue,
-				Connect &                        connection,
-				const boost::filesystem::path &  directory )
+	static void task(       DigestedTaskQueue &                      inputQueue,
+				Chain::ObjectStoreConnectionInterface &  connection,
+				const boost::filesystem::path &          directory )
 	{
 		try {
 			PutThread( inputQueue, connection, directory ).go();
@@ -18,23 +18,19 @@ public:
 	}
 
 private:
-	PutThread(      DigestedTaskQueue &              inputQueue,
-			Connect &                        connection,
-			const boost::filesystem::path &  directory ):
+	PutThread(      DigestedTaskQueue &                      inputQueue,
+			Chain::ObjectStoreConnectionInterface &  connection,
+			const boost::filesystem::path &          directory ):
 		_inputQueue( inputQueue ),
-		_connect( connection ),
+		_connection( connection ),
 		_directory( directory )
 	{}
 
 	void work()
 	{
 		Digested task = _inputQueue.get();
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::PUT ) };
-		_connect.socket().sendAllConcated( header, task.hash.raw() );
 		boost::filesystem::path absolute = _directory / task.path;
-		Stream::FileToSocket transfer( absolute.string().c_str(), _connect.socket() );
-		transfer.transfer();
-		Stream::AckOps( _connect.socket() ).wait( "Put object" );
+		_connection.putFile( absolute, task.hash );
 		TRACE_DEBUG( "Transferred file " << task.path );
 	}
 
@@ -48,9 +44,9 @@ private:
 		}
 	}
 
-	DigestedTaskQueue &            _inputQueue;
-	Connect &                      _connect;
-	const boost::filesystem::path  _directory; 
+	DigestedTaskQueue &                      _inputQueue;
+	Chain::ObjectStoreConnectionInterface &  _connection;
+	const boost::filesystem::path            _directory;
 
 	PutThread( const PutThread & rhs ) = delete;
 	PutThread & operator= ( const PutThread & rhs ) = delete;
