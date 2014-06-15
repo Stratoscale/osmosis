@@ -15,8 +15,10 @@ public:
 		_putIfMissing( putIfMissing ),
 		_connections( objectStores.size() )
 	{
+#ifdef DEBUG
 		for ( auto objectStore : _objectStores )
 			ASSERT( objectStore != nullptr );
+#endif // DEBUG
 	}
 
 	std::string getString( const Hash & hash )

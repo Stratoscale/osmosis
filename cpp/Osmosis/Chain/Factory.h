@@ -12,7 +12,8 @@ std::unique_ptr< ObjectStoreInterface > factory( const std::string & location )
 	if ( location.size() == 0 )
 		THROW( Error, "Location '" << location << "' is in invalid format: zero length" );
 	if ( location[ 0 ] == '/' ) {
-		ASSERT_VERBOSE( false, "Not Implemetned yet" );
+ASSERT_VERBOSE( false, "Not Implemetned yet" );
+THROW( Error, "Not implemented" );
 	} else {
 		std::vector< std::string > split;
 		boost::split( split, location, boost::is_any_of( ":" ) );
