@@ -51,10 +51,12 @@ void checkOut( const boost::program_options::variables_map & options )
 		if ( ignore.size() < workDirString.size() or
 				ignore.substr( 0, workDirString.size() ) != workDirString )
 			THROW( Error, "ignore '" << ignore << "' is not under checkout path '" << workDirString << "'" );
+		TRACE_INFO( "will ignore '" << ignore << "'" );
 	}
 
 	Osmosis::FilesystemUtils::clearUMask();
-	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout, ignores );
+	Osmosis::Client::Ignores ignoresInstance( ignores );
+	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout, ignoresInstance );
 	instance.go();
 }
 

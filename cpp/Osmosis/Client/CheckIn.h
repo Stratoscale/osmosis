@@ -20,7 +20,7 @@ public:
 			bool                             md5 ) :
 		_label( label ),
 		_md5( md5 ),
-		_digestDirectory( directory, md5, std::vector< std::string >() ),
+		_digestDirectory( directory, md5, _ignores ),
 		_putConnection( objectStore.connect() ),
 		_putQueue( CHECK_EXISTING_THREADS )
 	{
@@ -57,6 +57,7 @@ private:
 	const bool                                                _md5;
 	CheckExistingThread::AlreadyProcessed                     _checkExistingAlreadyProcessed;
 	std::mutex                                                _checkExistingAlreadyProcessedLock;
+	Ignores                                                   _ignores;
 	DigestDirectory                                           _digestDirectory;
 	std::unique_ptr< Chain::ObjectStoreConnectionInterface >  _putConnection;
 	DigestedTaskQueue                                         _putQueue;

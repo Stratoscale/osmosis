@@ -16,18 +16,19 @@ namespace Client
 class CheckOut
 {
 public:
-	CheckOut(       const boost::filesystem::path &     directory,
-			const std::string &                 label,
-			Chain::Chain &                      chain,
-			bool                                md5,
-			bool                                removeUnknownFiles,
-			bool                                myUIDandGIDcheckout,
-			const std::vector< std::string > &  ignores ) :
+	CheckOut(       const boost::filesystem::path &  directory,
+			const std::string &              label,
+			Chain::Chain &                   chain,
+			bool                             md5,
+			bool                             removeUnknownFiles,
+			bool                             myUIDandGIDcheckout,
+			const Ignores &                  ignores ) :
 		_directory( directory ),
 		_labels( label ),
 		_chain( chain ),
 		_removeUnknownFiles( removeUnknownFiles ),
 		_myUIDandGIDcheckout( myUIDandGIDcheckout ),
+		_ignores( ignores ),
 		_digestDirectory( directory, md5, ignores )
 	{}
 
@@ -65,6 +66,7 @@ private:
 	Chain::Chain &                 _chain;
 	const bool                     _removeUnknownFiles;
 	const bool                     _myUIDandGIDcheckout;
+	const Ignores &                _ignores;
 	DigestDirectory                _digestDirectory;
 
 	void removeUnknownFiles( const DirList & digested, const DirList & label )
@@ -75,6 +77,8 @@ private:
 				entry != digested.entries().rend(); ++ entry )
 			if ( label.find( entry->path ) == nullptr ) {
 				boost::filesystem::path absolute = _directory / entry->path;
+				if ( _ignores.parentOfAnIgnored( absolute ) )
+					continue;
 				boost::filesystem::remove( absolute );
 			}
 	}

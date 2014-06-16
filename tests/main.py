@@ -455,8 +455,32 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("firstFile"), "123456")
         self.assertEquals(self.client.readFile("directory/secondFile"), "223344")
 
+    def test_LocalObjectStoreInsideCheckout_Ignored(self):
+        self.client.writeFile("firstFile", "123456")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("firstFile"))
+
+        client = osmosiswrapper.Client(self.server)
+        try:
+            client.objectStores = [client.abspath("var/lib/osmosis/objectstore")] + client.objectStores
+            client.writeFile("willberemoved", "garbage")
+            client.checkout(
+                'yuvu', removeUnknownFiles=True, ignore=client.abspath("var/lib/osmosis"),
+                putIfMissing=True)
+            self.assertGreater(client.fileCount(), 1)
+            self.assertEquals(client.readFile("firstFile"), "123456")
+            self.assertFalse(os.path.exists(client.abspath("willberemoved")))
+
+            client2 = osmosiswrapper.Client(self.server)
+            try:
+                client2.objectStores = [client.objectStores[0]]
+                client.checkout("yuvu")
+            finally:
+                client2.clean()
+        finally:
+            client.clean()
+
 # todo transfer between object stores
-# localobject store ignored
 
 
 if __name__ == '__main__':
