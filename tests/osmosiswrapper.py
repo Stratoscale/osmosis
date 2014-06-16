@@ -152,16 +152,16 @@ class Client:
 class Server:
     def __init__(self):
         self._port = self._freePort()
-        self._path = tempfile.mkdtemp()
+        self.path = tempfile.mkdtemp()
         self._log = tempfile.NamedTemporaryFile()
         self._proc = subprocess.Popen([
-            "build/cpp/osmosis.bin", "server", "--objectStoreRootPath=" + self._path,
+            "build/cpp/osmosis.bin", "server", "--objectStoreRootPath=" + self.path,
             "--serverTCPPort=%d" % self._port], close_fds=True, stdout=self._log, stderr=self._log)
 
     def exit(self):
         self._proc.terminate()
         self._proc.wait()
-        shutil.rmtree(self._path, ignore_errors=True)
+        shutil.rmtree(self.path, ignore_errors=True)
 
     def readLog(self):
         with open(self._log.name, "r") as f:
@@ -181,6 +181,6 @@ class Server:
 
     def fileCount(self):
         count = 0
-        for root, dirs, files in os.walk(self._path):
+        for root, dirs, files in os.walk(self.path):
             count += len(files) + len(dirs)
         return count

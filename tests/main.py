@@ -426,6 +426,29 @@ class Test(unittest.TestCase):
         self.client.checkin("yuvu")
         self.client.checkin("pash")
 
+    def test_checkinAndCheckoutWithANonRemoteObjectStore(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+
+        client = osmosiswrapper.Client(self.server)
+        try:
+            client.objectStores = [self.server.path]
+            client.checkout('yuvu')
+            self.assertEquals(client.fileCount(), 1)
+            self.assertEquals(client.readFile("aFile"), "123456")
+            client.writeFile("aFile", "something else")
+            client.checkin('pash')
+        finally:
+            client.clean()
+
+        self.client.checkout('pash')
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "something else")
+
+
+# todo transfer between object stores
+# localobject store ignored
+
 
 if __name__ == '__main__':
     unittest.main()
