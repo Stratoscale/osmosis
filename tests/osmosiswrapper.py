@@ -93,6 +93,8 @@ class Client:
             moreArgs.append("--myUIDandGIDcheckout")
         if kwargs.get('putIfMissing', False):
             moreArgs.append("--putIfMissing")
+        if 'ignore' in kwargs:
+            moreArgs.append("--ignore=" + kwargs['ignore'])
         return moreArgs
 
     def _runAny(self, *args):
@@ -139,6 +141,8 @@ class Client:
             return f.read()
 
     def writeFile(self, relpath, content):
+        if not os.path.isdir(os.path.dirname(self.abspath(relpath))):
+            os.makedirs(os.path.dirname(self.abspath(relpath)))
         with open(self.abspath(relpath), "wb") as f:
             f.write(content)
 

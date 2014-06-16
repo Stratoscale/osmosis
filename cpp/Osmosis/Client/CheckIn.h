@@ -20,7 +20,7 @@ public:
 			bool                             md5 ) :
 		_label( label ),
 		_md5( md5 ),
-		_digestDirectory( directory, md5 ),
+		_digestDirectory( directory, md5, std::vector< std::string >() ),
 		_putConnection( objectStore.connect() ),
 		_putQueue( CHECK_EXISTING_THREADS )
 	{

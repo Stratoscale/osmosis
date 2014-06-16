@@ -11,9 +11,11 @@ namespace Client
 class DigestDirectory
 {
 public:
-	DigestDirectory(        const boost::filesystem::path &  directory,
-				bool                             md5 ) :
+	DigestDirectory(        const boost::filesystem::path &     directory,
+				bool                                md5,
+				const std::vector< std::string > &  ignores ) :
 		_directory( directory ),
+		_ignores( ignores ),
 		_toDigestTaskQueue( 1 ),
 		_digestedQueue( digestionThreads() )
 	{
@@ -48,12 +50,13 @@ public:
 	DirList & dirList() { return _dirList; }
 
 private:
-	const boost::filesystem::path  _directory;
-	DirList                        _dirList;
-	std::mutex                     _dirListMutex;
-	PathTaskQueue                  _toDigestTaskQueue;
-	DigestedTaskQueue              _digestedQueue; 
-	std::vector< std::thread >     _threads; 
+	const boost::filesystem::path     _directory;
+	const std::vector< std::string >  _ignores;
+	DirList                           _dirList;
+	std::mutex                        _dirListMutex;
+	PathTaskQueue                     _toDigestTaskQueue;
+	DigestedTaskQueue                 _digestedQueue;
+	std::vector< std::thread >        _threads;
 
 	void threadEntryPoint()
 	{
@@ -70,6 +73,10 @@ private:
 				i != boost::filesystem::recursive_directory_iterator();
 				++ i ) {
 			boost::filesystem::path path = i->path();
+			if ( ignored( path ) ) {
+				i.no_push(true);
+				continue;
+			}
 			FileStatus status( path );
 			if ( not status.isSymlink() and status.isSocket() ) {
 				TRACE_WARNING( "Will not digest socket file: " << path );
@@ -84,6 +91,15 @@ private:
 				_toDigestTaskQueue.put( std::move( relative ) );
 		}
 		_toDigestTaskQueue.producerDone();
+	}
+
+	bool ignored( const boost::filesystem::path & path ) const
+	{
+		std::string asString = path.string();
+		for ( auto & ignore : _ignores )
+			if ( asString == ignore )
+				return true;
+		return false;
 	}
 
 	static unsigned digestionThreads() { return numberOfCPUs() + 1; }

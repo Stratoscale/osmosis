@@ -445,6 +445,15 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "something else")
 
+    def test_IgnoreOnCheckOut(self):
+        self.client.writeFile("firstFile", "123456")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("firstFile"))
+        self.client.writeFile("directory/secondFile", "223344")
+        self.client.checkout("yuvu", ignore=self.client.abspath("directory"), removeUnknownFiles=True)
+        self.assertEquals(self.client.fileCount(), 3)
+        self.assertEquals(self.client.readFile("firstFile"), "123456")
+        self.assertEquals(self.client.readFile("directory/secondFile"), "223344")
 
 # todo transfer between object stores
 # localobject store ignored

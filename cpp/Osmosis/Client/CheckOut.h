@@ -16,18 +16,19 @@ namespace Client
 class CheckOut
 {
 public:
-	CheckOut(       const boost::filesystem::path &  directory,
-			const std::string &              label,
-			Chain::Chain &                   chain,
-			bool                             md5,
-			bool                             removeUnknownFiles,
-			bool                             myUIDandGIDcheckout ) :
+	CheckOut(       const boost::filesystem::path &     directory,
+			const std::string &                 label,
+			Chain::Chain &                      chain,
+			bool                                md5,
+			bool                                removeUnknownFiles,
+			bool                                myUIDandGIDcheckout,
+			const std::vector< std::string > &  ignores ) :
 		_directory( directory ),
 		_labels( label ),
 		_chain( chain ),
 		_removeUnknownFiles( removeUnknownFiles ),
 		_myUIDandGIDcheckout( myUIDandGIDcheckout ),
-		_digestDirectory( directory, md5 )
+		_digestDirectory( directory, md5, ignores )
 	{}
 
 	void go()

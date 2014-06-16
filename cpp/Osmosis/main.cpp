@@ -41,9 +41,20 @@ void checkOut( const boost::program_options::variables_map & options )
 	bool md5 = options.count( "MD5" ) > 0;
 	bool removeUnknownFiles = options.count( "removeUnknownFiles" ) > 0;
 	bool myUIDandGIDcheckout = options.count( "myUIDandGIDcheckout" ) > 0;
+	std::vector< std::string > ignores;
+	if ( options.count( "ignore" ) > 0 )
+		boost::split( ignores, options[ "ignore" ].as< std::string >(), boost::is_any_of( ":" ) );
+	workDir = boost::filesystem::absolute( workDir );
+	std::string workDirString = workDir.string();
+	for ( auto & ignore : ignores ) {
+		ignore = std::move( boost::filesystem::absolute( ignore ).string() );
+		if ( ignore.size() < workDirString.size() or
+				ignore.substr( 0, workDirString.size() ) != workDirString )
+			THROW( Error, "ignore '" << ignore << "' is not under checkout path '" << workDirString << "'" );
+	}
 
 	Osmosis::FilesystemUtils::clearUMask();
-	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout );
+	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout, ignores );
 	instance.go();
 }
 
@@ -133,7 +144,11 @@ int main( int argc, char * argv [] )
 		( "putIfMissing", "when command is 'checkout' this flag will cause any objects received not from the "
 		        "nearest object store to be put into all objects stores up to the one it was fetched from" )
 		( "removeUnknownFiles", "for checkout: remove files from disk that are not in the dirlist being checked out" )
-		( "myUIDandGIDcheckout", "for checkout: use my uid and gid" );
+		( "myUIDandGIDcheckout", "for checkout: use my uid and gid" )
+		( "ignore", boost::program_options::value< std::string >(),
+			"for checkout: ignore the existance of all files in this ':' seperated list. "
+			"if a directory was specified, ignored everything under it as well. specified paths "
+			"must reside inside the checkout path" );
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()
