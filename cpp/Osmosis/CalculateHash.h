@@ -12,7 +12,6 @@ class CalculateHash
 public:
 	static Hash MD5( const void * buffer, unsigned length )
 	{
-		static Tongue::Hash raw;
 		MD5_CTX context;
 		int result = MD5_Init( & context );
 		if ( result != 1 )
@@ -20,6 +19,7 @@ public:
 		result = MD5_Update( & context, buffer, length );
 		if ( result != 1 )
 			THROW( Error, "Unable to continue MD5 calculation" );
+		Tongue::Hash raw;
 		ASSERT( sizeof( raw.hash ) >= MD5_DIGEST_LENGTH );
 		result = MD5_Final( raw.hash, & context );
 		if ( result != 1 )
@@ -58,7 +58,7 @@ public:
 
 	static Hash SHA1( const void * buffer, unsigned length )
 	{
-		static Tongue::Hash raw;
+		Tongue::Hash raw;
 		SHA_CTX context;
 		int result = SHA1_Init( & context );
 		if ( result != 1 )
@@ -106,11 +106,11 @@ public:
 	{
 		if ( hash.algorithm() == Tongue::HashAlgorithm::MD5 ) {
 			Hash calculated = MD5( filename );
-			return memcmp( calculated.bytes(), hash.bytes(), hash.bytesCount() ) == 0;
+			return calculated == hash;
 		} else {
 			ASSERT( hash.algorithm() == Tongue::HashAlgorithm::SHA1 );
 			Hash calculated = SHA1( filename );
-			return memcmp( calculated.bytes(), hash.bytes(), hash.bytesCount() ) == 0;
+			return calculated == hash;
 		}
 	}
 
@@ -118,11 +118,11 @@ public:
 	{
 		if ( hash.algorithm() == Tongue::HashAlgorithm::MD5 ) {
 			Hash calculated = MD5( buffer, length );
-			return memcmp( calculated.bytes(), hash.bytes(), hash.bytesCount() ) == 0;
+			return calculated == hash;
 		} else {
 			ASSERT( hash.algorithm() == Tongue::HashAlgorithm::SHA1 );
 			Hash calculated = SHA1( buffer, length );
-			return memcmp( calculated.bytes(), hash.bytes(), hash.bytesCount() ) == 0;
+			return calculated == hash;
 		}
 	}
 

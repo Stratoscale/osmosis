@@ -37,7 +37,7 @@ public:
 		transfer.transfer();
 		std::string blob = transfer.data();
 		if ( not CalculateHash::verify( blob.c_str(), blob.size(), hash ) )
-			THROW( Error, "Blob hash did not match contents" );
+			THROW( Error, "Blob hash did not match contents: " << hash << " (size: " << blob.size() << ")" );
 		return std::move( blob );
 	}
 

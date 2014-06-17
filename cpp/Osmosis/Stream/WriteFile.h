@@ -16,8 +16,9 @@ public:
 
 	void write( size_t offset, const void * data, unsigned length )
 	{
-		ASSERT( length > 0 );
 		ASSERT( data != nullptr );
+		if ( length == 0 )
+			return;
 		if ( offset != _offset )
 			seek( offset );
 
