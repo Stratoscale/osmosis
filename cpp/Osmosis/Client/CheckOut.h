@@ -73,13 +73,14 @@ private:
 	{
 		if ( not _removeUnknownFiles )
 			return;
-		for ( auto entry = digested.entries().rbegin();
-				entry != digested.entries().rend(); ++ entry )
+		for ( auto & entry : digested.entries() )
 			if ( label.find( entry->path ) == nullptr ) {
 				boost::filesystem::path absolute = _directory / entry->path;
 				if ( _ignores.parentOfAnIgnored( absolute ) )
 					continue;
-				boost::filesystem::remove( absolute );
+				if ( not boost::filesystem::exists( absolute ) )
+					continue;
+				boost::filesystem::remove_all( absolute );
 			}
 	}
 
