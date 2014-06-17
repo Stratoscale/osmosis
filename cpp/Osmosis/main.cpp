@@ -2,6 +2,7 @@
 #include "Osmosis/Server/Server.h"
 #include "Osmosis/Client/CheckIn.h"
 #include "Osmosis/Client/CheckOut.h"
+#include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/LabelOps.h"
 
 std::mutex globalTraceLock;
@@ -60,6 +61,16 @@ void checkOut( const boost::program_options::variables_map & options )
 	instance.go();
 }
 
+void transfer( const boost::program_options::variables_map & options )
+{
+	std::string label = options[ "arg1" ].as< std::string >();
+	bool putIfMissing = options.count( "putIfMissing" ) > 0;
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing );
+	auto destination = Osmosis::Chain::factory( options[ "transferDestination" ].as< std::string >() );
+	Osmosis::Client::Transfer instance( label, chain, * destination );
+	instance.go();
+}
+
 void listLabels( const boost::program_options::variables_map & options )
 {
 	std::string labelRegex = ".*";
@@ -110,8 +121,8 @@ void usage( const boost::program_options::options_description & optionsDescripti
 {
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
-	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'listlabels'," << std::endl;
-	std::cout << "            'eraselabel' or 'renamelabel'" << std::endl;
+	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'transfer', " << std::endl;
+	std::cout << "            'listlabels', 'eraselabel' or 'renamelabel'" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
 	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
@@ -143,14 +154,16 @@ int main( int argc, char * argv [] )
 		( "objectStores", boost::program_options::value< std::string >()->default_value( "127.0.0.1:1010" ),
 			"the object store to act againt. May be a '+' seperated list for 'checkout' command" )
 		( "MD5", "use MD5, not SHA1 for hash in 'checkin' operation" )
-		( "putIfMissing", "when command is 'checkout' this flag will cause any objects received not from the "
+		( "putIfMissing", "when command is 'checkout' or 'transfer', this flag will cause any objects received not from the "
 		        "nearest object store to be put into all objects stores up to the one it was fetched from" )
 		( "removeUnknownFiles", "for checkout: remove files from disk that are not in the dirlist being checked out" )
 		( "myUIDandGIDcheckout", "for checkout: use my uid and gid" )
 		( "ignore", boost::program_options::value< std::string >(),
 			"for checkout: ignore the existance of all files in this ':' seperated list. "
 			"if a directory was specified, ignored everything under it as well. specified paths "
-			"must reside inside the checkout path" );
+			"must reside inside the checkout path" )
+		( "transferDestination", boost::program_options::value< std::string >(),
+			"destination object store to transfer the label into" );
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()
@@ -197,6 +210,8 @@ int main( int argc, char * argv [] )
 			checkIn( options );
 		else if ( command == "checkout" )
 			checkOut( options );
+		else if ( command == "transfer" )
+			transfer( options );
 		else if ( command == "listlabels" )
 			listLabels( options );
 		else if ( command == "eraselabel" )

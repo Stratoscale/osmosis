@@ -480,7 +480,23 @@ class Test(unittest.TestCase):
         finally:
             client.clean()
 
-# todo transfer between object stores
+    def test_TransferBetweenObjectStores(self):
+        self.client.writeFile("firstFile", "123456")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("firstFile"))
+
+        server = osmosiswrapper.Server()
+        try:
+            self.client.transfer("yuvu", server)
+            client = osmosiswrapper.Client(server)
+            try:
+                client.checkout("yuvu")
+                self.assertEquals(client.fileCount(), 1)
+                self.assertEquals(client.readFile("firstFile"), "123456")
+            finally:
+                client.clean()
+        finally:
+            server.exit()
 
 
 if __name__ == '__main__':

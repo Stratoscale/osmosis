@@ -40,7 +40,7 @@ public:
 				}
 			}
 		}
-		return result;
+		return std::move( result );
 	}
 
 private:

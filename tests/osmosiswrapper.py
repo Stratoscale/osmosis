@@ -76,6 +76,9 @@ class Client:
     def renameLabel(self, labelBefore, labelAfter):
         return self._run("renamelabel", labelBefore, labelAfter)
 
+    def transfer(self, label, destServer):
+        return self._run("transfer", label, "--transferDestination=localhost:%d" % destServer.port())
+
     def testHash(self, filename):
         absolute = os.path.join(self._path, filename)
         hash1 = self._run("testhash", absolute).strip()
