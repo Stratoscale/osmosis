@@ -74,8 +74,8 @@ private:
 		if ( not _removeUnknownFiles )
 			return;
 		for ( auto & entry : digested.entries() )
-			if ( label.find( entry->path ) == nullptr ) {
-				boost::filesystem::path absolute = _directory / entry->path;
+			if ( label.find( entry.path ) == nullptr ) {
+				boost::filesystem::path absolute = _directory / entry.path;
 				if ( _ignores.parentOfAnIgnored( absolute ) )
 					continue;
 				if ( not boost::filesystem::exists( absolute ) )
