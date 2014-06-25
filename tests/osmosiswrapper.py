@@ -164,6 +164,7 @@ class Server:
         self._proc = subprocess.Popen([
             "build/cpp/osmosis.bin", "server", "--objectStoreRootPath=" + self.path,
             "--serverTCPPort=%d" % self._port], close_fds=True, stdout=self._log, stderr=self._log)
+        self._waitForTCPServer()
 
     def exit(self):
         self._proc.terminate()
@@ -177,6 +178,12 @@ class Server:
     def port(self):
         return self._port
 
+    def fileCount(self):
+        count = 0
+        for root, dirs, files in os.walk(self.path):
+            count += len(files) + len(dirs)
+        return count
+
     def _freePort(self):
         sock = socket.socket()
         try:
@@ -186,8 +193,21 @@ class Server:
         finally:
             sock.close()
 
-    def fileCount(self):
-        count = 0
-        for root, dirs, files in os.walk(self.path):
-            count += len(files) + len(dirs)
-        return count
+    def _waitForTCPServer(self, timeout=30, interval=0.1):
+        before = time.time()
+        while time.time() - before < timeout:
+            if self._rawTCPConnect(("localhost", self._port)):
+                return
+            time.sleep(interval)
+        raise Exception("Osmosis TCP Server 'localhost:%(port)s' did not respond within timeout" % dict(
+            port=self._port))
+
+    def _rawTCPConnect(self, tcpEndpoint):
+        s = socket.socket()
+        try:
+            s.connect(tcpEndpoint)
+            return True
+        except:
+            return False
+        finally:
+            s.close()
