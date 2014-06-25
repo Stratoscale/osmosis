@@ -22,12 +22,12 @@ install:
 	-sudo systemctl stop osmosis
 	sudo cp build/cpp/osmosis.bin /usr/bin/osmosis
 	sudo cp osmosis.service /usr/lib/systemd/system/osmosis.service
-	sudo systemctl enable osmosis
-	sudo systemctl start osmosis
+	sudo systemctl enable osmosis.service
+	if ["$(DONT_START_SERVICE)" == ""]; then sudo systemctl start osmosis; fi
 
 uninstall:
-	sudo systemctl stop osmosis
-	sudo systemctl disable osmosis
+	-sudo systemctl stop osmosis
+	-sudo systemctl disable osmosis.service
 	sudo rm -f /usr/bin/osmosis
 	sudo rm -f /usr/lib/systemd/system/osmosis.service
 	echo "CONSIDER ERASING /var/lib/osmosis"
