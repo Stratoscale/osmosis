@@ -1,4 +1,8 @@
-all: build test
+all: 
+	$(MAKE) clean
+	$(MAKE) build unittest check_convention CONFIGURATION=DEBUG
+	$(MAKE) clean
+	$(MAKE) build unittest
 
 clean:
 	rm -fr build
@@ -7,12 +11,8 @@ clean:
 build:
 	$(MAKE) -f build.Makefile
 
-test: testscenarios whiteboxtest check_convention
-
-testscenarios: build
+unittest: build
 	python tests/main.py
-
-whiteboxtest: build
 	build/cpp/testtaskqueue.bin
 
 check_convention:

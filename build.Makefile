@@ -1,6 +1,6 @@
 all: all-targets
 
-CONFIGURATION ?= DEBUG
+CONFIGURATION ?= RELEASE
 SHELL ?= /bin/bash
 COMMON_CXXFLAGS = -Ic -Icpp -I/usr/include/python2.7 -std=gnu++0x -Werror -Wall
 COMMON_CFLAGS = -Ic -Werror -Wall
