@@ -5,6 +5,7 @@ import stat
 import fakeservers
 import shutil
 import time
+import logging
 
 
 class Test(unittest.TestCase):
@@ -495,6 +496,9 @@ class Test(unittest.TestCase):
                 self.assertEquals(client.readFile("firstFile"), "123456")
             finally:
                 client.clean()
+        except:
+            logging.error("Destination server log:\n%(log)s", dict(log=server.readLog()))
+            raise
         finally:
             server.exit()
 
