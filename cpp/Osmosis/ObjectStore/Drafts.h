@@ -48,6 +48,11 @@ public:
 		}
 		return std::move( _draftsPath / std::to_string( value ) );
 	}
+
+	boost::filesystem::path path() const
+	{
+		return _draftsPath;
+	}
 		
 private:
 	boost::filesystem::path _rootPath;

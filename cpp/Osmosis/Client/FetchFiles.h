@@ -50,6 +50,11 @@ public:
 		_fetchQueue.put( std::move( task ) );
 	}
 
+	boost::filesystem::path draftsPath() const
+	{
+		return _drafts.path();
+	}
+
 private:
 	const boost::filesystem::path  _directory;
 	Chain::CheckOut                _checkOut;

@@ -27,7 +27,7 @@ public:
 	{
 		std::string asString = path.string() + "/";
 		for ( auto & ignore : _ignores )
-			if ( asString.size() < ignore.size() and ignore.substr( 0, asString.size() ) == asString )
+			if ( asString.size() < ignore.size() and memcmp( ignore.c_str(), asString.c_str(), asString.size() ) == 0 )
 				return true;
 		return false;
 	}

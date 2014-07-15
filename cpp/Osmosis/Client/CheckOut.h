@@ -55,7 +55,7 @@ public:
 						entry.hash.get(),
 						labelsDirList );
 		fetchFiles.noMoreFilesToFetch();
-		removeUnknownFiles( _digestDirectory.dirList(), labelsDirList );
+		removeUnknownFiles( _digestDirectory.dirList(), labelsDirList, fetchFiles );
 		fetchFiles.join();
 		TRACE_DEBUG( "Checkout Complete" );
 	}
@@ -69,13 +69,19 @@ private:
 	const Ignores &                _ignores;
 	DigestDirectory                _digestDirectory;
 
-	void removeUnknownFiles( const DirList & digested, const DirList & label )
+	void removeUnknownFiles( const DirList & digested, const DirList & label, const FetchFiles & fetchFiles )
 	{
 		if ( not _removeUnknownFiles )
 			return;
+		boost::filesystem::path leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased = fetchFiles.draftsPath();
+		std::string leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErasedPrefix = leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased.string();
 		for ( auto & entry : digested.entries() )
 			if ( label.find( entry.path ) == nullptr ) {
 				boost::filesystem::path absolute = _directory / entry.path;
+				std::string relative = entry.path.string();
+				if ( entry.path == leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased and
+						startsWith( entry.path.string(), leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErasedPrefix ) )
+					continue;
 				if ( _ignores.parentOfAnIgnored( absolute ) )
 					continue;
 				if ( not boost::filesystem::exists( absolute ) )
@@ -124,6 +130,11 @@ private:
 					ApplyFileStatus( absolute, status ).applyNonRegular( digestedEntry->status );
 			}
 		}
+	}
+
+	static bool startsWith( const std::string & str, const std::string & prefix )
+	{
+		return str.size() >= prefix.size() and memcmp( str.c_str(), prefix.c_str(), prefix.size() ) == 0;
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;
