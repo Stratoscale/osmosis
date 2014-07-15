@@ -46,7 +46,15 @@ public:
 	void applyNonRegular( const FileStatus & existingStatus )
 	{
 		if ( _status.type() == existingStatus.type() ) {
-			if ( not _status.isSymlink() )
+			if ( _status.isSymlink() ) {
+				if ( _status.symlink() != existingStatus.symlink() ) {
+					boost::filesystem::remove_all( _path );
+					createNonRegular();
+					ASSERT_VERBOSE( FileStatus( _path ) == _status,
+							_path << ": " << FileStatus( _path ) << " != " << _status );
+					return;
+				}
+			} else
 				chmod();
 			chown();
 			ASSERT_VERBOSE( FileStatus( _path ) == _status,

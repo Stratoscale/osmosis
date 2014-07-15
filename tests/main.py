@@ -502,6 +502,15 @@ class Test(unittest.TestCase):
         finally:
             server.exit()
 
+    def test_CheckInOneFile_SymbolicLinkRestored(self):
+        os.symlink("/it", os.path.join(self.client.path(), "aLink"))
+        self.client.checkin("yuvu")
+        os.unlink(os.path.join(self.client.path(), "aLink"))
+        os.symlink("/notit", os.path.join(self.client.path(), "aLink"))
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(os.readlink(os.path.join(self.client.path(), "aLink")), "/it")
+
 
 if __name__ == '__main__':
     unittest.main()
