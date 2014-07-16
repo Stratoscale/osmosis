@@ -12,10 +12,10 @@ class Client:
         self._server = server
         self._server2 = server2
         self._path = tempfile.mkdtemp()
-        self.objectStores = ["127.0.0.1:%d" % server.port()]
+        self.objectStores = ["localhost:%d" % server.port()]
         self.additionalObjectStoresForCheckout = []
         if server2 is not None:
-            self.additionalObjectStoresForCheckout.append("127.0.0.1:%d" % server2.port())
+            self.additionalObjectStoresForCheckout.append("localhost:%d" % server2.port())
 
     def clean(self):
         shutil.rmtree(self._path, ignore_errors=True)

@@ -13,10 +13,11 @@ public:
 	{
 		boost::asio::ip::tcp::resolver resolver( _ioService );
 		boost::asio::ip::tcp::resolver::query query( hostname, std::to_string( port ) );
-		auto first = resolver.resolve( query );
+		auto first = resolver.resolve( boost::asio::ip::tcp::resolver::query( boost::asio::ip::tcp::v4(), hostname, "0" ) );
 		if ( first == boost::asio::ip::tcp::resolver::iterator() )
 			THROW( Error, "Unable to resolve the hostname '" << hostname << "'" );
-		_socket.connect( * first );
+		boost::asio::ip::tcp::endpoint endpoint( first->endpoint().address(), port );
+		_socket.connect( endpoint );
 		ASSERT( _socket.is_open() );
 
 		setTCPNoDelay();
