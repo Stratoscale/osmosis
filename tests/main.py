@@ -511,6 +511,18 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(os.readlink(os.path.join(self.client.path(), "aLink")), "/it")
 
+    def test_CheckoutTwoRepositories_NearestHasADefectiveCopy(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        serverNear = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(serverNear, self.server)
+        client.checkout("yuvu", putIfMissing=True)
+        serverNear.injectMalformedObject("123456", "defective")
+        os.unlink(os.path.join(client.path(), "aFile"))
+        client.checkout("yuvu", putIfMissing=True)
+        self.assertEquals(client.fileCount(), 1)
+        self.assertEquals(client.readFile("aFile"), "123456")
+
 
 if __name__ == '__main__':
     unittest.main()

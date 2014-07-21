@@ -64,6 +64,11 @@ public:
 		return _store.exists( hash );
 	}
 
+	void verify( const Hash & hash ) override
+	{
+		_store.verifyOrDestroy( hash );
+	}
+
 	void eraseLabel( const std::string & label ) override
 	{
 		_labels.erase( label );

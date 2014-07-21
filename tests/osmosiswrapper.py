@@ -184,6 +184,16 @@ class Server:
             count += len(files) + len(dirs)
         return count
 
+    def injectMalformedObject(self, previousContent, malformedContent):
+        for root, dirs, files in os.walk(self.path):
+            for filename in files:
+                with open(os.path.join(root, filename), "rb") as f:
+                    contents = f.read()
+                if contents != previousContent:
+                    continue
+                with open(os.path.join(root, filename), "wb") as f:
+                    f.write(malformedContent)
+
     def _freePort(self):
         sock = socket.socket()
         try:

@@ -55,8 +55,11 @@ private:
 	void work()
 	{
 		ToVerify task = _toDigestTaskQueue.get();
-		if ( not CalculateHash::verify( task.draft, task.hash ) )
-			THROW( Error, "Draft failed hash verification: " << task.hash );
+		if ( not CalculateHash::verify( task.draft, task.hash ) ) {
+			TRACE_ERROR( "Draft failed hash verification: " << task.hash << " (" << task.path << ")" );
+			boost::filesystem::remove( task.draft );
+			task.draft = boost::filesystem::path();
+		}
 		_digestedTaskQueue.put( std::move( task ) );
 	}
 

@@ -5,7 +5,7 @@ namespace Osmosis {
 namespace Tongue
 {
 
-enum { PROTOCOL_VERSION = 1000000 };
+enum { PROTOCOL_VERSION = 1000001 };
 
 enum class Compression
 {
@@ -26,11 +26,14 @@ enum class Opcode
 	GET = 1,
 	PUT = 2,
 	IS_EXISTS = 3,
-	SET_LABEL = 4,
-	GET_LABEL = 5,
-	LIST_LABELS = 6,
-	ERASE_LABEL = 7,
-	RENAME_LABEL = 8,
+	VERIFY = 4,
+
+	SET_LABEL = 11,
+	GET_LABEL = 12,
+	LIST_LABELS = 13,
+	ERASE_LABEL = 14,
+	RENAME_LABEL = 15,
+
 	ACK = 0xAC,
 };
 

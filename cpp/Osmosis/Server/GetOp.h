@@ -4,6 +4,7 @@
 #include "Osmosis/TCPSocket.h"
 #include "Osmosis/ObjectStore/Store.h"
 #include "Osmosis/Stream/FileToSocket.h"
+#include "Osmosis/Stream/BufferToSocket.h"
 
 namespace Osmosis {
 namespace Server
@@ -23,8 +24,14 @@ public:
 		if ( not _store.exists( hash ) )
 			THROW( Error, "Hash " << hash << " is not in object store, can not get" );
 #ifdef DEBUG
-		if ( not CalculateHash::verify( _store.filenameForExisting( hash ), hash ) )
-			THROW( Error, "Stored object " << hash << " does not match its hash" );
+		if ( not CalculateHash::verify( _store.filenameForExisting( hash ), hash ) ) {
+			TRACE_ERROR( "Stored object " << hash << " does not match its hash" );
+			_store.verifyOrDestroy( hash );
+			std::string message = "Malformed object found in object store";
+			Stream::BufferToSocket transfer( message.c_str(), message.size(), _socket );
+			transfer.transfer();
+			return;
+		}
 #endif // DEBUG
 		Stream::FileToSocket transfer( _store.filenameForExisting( hash ).string().c_str(), _socket );
 		transfer.transfer();

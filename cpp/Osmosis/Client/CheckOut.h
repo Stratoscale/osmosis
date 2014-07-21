@@ -2,7 +2,6 @@
 #define __OSMOSIS_CLIENT_CHECK_OUT_H__
 
 #include "Osmosis/Stream/SocketToBuffer.h"
-#include "Osmosis/Client/DigestDrafts.h"
 #include "Osmosis/Client/FetchFiles.h"
 #include "Osmosis/Client/DelayedLabels.h"
 #include "Osmosis/Client/FetchJointDirlistFromLabels.h"

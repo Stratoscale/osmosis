@@ -36,6 +36,12 @@ public:
 		THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
 	}
 
+	void verify( const Hash & hash )
+	{
+		for ( unsigned i = 0; i < _connections.size(); ++ i )
+			connection( i ).verify( hash );
+	}
+
 	void getFile( const boost::filesystem::path & path, const Hash & hash )
 	{
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {

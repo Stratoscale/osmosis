@@ -70,6 +70,13 @@ public:
 		return response.response == static_cast< unsigned char >( Tongue::IsExists::YES );
 	}
 
+	void verify( const Hash & hash ) override
+	{
+		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::VERIFY ) };
+		_connection.socket().sendAllConcated( header, hash.raw() );
+		Stream::AckOps( _connection.socket() ).wait( "Verify" );
+	}
+
 	void eraseLabel( const std::string & label ) override
 	{
 		_labelOps.erase( label );

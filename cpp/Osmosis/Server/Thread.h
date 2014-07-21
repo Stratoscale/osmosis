@@ -6,6 +6,7 @@
 #include "Osmosis/Server/GetOp.h"
 #include "Osmosis/Server/PutOp.h"
 #include "Osmosis/Server/IsExistsOp.h"
+#include "Osmosis/Server/VerifyOp.h"
 #include "Osmosis/Server/GetLabelOp.h"
 #include "Osmosis/Server/SetLabelOp.h"
 #include "Osmosis/Server/ListLabelsOp.h"
@@ -90,6 +91,9 @@ private:
 				break;
 			case Tongue::Opcode::IS_EXISTS:
 				IsExistsOp( _socket, _store ).go();
+				break;
+			case Tongue::Opcode::VERIFY:
+				VerifyOp( _socket, _store ).go();
 				break;
 			case Tongue::Opcode::SET_LABEL:
 				SetLabelOp( _socket, _labels ).go();

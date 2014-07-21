@@ -21,6 +21,19 @@ public:
 		return boost::filesystem::exists( absoluteFilename( hash ) );
 	}
 
+	void verifyOrDestroy( const Hash & hash ) const
+	{
+		boost::filesystem::path absolute = absoluteFilename( hash );
+		if ( not boost::filesystem::exists( absolute ) ) {
+			TRACE_WARNING( "Verify for a non existing object: " << hash );
+			return;
+		}
+		if ( not CalculateHash::verify( absolute, hash ) ) {
+			TRACE_ERROR( "Object " << hash << " is malformed, removing from object store" );
+			boost::filesystem::remove( absolute );
+		}
+	}
+
 	boost::filesystem::path filenameForExisting( const Hash & hash ) const
 	{
 		ASSERT( exists( hash ) );
