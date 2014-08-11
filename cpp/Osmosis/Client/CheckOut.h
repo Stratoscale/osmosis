@@ -126,7 +126,7 @@ private:
 					if ( hash == nullptr )
 						THROW( Error, "No hash for file that should have data - directory listing is defective" );
 					try {
-						boost::filesystem::remove( absolute );
+						boost::filesystem::remove_all( absolute );
 					} CATCH_TRACEBACK_EXCEPTION
 					fetchFiles.fetch( path, status, * hash );
 				}

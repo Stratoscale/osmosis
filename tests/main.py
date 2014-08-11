@@ -523,6 +523,17 @@ class Test(unittest.TestCase):
         self.assertEquals(client.fileCount(), 1)
         self.assertEquals(client.readFile("aFile"), "123456")
 
+    def test_CheckOut_AFileOverANonEmptyDirectory(self):
+        self.client.writeFile("aFile", "123")
+        self.client.checkin("yuvu")
+        os.unlink(os.path.join(self.client.path(), "aFile"))
+        os.mkdir(os.path.join(self.client.path(), "aFile"))
+        self.client.writeFile("aFile/inSubdirectory", "555")
+        self.client.checkout("yuvu")
+        os.system("find %s" % self.client.path())
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123")
+
 
 if __name__ == '__main__':
     unittest.main()
