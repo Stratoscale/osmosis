@@ -48,7 +48,9 @@ public:
 		if ( _status.type() == existingStatus.type() ) {
 			if ( _status.isSymlink() ) {
 				if ( _status.symlink() != existingStatus.symlink() ) {
-					boost::filesystem::remove_all( _path );
+					try {
+						boost::filesystem::remove_all( _path );
+					} CATCH_TRACEBACK_EXCEPTION
 					createNonRegular();
 					ASSERT_VERBOSE( FileStatus( _path ) == _status,
 							_path << ": " << FileStatus( _path ) << " != " << _status );
@@ -61,7 +63,9 @@ public:
 					_path << ": " << FileStatus( _path ) << " != " << _status );
 			return;
 		} else {
-			boost::filesystem::remove_all( _path );
+			try {
+				boost::filesystem::remove_all( _path );
+			} CATCH_TRACEBACK_EXCEPTION
 			createNonRegular();
 			ASSERT_VERBOSE( FileStatus( _path ) == _status,
 					_path << ": " << FileStatus( _path ) << " != " << _status );

@@ -37,25 +37,27 @@ public:
 		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain ).joined() );
 		_digestDirectory.join();
 
-		FetchFiles fetchFiles( _directory, _chain );
-		for ( auto & entry : labelsDirList.entries() )
-			if ( _myUIDandGIDcheckout ) {
-				FileStatus modifiedStatus( entry.status );
-				modifiedStatus.setUIDGID( OSUtils::uid(), OSUtils::gid() );
-				decideWhatToDo( fetchFiles,
-						entry.path,
-						modifiedStatus,
-						entry.hash.get(),
-						labelsDirList );
-			} else
-				decideWhatToDo( fetchFiles,
-						entry.path,
-						entry.status,
-						entry.hash.get(),
-						labelsDirList );
-		fetchFiles.noMoreFilesToFetch();
-		removeUnknownFiles( _digestDirectory.dirList(), labelsDirList, fetchFiles );
-		fetchFiles.join();
+		try {
+			FetchFiles fetchFiles( _directory, _chain );
+			for ( auto & entry : labelsDirList.entries() )
+				if ( _myUIDandGIDcheckout ) {
+					FileStatus modifiedStatus( entry.status );
+					modifiedStatus.setUIDGID( OSUtils::uid(), OSUtils::gid() );
+					decideWhatToDo( fetchFiles,
+							entry.path,
+							modifiedStatus,
+							entry.hash.get(),
+							labelsDirList );
+				} else
+					decideWhatToDo( fetchFiles,
+							entry.path,
+							entry.status,
+							entry.hash.get(),
+							labelsDirList );
+			fetchFiles.noMoreFilesToFetch();
+			removeUnknownFiles( _digestDirectory.dirList(), labelsDirList, fetchFiles );
+			fetchFiles.join();
+		} CATCH_ALL( "Dumping dirlists", dumpDirLists( labelsDirList, _digestDirectory.dirList() ); throw; );
 		TRACE_DEBUG( "Checkout Complete" );
 	}
 
@@ -85,7 +87,9 @@ private:
 					continue;
 				if ( not boost::filesystem::exists( absolute ) )
 					continue;
-				boost::filesystem::remove_all( absolute );
+				try {
+					boost::filesystem::remove_all( absolute );
+				} CATCH_TRACEBACK_EXCEPTION
 			}
 	}
 
@@ -121,7 +125,9 @@ private:
 				} else {
 					if ( hash == nullptr )
 						THROW( Error, "No hash for file that should have data - directory listing is defective" );
-					boost::filesystem::remove( absolute );
+					try {
+						boost::filesystem::remove( absolute );
+					} CATCH_TRACEBACK_EXCEPTION
 					fetchFiles.fetch( path, status, * hash );
 				}
 			} else {
@@ -134,6 +140,16 @@ private:
 	static bool startsWith( const std::string & str, const std::string & prefix )
 	{
 		return str.size() >= prefix.size() and memcmp( str.c_str(), prefix.c_str(), prefix.size() ) == 0;
+	}
+
+	static void dumpDirLists( const DirList & labelsDirList, const DirList & digestedDirlist )
+	{
+		try {
+			std::ofstream labelsDirListFile( "/tmp/labels.dirList" );
+			labelsDirListFile << labelsDirList;
+			std::ofstream digestedDirListFile( "/tmp/digested.dirList" );
+			digestedDirListFile << digestedDirlist;
+		} CATCH_ALL_IGNORE( "Unable to dump dirlists" );
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;
