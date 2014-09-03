@@ -1,3 +1,4 @@
 requirements:
-- hash: fd50d5d0290df68e35e2c1d8575760258d6284e0
+- hash: d486ce7983e2be1f9a95f8e5236ac46075d36be4
   originURL: https://github.com/Stratoscale/rootfs-build-nostrato.git
+
