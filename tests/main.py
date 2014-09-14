@@ -530,9 +530,21 @@ class Test(unittest.TestCase):
         os.mkdir(os.path.join(self.client.path(), "aFile"))
         self.client.writeFile("aFile/inSubdirectory", "555")
         self.client.checkout("yuvu")
-        os.system("find %s" % self.client.path())
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123")
+
+    def test_Bugfix_RemoveOtherExistingFiles_DoesNotRemoveSymlinksThatPointToNonExistingFiles(self):
+        self.client.writeFile("theFile", "theContents")
+        self.client.checkin("yuvu")
+
+        self.client.writeFile("another", "other contents")
+        os.symlink(
+            os.path.join(self.client.path(), "another"),
+            os.path.join(self.client.path(), "symlink"))
+        os.unlink(os.path.join(self.client.path(), "another"))
+        self.client.checkout("yuvu", removeUnknownFiles=True)
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("theFile"), "theContents")
 
 
 if __name__ == '__main__':

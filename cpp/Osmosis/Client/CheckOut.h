@@ -85,7 +85,7 @@ private:
 					continue;
 				if ( _ignores.parentOfAnIgnored( absolute ) )
 					continue;
-				if ( not boost::filesystem::exists( absolute ) )
+				if ( not boost::filesystem::exists( absolute ) and not boost::filesystem::symbolic_link_exists( absolute ) )
 					continue;
 				try {
 					boost::filesystem::remove_all( absolute );
