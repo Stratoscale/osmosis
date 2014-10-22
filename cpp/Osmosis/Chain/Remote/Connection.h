@@ -82,6 +82,11 @@ public:
 		_labelOps.erase( label );
 	}
 
+	void purge() override
+	{
+		THROW( Error, "Attempted to purge a remote object store" );
+	}
+
 	void setLabel( const Hash & hash, const std::string & label ) override
 	{
 		_labelOps.set( hash, label );

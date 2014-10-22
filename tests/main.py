@@ -294,6 +294,14 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
         after = self.server.fileCount()
+        self.assertEquals(after, before - 1)
+        client = osmosiswrapper.Client(self.server)
+        try:
+            client.objectStores = [self.server.path]
+            client.purge()
+        finally:
+            client.clean()
+        after = self.server.fileCount()
         self.assertEquals(after, before - 3)
 
     def test_CheckoutUsingDelayedLabel(self):

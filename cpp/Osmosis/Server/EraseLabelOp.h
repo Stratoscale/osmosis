@@ -24,7 +24,6 @@ public:
 		if ( not _labels.exists( label ) )
 			THROW( Error, "Label '" << label << "' does not exist, can not erase" );
 		_labels.erase( label );
-		ObjectStore::Purge( _store, _labels ).purge();
 		Stream::AckOps( _socket ).sendAck();
 	}
 

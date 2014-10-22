@@ -73,6 +73,9 @@ class Client:
     def eraseLabel(self, label, **kwargs):
         return self._run("eraselabel", label, * self._moreArgs(kwargs))
 
+    def purge(self, **kwargs):
+        return self._run("purge", * self._moreArgs(kwargs))
+
     def renameLabel(self, labelBefore, labelAfter):
         return self._run("renamelabel", labelBefore, labelAfter)
 

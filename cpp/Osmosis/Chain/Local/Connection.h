@@ -72,6 +72,10 @@ public:
 	void eraseLabel( const std::string & label ) override
 	{
 		_labels.erase( label );
+	}
+
+	void purge() override
+	{
 		Osmosis::ObjectStore::Purge( _store, _labels ).purge();
 	}
 

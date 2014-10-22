@@ -18,6 +18,7 @@ public:
 	virtual bool exists( const Hash & hash ) = 0;
 	virtual void verify( const Hash & hash ) = 0;
 	virtual void eraseLabel( const std::string & label ) = 0;
+	virtual void purge() = 0;
 	virtual void setLabel( const Hash & hash, const std::string & label ) = 0;
 	virtual Hash getLabel( const std::string & label ) = 0;
 	virtual void renameLabel( const std::string & currentLabel, const std::string & renameLabelTo ) = 0;

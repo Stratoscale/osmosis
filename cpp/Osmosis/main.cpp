@@ -4,6 +4,7 @@
 #include "Osmosis/Client/CheckOut.h"
 #include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/LabelOps.h"
+#include "Osmosis/Client/AdminOps.h"
 
 std::mutex globalTraceLock;
 
@@ -97,6 +98,15 @@ void eraseLabel( const boost::program_options::variables_map & options )
 	instance.eraseLabel( label );
 }
 
+void purge( const boost::program_options::variables_map & options )
+{
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
+	if ( chain.count() > 1 )
+		THROW( Error, "--objectStores must contain one LOCAL object store in a pruge operation" );
+	Osmosis::Client::AdminOps instance( chain.single() );
+	instance.purge();
+}
+
 void renameLabel( const boost::program_options::variables_map & options )
 {
 	std::string currentLabel = options[ "arg1" ].as< std::string >();
@@ -122,7 +132,7 @@ void usage( const boost::program_options::options_description & optionsDescripti
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
 	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'transfer', " << std::endl;
-	std::cout << "            'listlabels', 'eraselabel' or 'renamelabel'" << std::endl;
+	std::cout << "            'listlabels', 'eraselabel', 'renamelabel' or 'purge'" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
 	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
@@ -216,6 +226,8 @@ int main( int argc, char * argv [] )
 			listLabels( options );
 		else if ( command == "eraselabel" )
 			eraseLabel( options );
+		else if ( command == "purge" )
+			purge( options );
 		else if ( command == "renamelabel" )
 			renameLabel( options );
 		else if ( command == "testhash" )
