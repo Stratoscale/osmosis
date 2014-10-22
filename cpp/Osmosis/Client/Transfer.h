@@ -59,7 +59,7 @@ private:
 
 	void checkLabelDoesNotExistInDestination( Chain::ObjectStoreConnectionInterface & connection )
 	{
-		if ( connection.listLabels( _label ).size() > 0 )
+		if ( connection.listLabels( "^" + _label + "$" ).size() > 0 )
 			THROW( Error, "Label '" << _label << "' already exists at destination" );
 	}
 

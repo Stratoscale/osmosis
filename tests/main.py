@@ -554,6 +554,50 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("theFile"), "theContents")
 
+    def test_BugFix_PutIfMissing_WhenDirListObjectAlreadyExist(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(server2, self.server)
+        try:
+            client.checkout("yuvu", putIfMissing=True)
+            self.assertEquals(client.listLabels(), ["yuvu"])
+            client.eraseLabel("yuvu")
+            client.checkout("yuvu", putIfMissing=True)
+        finally:
+            client.clean()
+            server2.exit()
+
+    def test_BugFix_TwoServers_LabelWithMoreCharactersExists(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        self.client.checkin("yuv")
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(server2, self.server)
+        try:
+            client.checkout("yuvu", putIfMissing=True)
+            client.checkout("yuv", putIfMissing=True)
+        finally:
+            client.clean()
+            server2.exit()
+
+    def test_BugFix_TransferBetweenObjectStores_ALabelAlreadyExistsWithMoreCharacters(self):
+        self.client.writeFile("firstFile", "123456")
+        self.client.checkin("yuvu")
+        self.client.checkin("yuv")
+
+        server = osmosiswrapper.Server()
+        try:
+            self.client.transfer("yuvu", server)
+            self.client.transfer("yuv", server)
+        except:
+            logging.error("Destination server log:\n%(log)s", dict(log=server.readLog()))
+            raise
+        finally:
+            server.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

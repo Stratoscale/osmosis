@@ -20,12 +20,17 @@ public:
 
 	void putString( const std::string & blob, const Hash & hash ) override
 	{
-		ASSERT( CalculateHash::SHA1( blob.c_str(), blob.size() ) == hash );
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::PUT ) };
-		_connection.socket().sendAllConcated( header, hash.raw() );
-		Stream::BufferToSocket transfer( blob.c_str(), blob.size(), _connection.socket() );
-		transfer.transfer();
-		Stream::AckOps( _connection.socket() ).wait( "Put blob" );
+		try {
+			ASSERT( CalculateHash::SHA1( blob.c_str(), blob.size() ) == hash );
+			struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::PUT ) };
+			_connection.socket().sendAllConcated( header, hash.raw() );
+			Stream::BufferToSocket transfer( blob.c_str(), blob.size(), _connection.socket() );
+			transfer.transfer();
+			Stream::AckOps( _connection.socket() ).wait( "Put blob" );
+		} catch (...) {
+			TRACE_ERROR( "While transferring blob (possibly a dirList)" );
+			throw;
+		}
 		TRACE_DEBUG( "Transferred blob (possibly a dirList)" );
 	}
 
@@ -43,11 +48,16 @@ public:
 
 	void putFile( const boost::filesystem::path & path, const Hash & hash ) override
 	{
-		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::PUT ) };
-		_connection.socket().sendAllConcated( header, hash.raw() );
-		Stream::FileToSocket transfer( path.string().c_str(), _connection.socket() );
-		transfer.transfer();
-		Stream::AckOps( _connection.socket() ).wait( "Put object" );
+		try {
+			struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::PUT ) };
+			_connection.socket().sendAllConcated( header, hash.raw() );
+			Stream::FileToSocket transfer( path.string().c_str(), _connection.socket() );
+			transfer.transfer();
+			Stream::AckOps( _connection.socket() ).wait( "Put object" );
+		} catch (...) {
+			TRACE_ERROR( "While transferring file " << path );
+			throw;
+		}
 		TRACE_DEBUG( "Transferred file " << path );
 	}
 

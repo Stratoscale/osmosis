@@ -60,13 +60,14 @@ public:
 	Hash getLabel( const std::string & label )
 	{
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
-			bool exists = connection( i ).listLabels( label ).size() > 0;
+			bool exists = connection( i ).listLabels( "^" + label + "$" ).size() > 0;
 			if ( exists ) {
 				Hash hash = connection( i ).getLabel( label );
 				if ( _putIfMissing ) {
 					std::string content = connection( i ).getString( hash );
 					for ( int j = i - 1; j >= 0; -- j ) {
-						connection( j ).putString( content, hash );
+						if ( not connection( j ).exists( hash ) )
+							connection( j ).putString( content, hash );
 						connection( j ).setLabel( hash, label );
 					}
 				}
