@@ -79,6 +79,7 @@ private:
 				return false;
 			throw;
 		}
+		TRACE_DEBUG( "Incoming opcode: " << static_cast< unsigned >( header.opcode ) );
 		switch ( static_cast< Tongue::Opcode >( header.opcode ) ) {
 			case Tongue::Opcode::GET:
 // TODO: Test for large transfers to decide if worth it
@@ -109,6 +110,7 @@ private:
 				break;
 			case Tongue::Opcode::RENAME_LABEL:
 				RenameLabelOp( _socket, _labels ).go();
+				break;
 			case Tongue::Opcode::ACK:
 				THROW( Error, "Unexpected ack" );
 				break;

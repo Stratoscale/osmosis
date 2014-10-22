@@ -66,7 +66,7 @@ public:
 	void erase( const std::string & label )
 	{
 		sendLabelCommand( label, Tongue::Opcode::ERASE_LABEL );
-		Stream::AckOps( _socket ).wait( "Purged objects" );
+		Stream::AckOps( _socket ).wait( "Erased label" );
 	}
 
 	void sendLabelCommand( const std::string & label, Tongue::Opcode opcode )

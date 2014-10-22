@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <mutex>
 #include <boost/exception/diagnostic_information.hpp> 
+#include <boost/thread/thread.hpp>
 
 #ifdef UNITTEST
 
@@ -51,7 +52,7 @@ extern std::mutex globalTraceLock;
 	gettimeofday( & timeValue, nullptr ); \
 	std::lock_guard< std::mutex > lock( globalTraceLock ); \
 	__stream << timeValue.tv_sec << '.' << std::setfill( '0' ) << std::setw( 6 ) << timeValue.tv_usec << ':' << \
-		__level << ':' << ' ' << __serialize << ' ' << '(' << __FILE__ << ':' << __LINE__ << \
+		__level << ':' << boost::this_thread::get_id() << ':' << ' ' << __serialize << ' ' << '(' << __FILE__ << ':' << __LINE__ << \
 		')' << std::endl; \
     } while( 0 )
 
