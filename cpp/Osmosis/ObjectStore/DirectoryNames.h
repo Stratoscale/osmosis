@@ -7,7 +7,7 @@ namespace DirectoryNames
 {
 
 static const char LABELS[] = "labels";
-static const char DRAFTS[] = "drafts";
+static const char DRAFTS[] = "osmosisDrafts";
 
 } // namespace DirectoryNames
 } // namespace ObjectStore

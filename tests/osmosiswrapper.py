@@ -131,7 +131,7 @@ class Client:
         if cmd == "checkout":
             objectStores += self.additionalObjectStoresForCheckout
         try:
-            return subprocess.check_output(
+            subprocess.check_output(
                 ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args),
                 close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:

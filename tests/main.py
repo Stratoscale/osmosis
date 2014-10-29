@@ -598,6 +598,22 @@ class Test(unittest.TestCase):
         finally:
             server.exit()
 
+    def test_WillNotCheckIn_IfDraftsDirectoryExists(self):
+        self.client.writeFile("firstFile", "123456")
+        self.client.checkin("yuvu")
+        self.client.writeFile("osmosisDrafts", "123456")
+        message = self.client.failedCheckin("yuvu2")
+        self.assertIn("drafts", message.lower())
+
+    def test_Bugfix_CheckoutUsingDelayedLabel_DraftsDirLeftBehind(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("aFile"))
+        self.client.writeFile("osmosisDrafts", "123456")
+        self.client.checkoutUsingDelayedLabel("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+
 
 if __name__ == '__main__':
     unittest.main()

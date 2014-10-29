@@ -30,6 +30,10 @@ void checkIn( const boost::program_options::variables_map & options )
 		THROW( Error, "--objectStores must contain one object store in a checkin operation" );
 	bool md5 = options.count( "MD5" ) > 0;
 
+	boost::filesystem::path draftsPath = workDir / Osmosis::ObjectStore::DirectoryNames::DRAFTS;
+	if ( boost::filesystem::exists( draftsPath ) )
+		THROW( Error, "workDir must not contain " << draftsPath );
+
 	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5 );
 	instance.go();
 }
@@ -56,8 +60,12 @@ void checkOut( const boost::program_options::variables_map & options )
 		TRACE_INFO( "will ignore '" << ignore << "'" );
 	}
 
+	boost::filesystem::path draftsPath = workDir / Osmosis::ObjectStore::DirectoryNames::DRAFTS;
+	boost::filesystem::remove_all( draftsPath );
+
 	Osmosis::FilesystemUtils::clearUMask();
 	Osmosis::Client::Ignores ignoresInstance( ignores );
+	ignoresInstance.append( draftsPath.string() );
 	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout, ignoresInstance );
 	instance.go();
 }

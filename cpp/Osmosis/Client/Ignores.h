@@ -32,8 +32,13 @@ public:
 		return false;
 	}
 
+	void append( const std::string & toIgnore )
+	{
+		_ignores.push_back( toIgnore );
+	}
+
 private:
-	const std::vector< std::string >  _ignores;
+	std::vector< std::string >  _ignores;
 
 	Ignores( const Ignores & rhs ) = delete;
 	Ignores & operator= ( const Ignores & rhs ) = delete;
