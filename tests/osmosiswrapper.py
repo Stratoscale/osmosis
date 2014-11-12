@@ -23,6 +23,9 @@ class Client:
     def path(self):
         return self._path
 
+    def appendToPath(self, append):
+        self._path += append
+
     def checkin(self, label, **kwargs):
         return self._run("checkin", self._path, label, * self._moreArgs(kwargs))
 

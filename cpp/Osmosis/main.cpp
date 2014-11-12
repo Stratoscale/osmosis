@@ -21,9 +21,18 @@ void server( const boost::program_options::variables_map & options )
 	server.run();
 }
 
+boost::filesystem::path stripTrailingSlash( boost::filesystem::path path )
+{
+    auto str = path.string();
+    if ( boost::algorithm::ends_with( str, "/" ) )
+        return str.substr( 0, str.size() - 1 );
+    else
+        return path;
+}
+
 void checkIn( const boost::program_options::variables_map & options )
 {
-	boost::filesystem::path workDir = options[ "arg1" ].as< std::string >();
+	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
 	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
 	if ( chain.count() > 1 )
@@ -40,7 +49,7 @@ void checkIn( const boost::program_options::variables_map & options )
 
 void checkOut( const boost::program_options::variables_map & options )
 {
-	boost::filesystem::path workDir = options[ "arg1" ].as< std::string >();
+	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
 	bool putIfMissing = options.count( "putIfMissing" ) > 0;
 	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing );

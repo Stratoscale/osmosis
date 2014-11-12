@@ -614,6 +614,15 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
 
+    def test_Bugfix_TrailingSlash(self):
+        self.client.appendToPath("/")
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        self.client.writeFile("aFile", "1234567")
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+
 
 if __name__ == '__main__':
     unittest.main()
