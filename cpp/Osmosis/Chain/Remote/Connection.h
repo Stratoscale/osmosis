@@ -21,7 +21,7 @@ public:
 	void putString( const std::string & blob, const Hash & hash ) override
 	{
 		try {
-			ASSERT( CalculateHash::SHA1( blob.c_str(), blob.size() ) == hash );
+			ASSERT( CalculateHash::verify( blob.c_str(), blob.size(), hash ) );
 			struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::PUT ) };
 			_connection.socket().sendAllConcated( header, hash.raw() );
 			Stream::BufferToSocket transfer( blob.c_str(), blob.size(), _connection.socket() );
