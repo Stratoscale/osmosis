@@ -1,6 +1,7 @@
 #ifndef __OSMOSIS_OBJECT_STORE_PURGE_H__
 #define __OSMOSIS_OBJECT_STORE_PURGE_H__
 
+#include <unordered_set>
 #include "Osmosis/DirList.h"
 
 namespace Osmosis {
@@ -19,6 +20,7 @@ public:
 	{
 		startWithAllObjects();
 		size_t before = _staleHashes.size();
+		TRACE_INFO( "Found " << before << " objects" );
 		takeOutAllLabels();
 		size_t after = _staleHashes.size();
 		TRACE_INFO( "Purge found " << after << " objects to purge (" <<
@@ -28,9 +30,9 @@ public:
 	}
 
 private:
-	Store &           _store;
-	Labels &          _labels;
-	std::set< Hash >  _staleHashes;
+	Store &                     _store;
+	Labels &                    _labels;
+	std::unordered_set< Hash >  _staleHashes;
 
 	void startWithAllObjects()
 	{

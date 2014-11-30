@@ -103,4 +103,17 @@ private:
 
 } // namespace Osmosis
 
+namespace std
+{
+
+template<> struct hash< Osmosis::Hash >
+{
+	std::size_t operator()( const Osmosis::Hash & hash ) const
+	{
+		return * reinterpret_cast< const std::size_t * >( hash.bytes() );
+	}
+};
+
+} // namespace std
+
 #endif // __OSMOSIS_HASH_H__
