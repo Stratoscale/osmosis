@@ -6,6 +6,9 @@ import fakeservers
 import shutil
 import time
 import logging
+import fakeshell
+from osmosis.policy import cleanupremovelabelsuntildiskusage
+from osmosis import objectstore
 
 
 class Test(unittest.TestCase):
@@ -622,6 +625,21 @@ class Test(unittest.TestCase):
         self.client.checkout("yuvu")
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
+
+    def test_Policy_CleanupRemoveLabelsUntilDiskUsage(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu1")
+        self.client.checkin("yuvu2")
+        self.client.checkin("yuvu3")
+        self.client.checkin("yuvu4")
+        self.client.checkin("yuvu5")
+        fakeshell.makeDfSensitiveToLabels(
+            100 / 5, self.server.path, os.path.join(self.server.path, 'labels'))
+        objectStore = objectstore.ObjectStore(self.server.path)
+        self.assertEquals(len(objectStore.labels()), 5)
+        tested = cleanupremovelabelsuntildiskusage.CleanupRemoveLabelsUntilDiskUsage(objectStore, 50)
+        tested.go()
+        self.assertEquals(len(objectStore.labels()), 2)
 
 
 if __name__ == '__main__':

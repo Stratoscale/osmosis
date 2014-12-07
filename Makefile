@@ -2,17 +2,20 @@ all:
 	$(MAKE) clean
 	$(MAKE) build unittest check_convention CONFIGURATION=DEBUG
 	$(MAKE) clean
-	$(MAKE) build unittest
+	$(MAKE) build unittest egg
 
 clean:
-	rm -fr build
+	rm -fr build dist osmosis.egg-info
 
 .PHONY: build
 build:
 	$(MAKE) -f build.Makefile
 
+.PHONY: egg
+egg: dist/osmosis-1.0.linux-x86_64.tar.gz
+
 unittest: build
-	python tests/main.py
+	PYTHONPATH=py python tests/main.py
 	build/cpp/testtaskqueue.bin
 
 check_convention:
@@ -31,3 +34,13 @@ uninstall:
 	sudo rm -f /usr/bin/osmosis
 	sudo rm -f /usr/lib/systemd/system/osmosis.service
 	echo "CONSIDER ERASING /var/lib/osmosis"
+
+dist/osmosis-1.0.linux-x86_64.tar.gz:
+	cd py; python ../setup.py build
+	cd py; python ../setup.py bdist
+	cd py; python ../setup.py bdist_egg
+	rm -fr dict osmosis.egg-info build/pybuild
+	mv py/dist ./
+	-mkdir build
+	mv py/build build/pybuild
+	mv py/osmosis.egg-info ./

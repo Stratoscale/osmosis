@@ -29,7 +29,12 @@ public:
 		std::string middle = path.filename().string();
 		path.remove_filename();
 		std::string first = path.filename().string();
-		return Hash::fromHex( first + middle + last );
+		try {
+			return Hash::fromHex( first + middle + last );
+		} catch ( ... ) {
+			TRACE_ERROR( "While converting '" << first << "' '" << middle << "' '" << last << "' to hex" );
+			throw;
+		}
 	}
 
 	void next()
@@ -58,7 +63,7 @@ private:
 	bool skip()
 	{
 		if ( _iterator->path() == _labelsPath or _iterator->path() == _draftsPath ) {
-			_iterator.no_push(true);
+			_iterator.no_push();
 			return true;
 		}
 		return _iterator->status().type() != boost::filesystem::regular_file;
