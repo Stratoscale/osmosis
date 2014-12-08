@@ -7,6 +7,7 @@ import os
 _dir = tempfile.mkdtemp()
 atexit.register(lambda: shutil.rmtree(_dir))
 os.environ['PATH'] = _dir + ":" + os.environ['PATH']
+os.symlink(os.path.join(os.getcwd(), "build/cpp/osmosis.bin"), os.path.join(_dir, "osmosis"))
 
 
 def makeDfSensitiveToLabels(diskUsagePerLabel, location, labelsLocation):
