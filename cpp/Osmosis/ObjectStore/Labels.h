@@ -54,6 +54,7 @@ public:
 	{
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
+		TRACE_INFO("Erasing label '" << label << "'");
 		boost::filesystem::remove( absoluteFilename( label ) );
 	}
 
