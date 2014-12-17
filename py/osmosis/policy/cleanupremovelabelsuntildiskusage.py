@@ -12,10 +12,14 @@ class CleanupRemoveLabelsUntilDiskUsage:
         self._allowedDiskUsagePercent = allowedDiskUsagePercent
 
     def go(self):
+        accessAgeByLabel = None
         while self._diskUsage() > self._allowedDiskUsagePercent:
             if len(self._objectStore.labels()) == 0:
                 raise ObjectStoreEmptyException("Can not apply policy, object store already empty")
-            labels = [(age, label) for label, age in self._objectStore.accessAgeByLabel().iteritems()]
+            if accessAgeByLabel is None:
+                accessAgeByLabel = self._objectStore.accessAgeByLabel()
+                # purge accesses all labels, don't read access times after calling it
+            labels = [(accessAgeByLabel[label], label) for label in self._objectStore.labels()]
             labels.sort()
             eraseCount = max(len(labels) / 2, 1)
             logging.info(

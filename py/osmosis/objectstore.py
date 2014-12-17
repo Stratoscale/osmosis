@@ -13,6 +13,9 @@ class ObjectStore:
     def accessAgeByLabel(self):
         return self._ageByLabel(statAttribute="st_atime")
 
+    def creationAgeByLabel(self):
+        return self._ageByLabel(statAttribute="st_ctime")
+
     def labelsOlder(self, ageHours):
         return {k: v for k, v in self.ageHoursByLabel().iteritems() if v >= ageHours}
 
