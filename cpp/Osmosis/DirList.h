@@ -1,8 +1,22 @@
 #ifndef __OSMOSIS_DIR_LIST_H__
 #define __OSMOSIS_DIR_LIST_H__
 
+#include <unordered_map>
 #include <boost/algorithm/string.hpp>
 #include "Osmosis/DirListEntry.h"
+
+namespace std
+{
+
+template<> struct hash< boost::filesystem::path >
+{
+	std::size_t operator()( const boost::filesystem::path & path ) const
+	{
+		return hash< std::string >()( path.native() );
+	}
+};
+
+} // namespace std
 
 namespace Osmosis
 {
@@ -61,7 +75,7 @@ public:
 	const List & entries() const { return _entries; }
 
 private:
-	typedef std::map< boost::filesystem::path, struct DirListEntry * > Index;
+	typedef std::unordered_map< boost::filesystem::path, struct DirListEntry * > Index;
 
 	List _entries;
 	Index _index;
