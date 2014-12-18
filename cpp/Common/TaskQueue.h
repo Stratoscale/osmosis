@@ -15,6 +15,12 @@ public:
 		_producers( producers )
 	{}
 
+	size_t size() const
+	{
+		std::lock_guard< std::mutex > lock( _mutex );
+		return _tasks.size();
+	}
+
 	void put( Task && task )
 	{
 		{
@@ -70,9 +76,9 @@ public:
 
 private:
 	std::queue< Task >       _tasks;
-	std::mutex               _mutex;
+	mutable std::mutex       _mutex;
 	std::condition_variable  _wait;
-	unsigned                 _producers; 
+	unsigned                 _producers;
 
 	TaskQueue( const TaskQueue & rhs ) = delete;
 	TaskQueue & operator= ( const TaskQueue & rhs ) = delete;

@@ -13,8 +13,11 @@ public:
 	CheckOut( std::vector< ObjectStoreInterface * > && objectStores, bool putIfMissing ) :
 		_objectStores( objectStores ),
 		_putIfMissing( putIfMissing ),
-		_connections( objectStores.size() )
+		_connections( objectStores.size() ),
+		_getCount( objectStores.size() )
 	{
+		for ( auto & count : _getCount )
+			count = 0;
 #ifdef DEBUG
 		for ( auto objectStore : _objectStores )
 			ASSERT( objectStore != nullptr );
@@ -26,6 +29,7 @@ public:
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
 			if ( connection( i ).exists( hash ) ) {
 				std::string content = connection( i ).getString( hash );
+				_getCount[ i ] += 1;
 				if ( _putIfMissing ) {
 					for ( int j = i - 1; j >= 0; -- j )
 						connection( j ).putString( content, hash );
@@ -47,6 +51,7 @@ public:
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
 			if ( connection( i ).exists( hash ) ) {
 				connection( i ).getFile( path, hash );
+				_getCount[ i ] += 1;
 				if ( _putIfMissing ) {
 					for ( int j = i - 1; j >= 0; -- j )
 						connection( j ).putFile( path, hash );
@@ -77,10 +82,14 @@ public:
 		THROW( Error, "The label '" << label << "' does not exist in any of the object stores" );
 	}
 
+	typedef std::vector< unsigned > GetCountStats;
+	const GetCountStats & getCount() const { return _getCount; }
+
 private:
 	const std::vector< ObjectStoreInterface * >                       _objectStores;
 	const bool                                                        _putIfMissing;
 	std::vector< std::unique_ptr< ObjectStoreConnectionInterface > >  _connections;
+	GetCountStats                                                     _getCount;
 
 	ObjectStoreConnectionInterface & connection( unsigned objectStoreIndex )
 	{

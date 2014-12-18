@@ -5,6 +5,7 @@
 #include "Osmosis/Client/FetchFiles.h"
 #include "Osmosis/Client/DelayedLabels.h"
 #include "Osmosis/Client/FetchJointDirlistFromLabels.h"
+#include "Osmosis/Client/CheckOutProgress.h"
 #include "Osmosis/ApplyFileStatus.h"
 #include "Osmosis/OSUtils.h"
 
@@ -21,14 +22,17 @@ public:
 			bool                             md5,
 			bool                             removeUnknownFiles,
 			bool                             myUIDandGIDcheckout,
-			const Ignores &                  ignores ) :
+			const Ignores &                  ignores,
+			const boost::filesystem::path &  progressReport,
+			unsigned                         progressReportIntervalSeconds ) :
 		_directory( directory ),
 		_labels( label ),
 		_chain( chain ),
 		_removeUnknownFiles( removeUnknownFiles ),
 		_myUIDandGIDcheckout( myUIDandGIDcheckout ),
 		_ignores( ignores ),
-		_digestDirectory( directory, md5, ignores )
+		_digestDirectory( directory, md5, ignores ),
+		_checkOutProgress( progressReport, _digestDirectory, progressReportIntervalSeconds )
 	{}
 
 	void go()
@@ -39,6 +43,7 @@ public:
 
 		try {
 			FetchFiles fetchFiles( _directory, _chain );
+			_checkOutProgress.setFetchFiles( fetchFiles );
 			for ( auto & entry : labelsDirList.entries() )
 				if ( _myUIDandGIDcheckout ) {
 					FileStatus modifiedStatus( entry.status );
@@ -57,7 +62,9 @@ public:
 			fetchFiles.noMoreFilesToFetch();
 			removeUnknownFiles( _digestDirectory.dirList(), labelsDirList, fetchFiles );
 			fetchFiles.join();
+			_checkOutProgress.stop();
 		} CATCH_ALL( "Dumping dirlists", dumpDirLists( labelsDirList, _digestDirectory.dirList() ); throw; );
+		_checkOutProgress.stop();
 		TRACE_DEBUG( "Checkout Complete" );
 	}
 
@@ -69,6 +76,7 @@ private:
 	const bool                     _myUIDandGIDcheckout;
 	const Ignores &                _ignores;
 	DigestDirectory                _digestDirectory;
+	CheckOutProgress               _checkOutProgress;
 
 	void removeUnknownFiles( const DirList & digested, const DirList & label, const FetchFiles & fetchFiles )
 	{

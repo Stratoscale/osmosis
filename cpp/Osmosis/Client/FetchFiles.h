@@ -61,6 +61,17 @@ public:
 		return _drafts.path();
 	}
 
+	struct Stats {
+		unsigned fetchesRequested;
+		unsigned fetchesCompleted;
+		unsigned digestQueueLength;
+	};
+	Stats stats()
+	{
+		return { _fetchRequested, _fetchCompleted, static_cast< unsigned >( _digestDrafts.toDigestTaskQueue().size() ) };
+	}
+	const Chain::CheckOut::GetCountStats & checkOutGetCount() { return _checkOut.getCount(); }
+
 private:
 	const boost::filesystem::path  _directory;
 	Chain::CheckOut                _checkOut;

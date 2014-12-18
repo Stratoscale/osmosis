@@ -49,6 +49,8 @@ void checkIn( const boost::program_options::variables_map & options )
 
 void checkOut( const boost::program_options::variables_map & options )
 {
+	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
+	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
 	bool putIfMissing = options.count( "putIfMissing" ) > 0;
@@ -75,7 +77,8 @@ void checkOut( const boost::program_options::variables_map & options )
 	Osmosis::FilesystemUtils::clearUMask();
 	Osmosis::Client::Ignores ignoresInstance( ignores );
 	ignoresInstance.append( draftsPath.string() );
-	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles, myUIDandGIDcheckout, ignoresInstance );
+	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles,
+			myUIDandGIDcheckout, ignoresInstance, reportFile, reportIntervalSeconds );
 	instance.go();
 }
 
@@ -190,7 +193,11 @@ int main( int argc, char * argv [] )
 			"if a directory was specified, ignored everything under it as well. specified paths "
 			"must reside inside the checkout path" )
 		( "transferDestination", boost::program_options::value< std::string >(),
-			"destination object store to transfer the label into" );
+			"destination object store to transfer the label into" )
+		( "reportFile", boost::program_options::value< std::string >()->default_value( "" ),
+			"periodically write report in JSON format into this file" )
+		( "reportIntervalSeconds", boost::program_options::value< unsigned >()->default_value( 15 ),
+			"period to report progress" );
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()

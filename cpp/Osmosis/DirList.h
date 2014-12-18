@@ -71,6 +71,8 @@ public:
 		return is;
 	}
 
+	size_t size() const { return _index.size(); }
+
 	typedef std::list< DirListEntry > List;
 	const List & entries() const { return _entries; }
 
