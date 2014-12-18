@@ -104,6 +104,8 @@ class Client:
             moreArgs.append("--putIfMissing")
         if 'ignore' in kwargs:
             moreArgs.append("--ignore=" + kwargs['ignore'])
+        if 'reportFile' in kwargs:
+            moreArgs.append("--reportFile=" + kwargs['reportFile'])
         return moreArgs
 
     def _runAny(self, *args):

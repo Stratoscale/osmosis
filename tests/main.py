@@ -7,6 +7,8 @@ import shutil
 import time
 import logging
 import fakeshell
+import tempfile
+import json
 from osmosis.policy import cleanupremovelabelsuntildiskusage
 from osmosis import objectstore
 
@@ -640,6 +642,19 @@ class Test(unittest.TestCase):
         tested = cleanupremovelabelsuntildiskusage.CleanupRemoveLabelsUntilDiskUsage(objectStore, 50)
         tested.go()
         self.assertEquals(len(objectStore.labels()), 2)
+
+    def test_CheckOutProgressReport_FinalReportIsThatEverythingCompleted(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        os.unlink(self.client.abspath("aFile"))
+        reportFile = tempfile.NamedTemporaryFile()
+        self.client.checkout("yuvu", reportFile=reportFile.name)
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+        report = json.loads(reportFile.read())
+        self.assertEquals(report[u'state'], u'fetching')
+        self.assertEquals(report[u'fetchesRequested'], 1)
+        self.assertEquals(report[u'fetchesCompleted'], 1)
 
 
 if __name__ == '__main__':
