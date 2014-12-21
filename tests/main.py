@@ -3,6 +3,7 @@ import osmosiswrapper
 import os
 import stat
 import fakeservers
+import httpserver
 import shutil
 import time
 import logging
@@ -655,6 +656,20 @@ class Test(unittest.TestCase):
         self.assertEquals(report[u'state'], u'fetching')
         self.assertEquals(report[u'fetchesRequested'], 1)
         self.assertEquals(report[u'fetchesCompleted'], 1)
+
+    def test_CheckoutOverHttp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        server = httpserver.HttpServer(self.server.path)
+        os.system("find %s" % self.server.path)
+        try:
+            client = osmosiswrapper.Client(server)
+            client.objectStores = [server.url()]
+            client.checkout("yuvu")
+            self.assertEquals(client.fileCount(), 1)
+            self.assertEquals(client.readFile("aFile"), "123456")
+        finally:
+            server.stop()
 
 
 if __name__ == '__main__':

@@ -8,8 +8,12 @@ clean:
 	rm -fr build dist osmosis.egg-info
 
 .PHONY: build
-build:
+build: build/cpp-netlib-0.11.1-final
 	$(MAKE) -f build.Makefile
+
+build/cpp-netlib-0.11.1-final: cpp-netlib-0.11.1-final.tar.gz
+	-mkdir $(@D)
+	tar -xf $< -C $(@D)
 
 .PHONY: egg
 egg: dist/osmosis-1.0.linux-x86_64.tar.gz
@@ -19,7 +23,7 @@ unittest: build
 	build/cpp/testtaskqueue.bin
 
 check_convention:
-	pep8 . --max-line-length=109
+	pep8 py tests --max-line-length=109
 
 install:
 	-sudo systemctl stop osmosis

@@ -2,7 +2,7 @@ all: all-targets
 
 CONFIGURATION ?= RELEASE
 SHELL ?= /bin/bash
-COMMON_CXXFLAGS = -Ic -Icpp -I/usr/include/python2.7 -std=gnu++0x -Werror -Wall
+COMMON_CXXFLAGS = -Ic -Icpp -I/usr/include/python2.7 -Ibuild/cpp-netlib-0.11.1-final -std=gnu++0x -Werror -Wall
 COMMON_CFLAGS = -Ic -Werror -Wall
 
 DEBUG_CXXFLAGS = -ggdb -DDEBUG

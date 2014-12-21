@@ -5,6 +5,7 @@
 #include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/LabelOps.h"
 #include "Osmosis/Client/AdminOps.h"
+#include "Osmosis/includecppnetlib.h"
 
 std::mutex globalTraceLock;
 

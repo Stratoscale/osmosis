@@ -3,6 +3,7 @@
 
 #include "Osmosis/Chain/Remote/ObjectStore.h"
 #include "Osmosis/Chain/Local/ObjectStore.h"
+#include "Osmosis/Chain/Http/ObjectStore.h"
 
 namespace Osmosis {
 namespace Chain
@@ -15,6 +16,8 @@ std::unique_ptr< ObjectStoreInterface > factory( const std::string & location )
 	if ( location[ 0 ] == '/' ) {
 		boost::filesystem::path path( location );
 		return std::unique_ptr< ObjectStoreInterface >( new Local::ObjectStore( path ) );
+	} else if ( boost::starts_with( location, "http://" ) ) {
+		return std::unique_ptr< ObjectStoreInterface >( new Http::ObjectStore( location ) );
 	} else {
 		std::vector< std::string > split;
 		boost::split( split, location, boost::is_any_of( ":" ) );
