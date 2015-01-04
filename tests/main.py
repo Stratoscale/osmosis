@@ -661,7 +661,6 @@ class Test(unittest.TestCase):
         self.client.writeFile("aFile", "123456")
         self.client.checkin("yuvu")
         server = httpserver.HttpServer(self.server.path)
-        os.system("find %s" % self.server.path)
         try:
             client = osmosiswrapper.Client(server)
             client.objectStores = [server.url()]

@@ -13,6 +13,11 @@ RELEASE_CFLAGS = $(RELEASE_CXXFLAGS)
 
 CXXFLAGS = $(COMMON_CXXFLAGS) $($(CONFIGURATION)_CXXFLAGS)
 CFLAGS = $(COMMON_CFLAGS) $($(CONFIGURATION)_CFLAGS)
+LDFLAGS = -L/usr/lib/x86_64-linux-gnu
+
+ifneq ($(shell locate boost_filesystem-mt | grep '^/usr'),)
+BOOST_MT =-mt
+endif
 
 include targets.Makefile
 
