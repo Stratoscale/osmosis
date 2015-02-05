@@ -12,7 +12,9 @@ class TaskQueue
 {
 public:
 	TaskQueue( unsigned producers ) :
-		_producers( producers )
+		_producers( producers ),
+		_putCount( 0 ),
+		_getCount( 0 )
 	{}
 
 	size_t size() const
@@ -25,6 +27,7 @@ public:
 	{
 		{
 			std::lock_guard< std::mutex > lock( _mutex );
+			_putCount += 1;
 			_tasks.emplace( std::move( task ) );
 		}
 		_wait.notify_one();
@@ -66,6 +69,7 @@ public:
 			ASSERT( not _tasks.empty() );
 			Task result( std::move( _tasks.front() ) );
 			_tasks.pop();
+			_getCount += 1;
 			return std::move( result );
 		}
 		if ( _producers == 0 )
@@ -74,11 +78,16 @@ public:
 			THROW( Error, "Internal assertion: should never be reached" );
 	}
 
+	unsigned putCount() const { return _putCount; }
+	unsigned getCount() const { return _getCount; }
+
 private:
 	std::queue< Task >       _tasks;
 	mutable std::mutex       _mutex;
 	std::condition_variable  _wait;
 	unsigned                 _producers;
+	unsigned                 _putCount;
+	unsigned                 _getCount;
 
 	TaskQueue( const TaskQueue & rhs ) = delete;
 	TaskQueue & operator= ( const TaskQueue & rhs ) = delete;

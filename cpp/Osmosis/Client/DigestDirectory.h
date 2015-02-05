@@ -18,8 +18,7 @@ public:
 		_directory( directory ),
 		_ignores( ignores ),
 		_toDigestTaskQueue( 1 ),
-		_digestedQueue( digestionThreads() ),
-		_filesToDigest( 0 )
+		_digestedQueue( digestionThreads() )
 	{
 		for ( unsigned i = 0; i < digestionThreads(); ++ i )
 			_threads.push_back( std::thread(
@@ -49,9 +48,8 @@ public:
 	}
 
 	DigestedTaskQueue & digestedQueue() { return _digestedQueue; }
+	const PathTaskQueue & toDigestTaskQueue() const { return _toDigestTaskQueue; }
 	DirList & dirList() { return _dirList; }
-	unsigned filesToDigest() const { return _filesToDigest; }
-	unsigned digestQueueLength() const { return _toDigestTaskQueue.size(); }
 
 private:
 	const boost::filesystem::path  _directory;
@@ -61,7 +59,6 @@ private:
 	PathTaskQueue                  _toDigestTaskQueue;
 	DigestedTaskQueue              _digestedQueue;
 	std::vector< std::thread >     _threads;
-	unsigned                       _filesToDigest;
 
 	void threadEntryPoint()
 	{
@@ -92,10 +89,8 @@ private:
 				std::lock_guard< std::mutex > lock( _dirListMutex );
 				_dirList.add( relative, status );
 			}
-			if ( status.syncContent() ) {
+			if ( status.syncContent() )
 				_toDigestTaskQueue.put( std::move( relative ) );
-				_filesToDigest += 1;
-			}
 		}
 		_toDigestTaskQueue.producerDone();
 	}

@@ -644,16 +644,22 @@ class Test(unittest.TestCase):
         tested.go()
         self.assertEquals(len(objectStore.labels()), 2)
 
-    def test_CheckOutProgressReport_FinalReportIsThatEverythingCompleted(self):
+    def test_ProgressReport_FinalReportIsThatEverythingCompleted(self):
         self.client.writeFile("aFile", "123456")
-        self.client.checkin("yuvu")
-        os.unlink(self.client.abspath("aFile"))
         reportFile = tempfile.NamedTemporaryFile()
+        self.client.checkin("yuvu", reportFile=reportFile.name)
+        report = json.loads(reportFile.read())
+        self.assertEquals(report[u'state'], u'checkin')
+        self.assertEquals(report[u'percent'], 100)
+        self.assertEquals(report[u'put'][u'done'], 1)
+        os.unlink(self.client.abspath("aFile"))
         self.client.checkout("yuvu", reportFile=reportFile.name)
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
+        reportFile.seek(0)
         report = json.loads(reportFile.read())
         self.assertEquals(report[u'state'], u'fetching')
+        self.assertEquals(report[u'percent'], 100)
         self.assertEquals(report[u'fetchesRequested'], 1)
         self.assertEquals(report[u'fetchesCompleted'], 1)
 

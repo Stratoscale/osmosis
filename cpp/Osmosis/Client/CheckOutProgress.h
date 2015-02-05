@@ -5,7 +5,6 @@
 #include "Osmosis/Client/CheckExistingThread.h"
 #include "Osmosis/Client/PutThread.h"
 #include "Osmosis/Stream/BufferToSocket.h"
-#include "Common/NumberOfCPUs.h"
 
 namespace Osmosis {
 namespace Client
@@ -36,7 +35,7 @@ public:
 			return;
 		_stop.notify_one();
 		_thread.join();
-		report();
+		report( true );
 	}
 
 	void setFetchFiles( FetchFiles & fetchFiles )
@@ -64,10 +63,10 @@ private:
 	void threadEntryPoint()
 	{
 		while ( sleep() )
-			report();
+			report( false );
 	}
 
-	void report()
+	void report( bool zeroIsDone )
 	{
 		if ( _fetchFiles != NULL ) {
 			FetchFiles::Stats stats = _fetchFiles->stats();
@@ -81,7 +80,10 @@ private:
 			TRACE_INFO( "Get count per chain component: " << chainCount.str() );
 			if ( _path != boost::filesystem::path( "" ) ) {
 				std::ofstream output( _path.string() );
-				output << "{ \"state\": \"fetching\", \"fetchesRequested\": " << stats.fetchesRequested <<
+				unsigned percent = ProgressPercent::calc(
+					stats.fetchesCompleted, stats.fetchesRequested, zeroIsDone );
+				output << "{ \"state\": \"fetching\", \"percent\": " << percent <<
+					", \"fetchesRequested\": " << stats.fetchesRequested <<
 					", \"fetchesCompleted\": " << stats.fetchesCompleted <<
 					", \"digestQueueLength\": " << stats.digestQueueLength <<
 					", \"chainGetCount\": [";
@@ -96,14 +98,16 @@ private:
 				output << "]}";
 			}
 		} else {
-			unsigned filesToDigest = _digestDirectory.filesToDigest();
-			unsigned digestQueueLength = _digestDirectory.digestQueueLength();
-			unsigned digestedFiles = _digestDirectory.digestedQueue().size();
-			TRACE_INFO( "Status: digesting. filesToDigest: " << filesToDigest << ", digestedFiles: " << digestedFiles << ", digestQueueLength: " << digestQueueLength );
+			unsigned digestionPercent = ProgressPercent::calc(
+				_digestDirectory.toDigestTaskQueue().getCount(), _digestDirectory.toDigestTaskQueue().putCount(), zeroIsDone );
+			TRACE_INFO( "Status: digesting " << digestionPercent << "% " <<
+				_digestDirectory.toDigestTaskQueue().getCount() << "/" << _digestDirectory.toDigestTaskQueue().putCount() );
 			if ( _path != boost::filesystem::path( "" ) ) {
 				std::ofstream output( _path.string() );
-				output << "{ \"state\": \"digesting\", \"filesToDigest\": " << filesToDigest <<
-					", \"digestQueueLength\": " << digestQueueLength << "}";
+				output <<
+					"{ \"state\": \"digesting\", \"percent\": " << digestionPercent << ", \"digestion\": { " <<
+					"\"done\": " << _digestDirectory.toDigestTaskQueue().getCount() <<
+					", \"total\": " << _digestDirectory.toDigestTaskQueue().putCount() << "}}";
 			}
 		}
 	}

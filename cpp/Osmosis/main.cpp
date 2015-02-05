@@ -33,6 +33,8 @@ boost::filesystem::path stripTrailingSlash( boost::filesystem::path path )
 
 void checkIn( const boost::program_options::variables_map & options )
 {
+	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
+	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
 	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false );
@@ -44,7 +46,7 @@ void checkIn( const boost::program_options::variables_map & options )
 	if ( boost::filesystem::exists( draftsPath ) )
 		THROW( Error, "workDir must not contain " << draftsPath );
 
-	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5 );
+	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5, reportFile, reportIntervalSeconds );
 	instance.go();
 }
 

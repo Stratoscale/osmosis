@@ -4,6 +4,7 @@
 #include "Osmosis/Client/DigestDirectory.h"
 #include "Osmosis/Client/CheckExistingThread.h"
 #include "Osmosis/Client/PutThread.h"
+#include "Osmosis/Client/CheckInProgress.h"
 #include "Osmosis/Stream/BufferToSocket.h"
 #include "Common/NumberOfCPUs.h"
 
@@ -17,12 +18,15 @@ public:
 	CheckIn(        const boost::filesystem::path &  directory,
 			const std::string &              label,
 			Chain::ObjectStoreInterface &    objectStore,
-			bool                             md5 ) :
+			bool                             md5,
+			const boost::filesystem::path &  progressReport,
+			unsigned                         progressReportIntervalSeconds ) :
 		_label( label ),
 		_md5( md5 ),
 		_digestDirectory( directory, md5, _ignores ),
 		_putConnection( objectStore.connect() ),
-		_putQueue( CHECK_EXISTING_THREADS )
+		_putQueue( CHECK_EXISTING_THREADS ),
+		_checkInProgress( progressReport, _digestDirectory, _putQueue, progressReportIntervalSeconds )
 	{
 		for ( unsigned i = 0; i < CHECK_EXISTING_THREADS; ++ i )
 			_threads.push_back( std::thread(
@@ -62,6 +66,7 @@ private:
 	std::unique_ptr< Chain::ObjectStoreConnectionInterface >  _putConnection;
 	DigestedTaskQueue                                         _putQueue;
 	std::vector< std::thread >                                _threads;
+	CheckInProgress						  _checkInProgress;
 
 	Hash putDirList()
 	{
