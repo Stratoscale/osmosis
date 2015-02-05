@@ -43,7 +43,7 @@ private:
 	void takeOutAllLabels()
 	{
 		for ( auto i = _labels.list( "" ); not i.done(); i.next() ) {
-			Hash hash = _labels.readLabel( * i );
+			Hash hash = _labels.readLabelNoLog( * i );
 			_staleHashes.erase( hash );
 			DirList dirList;
 			std::ifstream dirListFile( _store.filenameForExisting( hash ).string() );

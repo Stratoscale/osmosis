@@ -41,7 +41,7 @@ private:
 	ObjectStore::Drafts &           _drafts;
 	ObjectStore::Labels &           _labels;
 	boost::asio::io_service         _ioService;
-	boost::asio::ip::tcp::acceptor  _acceptor; 
+	boost::asio::ip::tcp::acceptor  _acceptor;
 
 	Server( const Server & rhs ) = delete;
 	Server & operator= ( const Server & rhs ) = delete;

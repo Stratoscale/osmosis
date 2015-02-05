@@ -5,6 +5,7 @@
 #include "Osmosis/FilesystemUtils.h"
 #include "Osmosis/ObjectStore/LabelsIterator.h"
 #include "Osmosis/ObjectStore/DirectoryNames.h"
+#include "Osmosis/ObjectStore/LabelLog.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -16,7 +17,8 @@ public:
 	Labels( const boost::filesystem::path & rootPath, const Store & store ) :
 		_rootPath( rootPath ),
 		_store( store ),
-		_labelsPath( rootPath / DirectoryNames::LABELS )
+		_labelsPath( rootPath / DirectoryNames::LABELS ),
+		_log( rootPath )
 	{
 		if ( not boost::filesystem::is_directory( _labelsPath ) )
 			boost::filesystem::create_directories( _labelsPath );
@@ -29,32 +31,51 @@ public:
 					"label '" << label << "'" );
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
-		std::ofstream hashFile( absoluteFilename( label ).string() );
-		hashFile << hash;
+		{
+			std::ofstream hashFile( absoluteFilename( label ).string() );
+			hashFile << hash;
+		}
+		_log.set( label, hash );
 	}
 
 	bool exists( const std::string & label ) const
 	{
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
-		return boost::filesystem::exists( absoluteFilename( label ) );
+		bool result = boost::filesystem::exists( absoluteFilename( label ) );
+		if ( result )
+			_log.get( label, readLabelNoLog( label ) );
+		return result;
 	}
 
-	Hash readLabel( const std::string & label ) const
+	Hash readLabelNoLog( const std::string & label ) const
 	{
-		if ( not FilesystemUtils::safeFilename( label ) )
-			THROW( Error, "Label '" << label << "' contains forbidden characters" );
+		ASSERT( FilesystemUtils::safeFilename( label ) );
 		std::ifstream hashFile( absoluteFilename( label ).string() );
 		std::string hex;
 		hashFile >> hex;
 		return Hash::fromHex( hex );
 	}
 
+	Hash readLabel( const std::string & label ) const
+	{
+		if ( not FilesystemUtils::safeFilename( label ) )
+			THROW( Error, "Label '" << label << "' contains forbidden characters" );
+		Hash hash( readLabelNoLog( label ) );
+		_log.get( label, hash );
+		return hash;
+	}
+
 	void erase( const std::string & label )
 	{
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
+		if ( not boost::filesystem::exists( absoluteFilename( label ) ) ) {
+			TRACE_INFO( "Not Erasing label '" << label << "', does not exist" );
+			return;
+		}
 		TRACE_INFO("Erasing label '" << label << "'");
+		_log.remove( label, readLabelNoLog( label ) );
 		boost::filesystem::remove( absoluteFilename( label ) );
 	}
 
@@ -65,6 +86,9 @@ public:
 		ASSERT( FilesystemUtils::safeFilename( from ) );
 		ASSERT( FilesystemUtils::safeFilename( to ) );
 		boost::filesystem::rename( absoluteFilename( from ), absoluteFilename( to ) );
+		Hash hash( readLabelNoLog( to ) );
+		_log.remove( from, hash );
+		_log.set( to, hash );
 	}
 
 	LabelsIterator list( const std::string & regex ) const
@@ -76,7 +100,8 @@ public:
 private:
 	boost::filesystem::path  _rootPath;
 	const Store &            _store;
-	boost::filesystem::path  _labelsPath; 
+	boost::filesystem::path  _labelsPath;
+	mutable LabelLog         _log;
 
 	boost::filesystem::path absoluteFilename( const std::string & label ) const
 	{

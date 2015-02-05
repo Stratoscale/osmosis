@@ -1,6 +1,8 @@
 #ifndef __COMMON_SPLIT_STRING_H__
 #define __COMMON_SPLIT_STRING_H__
 
+#include "Common/Debug.h"
+
 class SplitString
 {
 public:

@@ -8,12 +8,13 @@ clean:
 	rm -fr build dist osmosis.egg-info
 
 .PHONY: build
-build: build/cpp-netlib-0.11.1-final
+build: build/cpp-netlib-0.11.1-final/.unpacked
 	$(MAKE) -f build.Makefile
 
-build/cpp-netlib-0.11.1-final: cpp-netlib-0.11.1-final.tar.gz
-	-mkdir $(@D)
-	tar -xf $< -C $(@D)
+build/cpp-netlib-0.11.1-final/.unpacked: cpp-netlib-0.11.1-final.tar.gz
+	mkdir build > /dev/null 2> /dev/null || true
+	tar -xf $< -C build
+	touch $@
 
 .PHONY: egg
 egg: dist/osmosis-1.0.linux-x86_64.tar.gz

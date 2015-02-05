@@ -11,7 +11,6 @@ class Drafts
 {
 public:
 	Drafts( const boost::filesystem::path & rootPath ) :
-		_rootPath( rootPath ),
 		_draftsPath( rootPath / DirectoryNames::DRAFTS ),
 		_counter( 0 )
 	{
@@ -55,7 +54,6 @@ public:
 	}
 		
 private:
-	boost::filesystem::path _rootPath;
 	boost::filesystem::path _draftsPath;
 	size_t _counter;
 	std::mutex _counterLock;

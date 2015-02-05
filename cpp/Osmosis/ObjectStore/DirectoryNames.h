@@ -8,6 +8,7 @@ namespace DirectoryNames
 
 static const char LABELS[] = "labels";
 static const char DRAFTS[] = "osmosisDrafts";
+static const char LABEL_LOG[] = "labelLog";
 
 } // namespace DirectoryNames
 } // namespace ObjectStore
