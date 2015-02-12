@@ -29,10 +29,13 @@ private:
 	void work()
 	{
 		struct Digested task = _inputQueue.get();
-		if ( _destinationConnection->exists( task.hash ) )
-			return;
-		std::string content = _checkOut.getString( task.hash );
-		_destinationConnection->putString( content, task.hash );
+		try {
+			std::string content = _checkOut.getString( task.hash );
+			_destinationConnection->putString( content, task.hash );
+		} catch (...) {
+			TRACE_ERROR( "While transferring hash: " << task.hash );
+			throw;
+		}
 	}
 
 	void go()

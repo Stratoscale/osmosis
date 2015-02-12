@@ -2,6 +2,7 @@
 #define __OSMOSIS_CLIENT_TRANSFER_H__
 
 #include "Osmosis/Client/TransferThread.h"
+#include "Osmosis/Client/CheckExistingThread.h"
 
 namespace Osmosis {
 namespace Client
@@ -16,8 +17,13 @@ public:
 		_label( label ),
 		_chain( chain ),
 		_destination( destination ),
-		_toTransferQueue( 1 )
+		_toCheckExistingQueue( 1 ),
+		_toTransferQueue( CHECK_EXISTING_THREADS )
 	{
+		for ( unsigned i = 0; i < CHECK_EXISTING_THREADS; ++ i )
+			_threads.push_back( std::thread(
+				CheckExistingThread::task, std::ref( _toCheckExistingQueue ), std::ref( _toTransferQueue ), std::ref( destination ),
+				std::ref( _checkExistingAlreadyProcessed ), std::ref( _checkExistingAlreadyProcessedLock ) ) );
 		for ( unsigned i = 0; i < TRANSFER_THREADS; ++ i )
 			_threads.push_back( std::thread(
 				TransferThread::task, std::ref( _toTransferQueue ), std::ref( chain ), std::ref( destination ) ) );
@@ -25,6 +31,7 @@ public:
 
 	~Transfer()
 	{
+		_toCheckExistingQueue.abort();
 		_toTransferQueue.abort();
 		for ( auto & i : _threads )
 			if ( i.joinable() )
@@ -40,7 +47,7 @@ public:
 		Hash labelHash = checkOut.getLabel( _label );
 		DirList labelDirList = fetchDirList( labelHash, checkOut );
 
-		populateTransferQueue( labelHash, labelDirList );
+		populateToCheckExistingQueue( labelHash, labelDirList );
 		for ( auto & i : _threads )
 			i.join();
 		connection->setLabel( labelHash, _label );
@@ -48,14 +55,18 @@ public:
 
 private:
 	enum {
-		TRANSFER_THREADS = 10,
+		CHECK_EXISTING_THREADS = 10,
+		TRANSFER_THREADS = 5,
 	};
 
-	const std::string              _label;
-	Chain::Chain &                 _chain;
-	Chain::ObjectStoreInterface &  _destination;
-	DigestedTaskQueue              _toTransferQueue;
-	std::vector< std::thread >     _threads;
+	const std::string                      _label;
+	Chain::Chain &                         _chain;
+	Chain::ObjectStoreInterface &          _destination;
+	CheckExistingThread::AlreadyProcessed  _checkExistingAlreadyProcessed;
+	std::mutex                             _checkExistingAlreadyProcessedLock;
+	DigestedTaskQueue                      _toCheckExistingQueue;
+	DigestedTaskQueue                      _toTransferQueue;
+	std::vector< std::thread >             _threads;
 
 	void checkLabelDoesNotExistInDestination( Chain::ObjectStoreConnectionInterface & connection )
 	{
@@ -63,13 +74,13 @@ private:
 			THROW( Error, "Label '" << _label << "' already exists at destination" );
 	}
 
-	void populateTransferQueue( const Hash & labelHash, const DirList & labelDirList )
+	void populateToCheckExistingQueue( const Hash & labelHash, const DirList & labelDirList )
 	{
-		_toTransferQueue.put( Digested( { boost::filesystem::path( "label" ), labelHash } ) );
 		for ( auto & entry : labelDirList.entries() )
 			if ( entry.hash )
-				_toTransferQueue.put( Digested( { entry.path, * entry.hash } ) );
-		_toTransferQueue.producerDone();
+				_toCheckExistingQueue.put( Digested( { entry.path, * entry.hash } ) );
+		_toCheckExistingQueue.put( Digested( { boost::filesystem::path( "label" ), labelHash } ) );
+		_toCheckExistingQueue.producerDone();
 	}
 
 	DirList fetchDirList( const Hash & labelHash, Chain::CheckOut & checkOut )

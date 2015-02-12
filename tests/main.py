@@ -676,6 +676,21 @@ class Test(unittest.TestCase):
         finally:
             server.stop()
 
+    def test_DirlistContainsSameObjectSeveralTimes(self):
+        for i in xrange(100):
+            self.client.writeFile("aFile%d" % i, "123456")
+        self.client.checkin("yuvu")
+        self.client.checkin("yuvu2")
+        server = osmosiswrapper.Server()
+        try:
+            self.client.transfer("yuvu", server)
+            self.client.transfer("yuvu2", server)
+        except:
+            logging.error("Destination server log:\n%(log)s", dict(log=server.readLog()))
+            raise
+        finally:
+            server.exit()
+
 
 if __name__ == '__main__':
     unittest.main()
