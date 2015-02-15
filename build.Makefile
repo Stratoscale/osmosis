@@ -10,10 +10,16 @@ DEBUG_CFLAGS = $(DEBUG_CXXFLAGS)
 
 RELEASE_CXXFLAGS = -O3
 RELEASE_CFLAGS = $(RELEASE_CXXFLAGS)
+RELEASE_LDFLAGS = -O3
 
 CXXFLAGS = $(COMMON_CXXFLAGS) $($(CONFIGURATION)_CXXFLAGS)
 CFLAGS = $(COMMON_CFLAGS) $($(CONFIGURATION)_CFLAGS)
-LDFLAGS = -L/usr/lib/x86_64-linux-gnu
+LDFLAGS = -L/usr/lib/x86_64-linux-gnu $($(CONFIGURATION)_LDFLAGS)
+
+ifneq ($(PROFILE),)
+CFLAGS += -pg
+LDFLAGS += -pg
+endif
 
 ifneq ($(shell locate boost_filesystem-mt | grep '^/usr'),)
 BOOST_MT =-mt

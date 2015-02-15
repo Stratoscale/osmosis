@@ -45,18 +45,20 @@ private:
 		for ( auto i = _labels.list( "" ); not i.done(); i.next() ) {
 			Hash hash = _labels.readLabelNoLog( * i );
 			_staleHashes.erase( hash );
-			DirList dirList;
+
 			std::ifstream dirListFile( _store.filenameForExisting( hash ).string() );
-			dirListFile >> dirList;
-			takeOutAllHashesFromDirList( dirList );
+			takeOutDirListFile( dirListFile );
 		}
 	}
 
-	void takeOutAllHashesFromDirList( const DirList & dirList )
+	void takeOutDirListFile( std::ifstream & dirListFile )
 	{
-		for ( auto & entry : dirList.entries() )
+		std::string line;
+		while ( std::getline( dirListFile, line ) ) {
+			DirListEntry entry( line );
 			if ( entry.hash )
 				_staleHashes.erase( * entry.hash );
+		}
 	}
 
 	Purge( const Purge & rhs ) = delete;
