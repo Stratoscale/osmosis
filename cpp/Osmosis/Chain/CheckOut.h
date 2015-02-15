@@ -10,9 +10,10 @@ class CheckOut
 public:
 	CheckOut( CheckOut && other ) = default;
 
-	CheckOut( std::vector< ObjectStoreInterface * > && objectStores, bool putIfMissing ) :
+	CheckOut( std::vector< ObjectStoreInterface * > && objectStores, bool putIfMissing, bool touch ) :
 		_objectStores( objectStores ),
 		_putIfMissing( putIfMissing ),
+		_touch( touch ),
 		_connections( objectStores.size() ),
 		_getCount( objectStores.size() )
 	{
@@ -76,6 +77,13 @@ public:
 						connection( j ).setLabel( hash, label );
 					}
 				}
+				if ( _touch ) {
+					TRACE_INFO( "Touching chain for label: " << label );
+					for ( unsigned j = i + 1; j < _connections.size(); ++ j )
+						try {
+							connection( j ).getLabel( label );
+						} CATCH_ALL_IGNORE( "While touching label on object store " << j << ", ignoring" );
+				}
 				return hash;
 			}
 		}
@@ -88,6 +96,7 @@ public:
 private:
 	const std::vector< ObjectStoreInterface * >                       _objectStores;
 	const bool                                                        _putIfMissing;
+	const bool                                                        _touch;
 	std::vector< std::unique_ptr< ObjectStoreConnectionInterface > >  _connections;
 	GetCountStats                                                     _getCount;
 

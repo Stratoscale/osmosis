@@ -1,5 +1,5 @@
-#ifndef __OSMOSIS_OBJECT_STORE_LABEL_LOG_H__
-#define __OSMOSIS_OBJECT_STORE_LABEL_LOG_H__
+#ifndef __OSMOSIS_OBJECT_STORE_LABEL_LOG_APPENDER_H__
+#define __OSMOSIS_OBJECT_STORE_LABEL_LOG_APPENDER_H__
 
 #include "Osmosis/ObjectStore/LabelLogEntry.h"
 #include "Osmosis/Debug.h"
@@ -8,17 +8,17 @@ namespace Osmosis {
 namespace ObjectStore
 {
 
-class LabelLog
+class LabelLogAppender
 {
 public:
-	LabelLog( const boost::filesystem::path & rootPath ) :
+	LabelLogAppender( const boost::filesystem::path & rootPath ) :
 		_labelLogsPath( rootPath / DirectoryNames::LABEL_LOG )
 	{
 		if ( not boost::filesystem::is_directory( _labelLogsPath ) )
 			boost::filesystem::create_directories( _labelLogsPath );
 	}
 
-	~LabelLog()
+	~LabelLogAppender()
 	{
 		try {
 			write();
@@ -49,10 +49,7 @@ public:
 			std::lock_guard< std::mutex > lock( _logLock );
 			temp.splice(temp.begin(), _log);
 		}
-		std::time_t now = std::time( nullptr );
-		std::string hostname( boost::asio::ip::host_name() );
-		std::string basename( std::to_string( now ) + "__" + hostname + "__" + randomHex() );
-		boost::filesystem::path logFilePath = _labelLogsPath / basename;
+		boost::filesystem::path logFilePath = _labelLogsPath / logBasename();
 		std::ofstream output( logFilePath.string() );
 		for ( auto & entry : temp )
 			output << entry;
@@ -85,11 +82,18 @@ private:
 		return std::move( std::string( output, sizeof( buffer ) * ( sizeof( "XX" ) - sizeof( '\0' ) ) ) );
 	}
 
-	LabelLog( const LabelLog & rhs ) = delete;
-	LabelLog & operator= ( const LabelLog & rhs ) = delete;
+	static std::string logBasename()
+	{
+		std::time_t now = std::time( nullptr );
+		std::string hostname( boost::asio::ip::host_name() );
+		return std::to_string( now ) + "__" + hostname + "__" + randomHex();
+	}
+
+	LabelLogAppender( const LabelLogAppender & rhs ) = delete;
+	LabelLogAppender & operator= ( const LabelLogAppender & rhs ) = delete;
 };
 
 } // namespace ObjectStore
 } // namespace Osmosis
 
-#endif // __OSMOSIS_OBJECT_STORE_LABEL_LOG_H__
+#endif // __OSMOSIS_OBJECT_STORE_LABEL_LOG_APPENDER_H__

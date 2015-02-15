@@ -691,6 +691,29 @@ class Test(unittest.TestCase):
         finally:
             server.exit()
 
+    def test_ChainTouchVSNoChainTouch(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        eventsBefore = self.server.labelLog()
+
+        server2 = osmosiswrapper.Server()
+        client = osmosiswrapper.Client(server2, self.server)
+        try:
+            client.checkout("yuvu", noChainTouch=True, putIfMissing=True)
+            eventsAfter = self.server.labelLog()
+            self.assertLess(len(eventsBefore), len(eventsAfter))
+
+            client.checkout("yuvu", noChainTouch=True)
+            eventsAfter2 = self.server.labelLog()
+            self.assertEquals(eventsAfter2, eventsAfter)
+
+            client.checkout("yuvu")
+            eventsAfter3 = self.server.labelLog()
+            self.assertLess(len(eventsAfter2), len(eventsAfter3))
+        finally:
+            client.clean()
+            server2.exit()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,7 +5,7 @@
 #include "Osmosis/FilesystemUtils.h"
 #include "Osmosis/ObjectStore/LabelsIterator.h"
 #include "Osmosis/ObjectStore/DirectoryNames.h"
-#include "Osmosis/ObjectStore/LabelLog.h"
+#include "Osmosis/ObjectStore/LabelLogAppender.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -97,11 +97,16 @@ public:
 		return std::move( iterator );
 	}
 
+	void flushLog()
+	{
+		_log.write();
+	}
+
 private:
-	boost::filesystem::path  _rootPath;
-	const Store &            _store;
-	boost::filesystem::path  _labelsPath;
-	mutable LabelLog         _log;
+	boost::filesystem::path   _rootPath;
+	const Store &             _store;
+	boost::filesystem::path   _labelsPath;
+	mutable LabelLogAppender  _log;
 
 	boost::filesystem::path absoluteFilename( const std::string & label ) const
 	{

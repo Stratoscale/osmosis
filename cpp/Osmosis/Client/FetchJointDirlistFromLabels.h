@@ -8,9 +8,10 @@ namespace Client
 class FetchJointDirlistFromLabels
 {
 public:
-	FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain ):
+	FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain, bool chainTouch ):
 		_labels( labels ),
-		_checkOut( chain.checkOut() )
+		_checkOut( chain.checkOut() ),
+		_chainTouch( chainTouch )
 	{}
 
 	DirList joined()
@@ -46,6 +47,7 @@ public:
 private:
 	const std::vector< std::string >  _labels;
 	Chain::CheckOut                   _checkOut;
+	bool                              _chainTouch;
 
 	DirList getLabelDirList( const std::string & label )
 	{

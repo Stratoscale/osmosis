@@ -24,6 +24,13 @@ struct LabelLogEntry
 		hash( new Hash( hash ) )
 	{}
 
+	LabelLogEntry( const LabelLogEntry & other ) :
+		time( other.time ),
+		operation( other.operation ),
+		label( other.label ),
+		hash( new Hash( * other.hash ) )
+	{}
+
 	LabelLogEntry( std::string line )
 	{
 		boost::trim( line );
@@ -67,7 +74,6 @@ private:
 		return static_cast< Operation >( input[ 0 ] );
 	}
 
-	LabelLogEntry( const LabelLogEntry & rhs ) = delete;
 	LabelLogEntry & operator= ( const LabelLogEntry & rhs ) = delete;
 };
 

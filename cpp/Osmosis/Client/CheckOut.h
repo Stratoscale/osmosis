@@ -24,7 +24,8 @@ public:
 			bool                             myUIDandGIDcheckout,
 			const Ignores &                  ignores,
 			const boost::filesystem::path &  progressReport,
-			unsigned                         progressReportIntervalSeconds ) :
+			unsigned                         progressReportIntervalSeconds,
+			bool                             chainTouch ) :
 		_directory( directory ),
 		_labels( label ),
 		_chain( chain ),
@@ -32,13 +33,14 @@ public:
 		_myUIDandGIDcheckout( myUIDandGIDcheckout ),
 		_ignores( ignores ),
 		_digestDirectory( directory, md5, ignores ),
-		_checkOutProgress( progressReport, _digestDirectory, progressReportIntervalSeconds )
+		_checkOutProgress( progressReport, _digestDirectory, progressReportIntervalSeconds ),
+		_chainTouch( chainTouch )
 	{}
 
 	void go()
 	{
 		_labels.fetch();
-		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain ).joined() );
+		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain, _chainTouch ).joined() );
 		_digestDirectory.join();
 
 		try {
@@ -77,6 +79,7 @@ private:
 	const Ignores &                _ignores;
 	DigestDirectory                _digestDirectory;
 	CheckOutProgress               _checkOutProgress;
+	bool                           _chainTouch;
 
 	void removeUnknownFiles( const DirList & digested, const DirList & label, const FetchFiles & fetchFiles )
 	{

@@ -17,6 +17,12 @@ static inline gid_t gid()
 	return gid;
 }
 
+static inline pid_t pid()
+{
+	static pid_t pid = getpid();
+	return pid;
+}
+
 } // namespace OSUtils
 } // namespace Osmosis
 

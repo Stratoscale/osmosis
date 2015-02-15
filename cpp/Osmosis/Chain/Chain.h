@@ -11,8 +11,9 @@ namespace Chain
 class Chain
 {
 public:
-	Chain( const std::string & objectStoresArgument, bool putIfMissing ):
-		_putIfMissing( putIfMissing )
+	Chain( const std::string & objectStoresArgument, bool putIfMissing, bool chainTouch ):
+		_putIfMissing( putIfMissing ),
+		_chainTouch( chainTouch )
 	{
 		std::vector< std::string > locations;
 		boost::split( locations, objectStoresArgument, boost::is_any_of( "+" ) );
@@ -36,11 +37,12 @@ public:
 		std::vector< ObjectStoreInterface * > objectStores;
 		for ( auto & objectStore : _objectStores )
 			objectStores.push_back( objectStore.get() );
-		return std::move( CheckOut( std::move( objectStores ), _putIfMissing ) );
+		return std::move( CheckOut( std::move( objectStores ), _putIfMissing, _chainTouch ) );
 	}
 
 private:
 	const bool                                              _putIfMissing;
+	const bool                                              _chainTouch;
 	std::vector< std::unique_ptr< ObjectStoreInterface > >  _objectStores;
 
 	Chain( const Chain & rhs ) = delete;

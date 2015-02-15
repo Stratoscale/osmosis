@@ -2,6 +2,7 @@
 #define __OSMOSIS_SERVER_SERVER_H__
 
 #include "Osmosis/Server/Thread.h"
+#include "Osmosis/HandleSignal.h"
 
 namespace Osmosis {
 namespace Server
@@ -23,6 +24,7 @@ public:
 	{
 		boost::asio::socket_base::reuse_address option( true );
 		_acceptor.set_option(option);
+		HandleSignal::registerHandler( SIGUSR1, std::bind( &Server::flush, this ) );
 	}
 
 	void run()
@@ -42,6 +44,11 @@ private:
 	ObjectStore::Labels &           _labels;
 	boost::asio::io_service         _ioService;
 	boost::asio::ip::tcp::acceptor  _acceptor;
+
+	void flush()
+	{
+		_labels.flushLog();
+	}
 
 	Server( const Server & rhs ) = delete;
 	Server & operator= ( const Server & rhs ) = delete;

@@ -3,6 +3,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <mutex>
+#include "Osmosis/OSUtils.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -74,7 +75,7 @@ private:
 
 	static std::string pidPrefix()
 	{
-		return std::to_string(getpid()) + ".";
+		return std::to_string( OSUtils::pid() ) + ".";
 	}
 
 	Drafts( const Drafts & rhs ) = delete;

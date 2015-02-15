@@ -5,6 +5,7 @@ import socket
 import logging
 import os
 import time
+import signal
 
 
 class Client:
@@ -102,6 +103,8 @@ class Client:
             moreArgs.append("--myUIDandGIDcheckout")
         if kwargs.get('putIfMissing', False):
             moreArgs.append("--putIfMissing")
+        if kwargs.get('noChainTouch', False):
+            moreArgs.append("--noChainTouch")
         if 'ignore' in kwargs:
             moreArgs.append("--ignore=" + kwargs['ignore'])
         if 'reportFile' in kwargs:
@@ -201,6 +204,12 @@ class Server:
                     continue
                 with open(os.path.join(root, filename), "wb") as f:
                     f.write(malformedContent)
+
+    def labelLog(self):
+        os.kill(self._proc.pid, signal.SIGUSR1)
+        output = subprocess.check_output([
+            "build/cpp/osmosis.bin", "labellog", "--objectStoreRootPath=" + self.path], close_fds=True)
+        return output.strip().split("\n")
 
     def _freePort(self):
         sock = socket.socket()
