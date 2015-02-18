@@ -55,9 +55,10 @@ private:
 	{
 		std::string line;
 		while ( std::getline( dirListFile, line ) ) {
-			DirListEntry entry( line );
-			if ( entry.hash )
-				_staleHashes.erase( * entry.hash );
+			Container< Hash > hash;
+			DirListEntry::parseOnlyHashFromLine( line, hash );
+			if ( hash.constructed() )
+				_staleHashes.erase( * hash );
 		}
 	}
 

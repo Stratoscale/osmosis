@@ -2,6 +2,7 @@
 #define __OSMOSIS_DIR_LIST_ENTRY_H__
 
 #include "Osmosis/FileStatus.h"
+#include "Common/Container.h"
 
 namespace Osmosis
 {
@@ -35,7 +36,7 @@ struct DirListEntry
 			if ( hashString == "nohash" )
 				THROW( Error, "'" << line << "' is in an invalid format for a dir list entry: " <<
 						"regular files must have a hash" );
-			hash.reset( new Hash( Hash::fromHex( hashString ) ) );
+			hash.reset( new Hash( hashString ) );
 		} else {
 			if ( hashString != "nohash" )
 				THROW( Error, "'" << line << "' is in an invalid format for a dir list entry: " <<
@@ -55,6 +56,23 @@ struct DirListEntry
 			os << "nohash";
 		os << '\n';
 		return os;
+	}
+
+	static void parseOnlyHashFromLine( const std::string & line, Container< Hash > & result )
+	{
+		SplitString split( line, '\t' );
+		if ( split.done() )
+			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
+		split.next();
+		if ( split.done() )
+			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
+		split.next();
+		if ( split.done() )
+			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
+		ASSERT( split.charCount() > 0 );
+		if ( split.asCharPtr()[0] == 'n' ) //nohash
+			return;
+		result.emplace( split.asCharPtr(), split.charCount() );
 	}
 
 private:

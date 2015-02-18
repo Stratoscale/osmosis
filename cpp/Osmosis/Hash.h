@@ -20,19 +20,19 @@ public:
 				_raw.hashAlgorithm == static_cast< unsigned >( Tongue::HashAlgorithm::SHA1 ) );
 	}
 
-	static Hash fromHex( const std::string & hex )
+	Hash( const char *hex, unsigned length )
 	{
-		struct Tongue::Hash raw;
-		Hex::toBuffer( hex, raw.hash, sizeof( raw.hash ) );
-		if ( hex.size() == MD5_DIGEST_LENGTH * 2 )
-			raw.hashAlgorithm = static_cast< unsigned >( Tongue::HashAlgorithm::MD5 );
-		else if ( hex.size() == SHA_DIGEST_LENGTH * 2 )
-			raw.hashAlgorithm = static_cast< unsigned >( Tongue::HashAlgorithm::SHA1 );
+		Hex::toBuffer( hex, length, _raw.hash, sizeof( _raw.hash ) );
+		if ( length == MD5_DIGEST_LENGTH * 2 )
+			_raw.hashAlgorithm = static_cast< unsigned >( Tongue::HashAlgorithm::MD5 );
+		else if ( length == SHA_DIGEST_LENGTH * 2 )
+			_raw.hashAlgorithm = static_cast< unsigned >( Tongue::HashAlgorithm::SHA1 );
 		else
 			THROW( Error, "Hash hex strings can be only 32 characters for MD5, or 40 for SHA1, but "
-					"string " << hex << " is " << hex.size() );
-		return raw;
+					"string " << std::string( hex, length ) << " is " << length );
 	}
+
+	Hash( const std::string & hex ) : Hash( hex.c_str(), hex.size() ) {}
 
 	boost::filesystem::path relativeFilename() const
 	{

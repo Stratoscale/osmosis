@@ -38,6 +38,21 @@ public:
 		return std::move( result );
 	}
 
+	const char * asCharPtr() const
+	{
+		ASSERT( not done() );
+		return _data.c_str() + _start;
+	}
+
+	unsigned charCount() const
+	{
+		ASSERT( not done() );
+		if ( _end == std::string::npos )
+			return _data.size() - _start;
+		else
+			return _end - _start;
+	}
+
 private:
 	const std::string & _data;
 	char _delimiter;

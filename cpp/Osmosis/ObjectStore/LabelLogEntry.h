@@ -47,7 +47,7 @@ struct LabelLogEntry
 		split.next();
 		if ( split.done() )
 			return;
-		hash.reset( new Hash( Hash::fromHex( split.asString() ) ) );
+		hash.reset( new Hash( split.asString() ) );
 		split.next();
 		if ( not split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a label log entry" );

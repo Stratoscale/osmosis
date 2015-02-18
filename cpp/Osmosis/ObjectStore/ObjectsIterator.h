@@ -30,7 +30,7 @@ public:
 		path.remove_filename();
 		std::string first = path.filename().string();
 		try {
-			return Hash::fromHex( first + middle + last );
+			return Hash( first + middle + last );
 		} catch ( ... ) {
 			TRACE_ERROR( "While converting '" << first << "' '" << middle << "' '" << last << "' to hex" );
 			throw;

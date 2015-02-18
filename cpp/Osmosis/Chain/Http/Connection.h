@@ -86,7 +86,7 @@ public:
 		boost::network::http::client::response response = _client.get( request );
 		std::ostringstream out;
 		out << boost::network::http::body( response );
-		return Hash::fromHex( out.str() );
+		return Hash( out.str() );
 	}
 
 	void renameLabel( const std::string & currentLabel, const std::string & renameLabelTo ) override

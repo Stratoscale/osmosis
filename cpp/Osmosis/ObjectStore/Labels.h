@@ -54,7 +54,7 @@ public:
 		std::ifstream hashFile( absoluteFilename( label ).string() );
 		std::string hex;
 		hashFile >> hex;
-		return Hash::fromHex( hex );
+		return Hash( hex );
 	}
 
 	Hash readLabel( const std::string & label ) const
