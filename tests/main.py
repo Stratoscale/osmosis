@@ -293,21 +293,16 @@ class Test(unittest.TestCase):
         self.client.writeFile("anotherFile", "778899")
         self.client.checkin("pash")
         self.assertEquals(set(self.client.listLabels()), set(["yuvu", "pash"]))
-        before = self.server.fileCount()
+        before = self.server.fileCount(excludeDir='labelLog')
         self.client.eraseLabel("pash")
         self.assertEquals(self.client.listLabels(), ["yuvu"])
         self.client.checkout("yuvu", removeUnknownFiles=True)
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
-        after = self.server.fileCount()
+        after = self.server.fileCount(excludeDir='labelLog')
         self.assertEquals(after, before - 1)
-        client = osmosiswrapper.Client(self.server)
-        try:
-            client.objectStores = [self.server.path]
-            client.purge()
-        finally:
-            client.clean()
-        after = self.server.fileCount()
+        self.server.purge()
+        after = self.server.fileCount(excludeDir='labelLog')
         self.assertEquals(after, before - 3)
 
     def test_CheckoutUsingDelayedLabel(self):

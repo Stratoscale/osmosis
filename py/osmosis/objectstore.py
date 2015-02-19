@@ -26,7 +26,7 @@ class ObjectStore:
         os.unlink(self.labelPath(label))
 
     def purge(self):
-        sh.run(["osmosis", "purge", "--objectStores", self._root])
+        sh.run(["osmosis", "purge", "--objectStoreRootPath", self._root])
 
     def labels(self):
         return os.listdir(os.path.join(self._root, "labels"))

@@ -65,13 +65,6 @@ public:
 				"as the last in the chain)" );
 	}
 
-	void purge() override
-	{
-		THROW( Error, "'http://' object store does not support the purge operation "
-				"(this kind of object store can only be used for checkout operations "
-				"as the last in the chain)" );
-	}
-
 	void setLabel( const Hash & hash, const std::string & label ) override
 	{
 		THROW( Error, "'http://' object store does not support the setLabel operation "

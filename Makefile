@@ -28,6 +28,7 @@ check_convention:
 
 install:
 	-sudo systemctl stop osmosis
+	-sudo service osmosis stop
 	sudo cp build/cpp/osmosis.bin /usr/bin/osmosis
 	if grep -i ubuntu /etc/os-release >/dev/null 2>/dev/null; then make install_service_upstart; else make install_service_systemd; fi
 

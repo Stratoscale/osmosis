@@ -77,9 +77,6 @@ class Client:
     def eraseLabel(self, label, **kwargs):
         return self._run("eraselabel", label, * self._moreArgs(kwargs))
 
-    def purge(self, **kwargs):
-        return self._run("purge", * self._moreArgs(kwargs))
-
     def renameLabel(self, labelBefore, labelAfter):
         return self._run("renamelabel", labelBefore, labelAfter)
 
@@ -189,9 +186,11 @@ class Server:
     def port(self):
         return self._port
 
-    def fileCount(self):
+    def fileCount(self, excludeDir=None):
         count = 0
         for root, dirs, files in os.walk(self.path):
+            if excludeDir in dirs:
+                dirs.remove(excludeDir)
             count += len(files) + len(dirs)
         return count
 
@@ -210,6 +209,11 @@ class Server:
         output = subprocess.check_output([
             "build/cpp/osmosis.bin", "labellog", "--objectStoreRootPath=" + self.path], close_fds=True)
         return output.strip().split("\n")
+
+    def purge(self):
+        os.kill(self._proc.pid, signal.SIGUSR1)
+        return subprocess.check_output([
+            "build/cpp/osmosis.bin", "purge", "--objectStoreRootPath=" + self.path], close_fds=True)
 
     def _freePort(self):
         sock = socket.socket()

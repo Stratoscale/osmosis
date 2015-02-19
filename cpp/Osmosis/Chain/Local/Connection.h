@@ -74,11 +74,6 @@ public:
 		_labels.erase( label );
 	}
 
-	void purge() override
-	{
-		Osmosis::ObjectStore::Purge( _store, _labels ).purge();
-	}
-
 	void setLabel( const Hash & hash, const std::string & label ) override
 	{
 		_labels.label( hash, label );

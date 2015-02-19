@@ -4,7 +4,6 @@
 #include "Osmosis/Client/CheckOut.h"
 #include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/LabelOps.h"
-#include "Osmosis/Client/AdminOps.h"
 #include "Osmosis/includecppnetlib.h"
 #include "Osmosis/ObjectStore/LabelLogIterator.h"
 
@@ -126,11 +125,11 @@ void eraseLabel( const boost::program_options::variables_map & options )
 
 void purge( const boost::program_options::variables_map & options )
 {
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
-	if ( chain.count() > 1 )
-		THROW( Error, "--objectStores must contain one LOCAL object store in a pruge operation" );
-	Osmosis::Client::AdminOps instance( chain.single() );
-	instance.purge();
+	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
+	Osmosis::ObjectStore::Store store( rootPath );
+	Osmosis::ObjectStore::Labels labels( rootPath, store );
+	Osmosis::ObjectStore::Purge purge( store, labels );
+	purge.purge();
 }
 
 void renameLabel( const boost::program_options::variables_map & options )
@@ -195,7 +194,7 @@ int main( int argc, char * argv [] )
 	optionsDescription.add_options()
 		("help", "produce help message")
 		("objectStoreRootPath", boost::program_options::value< std::string >()->default_value( "/var/lib/osmosis/objectstore" ),
-			"Path where osmosis will store objects. relevant for 'server' command" )
+			"Path where osmosis will store objects. relevant for 'server', 'purge' and 'labellog' commands" )
 		("serverTCPPort", boost::program_options::value< unsigned short >()->default_value( 1010 ),
 			"the TCP port to bind to, if command is 'server'")
 		( "objectStores", boost::program_options::value< std::string >()->default_value( "127.0.0.1:1010" ),

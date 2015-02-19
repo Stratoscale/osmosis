@@ -15,7 +15,8 @@ public:
 	ObjectsIterator( boost::filesystem::path rootPath ):
 		_iterator( rootPath ),
 		_labelsPath( rootPath / DirectoryNames::LABELS ),
-		_draftsPath( rootPath / DirectoryNames::DRAFTS )
+		_draftsPath( rootPath / DirectoryNames::DRAFTS ),
+		_labelLogPath( rootPath / DirectoryNames::LABEL_LOG )
 	{
 		skipNonObjects();
 	}
@@ -53,6 +54,7 @@ private:
 	boost::filesystem::recursive_directory_iterator  _iterator;
 	boost::filesystem::path                          _labelsPath;
 	boost::filesystem::path                          _draftsPath;
+	boost::filesystem::path                          _labelLogPath;
 
 	void skipNonObjects()
 	{
@@ -62,7 +64,8 @@ private:
 
 	bool skip()
 	{
-		if ( _iterator->path() == _labelsPath or _iterator->path() == _draftsPath ) {
+		if ( _iterator->path() == _labelsPath or _iterator->path() == _draftsPath  or
+				_iterator->path() == _labelLogPath ) {
 			_iterator.no_push();
 			return true;
 		}
