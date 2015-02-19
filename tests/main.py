@@ -709,6 +709,28 @@ class Test(unittest.TestCase):
             client.clean()
             server2.exit()
 
+    def test_LeastRecentlyUsed(self):
+        self.client.writeFile("megabyte", "X" * (1024*1024))
+        self.client.checkin("keepForever")
+        time.sleep(2)
+        self.client.writeFile("megabyte", "1" * (1024*1024))
+        self.client.checkin("yuvu1")
+        time.sleep(2)
+        self.client.writeFile("megabyte", "2" * (1024*1024))
+        self.client.checkin("yuvu2")
+        time.sleep(2)
+        self.client.writeFile("megabyte", "3" * (1024*1024))
+        self.client.checkin("yuvu3")
+        time.sleep(2)
+        self.client.writeFile("megabyte", "4" * (1024*1024))
+        self.client.checkin("yuvu4")
+
+        self.assertEquals(
+            set(self.client.listLabels()), set(["yuvu1", "yuvu2", "yuvu3", "yuvu4", "keepForever"]))
+        self.server.leastRecentlyUsed(keep=".*keep.*", maximumDiskUsage="%dK" % int(3.5 * 1024))
+        self.assertEquals(
+            set(self.client.listLabels()), set(["yuvu3", "yuvu4", "keepForever"]))
+
 
 if __name__ == '__main__':
     unittest.main()

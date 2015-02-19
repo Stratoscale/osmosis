@@ -215,6 +215,14 @@ class Server:
         return subprocess.check_output([
             "build/cpp/osmosis.bin", "purge", "--objectStoreRootPath=" + self.path], close_fds=True)
 
+    def leastRecentlyUsed(self, keep, maximumDiskUsage):
+        os.kill(self._proc.pid, signal.SIGUSR1)
+        return subprocess.check_output([
+            "build/cpp/osmosis.bin", "leastrecentlyused",
+            "--objectStoreRootPath=" + self.path,
+            "--keep=" + keep,
+            "--maximumDiskUsage=" + maximumDiskUsage], close_fds=True)
+
     def _freePort(self):
         sock = socket.socket()
         try:

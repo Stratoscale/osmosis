@@ -6,6 +6,7 @@
 #include "Osmosis/Client/LabelOps.h"
 #include "Osmosis/includecppnetlib.h"
 #include "Osmosis/ObjectStore/LabelLogIterator.h"
+#include "Osmosis/ObjectStore/LeastRecentlyUsed.h"
 
 std::mutex globalTraceLock;
 
@@ -153,6 +154,41 @@ void dumpLabelLog( const boost::program_options::variables_map & options )
 	}
 }
 
+size_t parseSizeArgument( const std::string & argument )
+{
+	if ( argument.size() < ( sizeof( "1G" ) - sizeof( '\0' ) ) )
+		THROW( Error, "Inavlid format for --maximumDiskUsage" );
+	switch ( argument[ argument.size() - 1 ] ) {
+		case 'G':
+		case 'g':
+			return std::stol( argument.substr( 0, argument.size() - 1 ) ) * 1024 * 1024 * 1024;
+			break;
+		case 'M':
+		case 'm':
+			return std::stol( argument.substr( 0, argument.size() - 1 ) ) * 1024 * 1024;
+			break;
+		case 'K':
+		case 'k':
+			return std::stol( argument.substr( 0, argument.size() - 1 ) ) * 1024;
+			break;
+		default:
+			THROW( Error, "Unable to parse '" << argument << "': last letter is not G or M" );
+	}
+}
+
+void leastRecentlyUsed( const boost::program_options::variables_map & options )
+{
+	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
+	std::string keepRegex = options[ "keep" ].as< std::string >();
+	boost::regex testExpression( keepRegex );
+	size_t maximumDiskUsage = parseSizeArgument( options[ "maximumDiskUsage" ].as< std::string >() );
+
+	Osmosis::ObjectStore::Store store( rootPath );
+	Osmosis::ObjectStore::Labels labels( rootPath, store );
+	Osmosis::ObjectStore::LeastRecentlyUsed leastRecentlyUsed( rootPath, store, labels, keepRegex, maximumDiskUsage );
+	leastRecentlyUsed.go();
+}
+
 void testHash( const boost::program_options::variables_map & options )
 {
 	boost::filesystem::path fileToHash = options[ "arg1" ].as< std::string >();
@@ -168,7 +204,7 @@ void usage( const boost::program_options::options_description & optionsDescripti
 	std::cout << std::endl;
 	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'transfer', " << std::endl;
 	std::cout << "            'listlabels', 'eraselabel', 'renamelabel', 'purge', " << std::endl;
-	std::cout << "            or 'labellog'" << std::endl;
+	std::cout << "            'labellog' or 'leastrecentlyused'" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
 	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
@@ -194,7 +230,7 @@ int main( int argc, char * argv [] )
 	optionsDescription.add_options()
 		("help", "produce help message")
 		("objectStoreRootPath", boost::program_options::value< std::string >()->default_value( "/var/lib/osmosis/objectstore" ),
-			"Path where osmosis will store objects. relevant for 'server', 'purge' and 'labellog' commands" )
+			"Path where osmosis will store objects. relevant for 'server', 'purge', 'labellog' and 'leastrecentlyused' commands" )
 		("serverTCPPort", boost::program_options::value< unsigned short >()->default_value( 1010 ),
 			"the TCP port to bind to, if command is 'server'")
 		( "objectStores", boost::program_options::value< std::string >()->default_value( "127.0.0.1:1010" ),
@@ -214,7 +250,11 @@ int main( int argc, char * argv [] )
 			"periodically write report in JSON format into this file" )
 		( "reportIntervalSeconds", boost::program_options::value< unsigned >()->default_value( 15 ),
 			"period to report progress" )
-		( "noChainTouch", "avoid touching fetched label in all object stores in chain (used for label bookeeping)" );
+		( "noChainTouch", "avoid touching fetched label in all object stores in chain (used for label bookeeping)" )
+		( "keep", boost::program_options::value< std::string >()->default_value( "keepforever|bootstrap" ),
+		  	"regular expression for labels to never erase. Only relevant under 'leastrecentlyused' command" )
+		( "maximumDiskUsage", boost::program_options::value< std::string >(),
+		  	"<number>M or <number>G for the amount of storage used for label objects before 'leastrecentlyused' starts erasing labels");
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()
@@ -273,6 +313,8 @@ int main( int argc, char * argv [] )
 			renameLabel( options );
 		else if ( command == "labellog" )
 			dumpLabelLog( options );
+		else if ( command == "leastrecentlyused" )
+			leastRecentlyUsed( options );
 		else if ( command == "testhash" )
 			testHash( options );
 		else {
