@@ -204,8 +204,9 @@ class Server:
                 with open(os.path.join(root, filename), "wb") as f:
                     f.write(malformedContent)
 
-    def labelLog(self):
-        os.kill(self._proc.pid, signal.SIGUSR1)
+    def labelLog(self, flush=True):
+        if flush:
+            os.kill(self._proc.pid, signal.SIGUSR1)
         output = subprocess.check_output([
             "build/cpp/osmosis.bin", "labellog", "--objectStoreRootPath=" + self.path], close_fds=True)
         return output.strip().split("\n")

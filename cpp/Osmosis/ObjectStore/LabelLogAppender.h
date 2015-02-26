@@ -56,6 +56,8 @@ public:
 	} 
 
 private:
+	enum { MAXIMUM_LOG_TO_KEEP_IN_MEMORY = 100 };
+
 	typedef std::list< LabelLogEntry > Log;
 
 	boost::filesystem::path  _labelLogsPath;
@@ -66,8 +68,12 @@ private:
 	{
 		Log temp;
 		temp.emplace_back( operation, label, hash );
-		std::lock_guard< std::mutex > lock( _logLock );
-		_log.splice(_log.begin(), temp);
+		{
+			std::lock_guard< std::mutex > lock( _logLock );
+			_log.splice(_log.begin(), temp);
+		}
+		if ( _log.size() > MAXIMUM_LOG_TO_KEEP_IN_MEMORY )
+			write();
 	}
 
 	static std::string randomHex()

@@ -731,6 +731,15 @@ class Test(unittest.TestCase):
         self.assertEquals(
             set(self.client.listLabels()), set(["yuvu3", "yuvu4", "keepForever"]))
 
+    def test_LabelLogFlushesItself(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        before = self.server.labelLog(flush=False)
+        for i in xrange(100):
+            self.client.checkout("yuvu")
+        after = self.server.labelLog(flush=False)
+        self.assertLess(len(before), len(after))
+
 
 if __name__ == '__main__':
     unittest.main()
