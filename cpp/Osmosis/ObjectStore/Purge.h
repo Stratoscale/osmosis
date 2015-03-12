@@ -42,11 +42,18 @@ private:
 
 	void takeOutAllLabels()
 	{
-		for ( auto i = _labels.list( "" ); not i.done(); i.next() ) {
-			Hash hash = _labels.readLabelNoLog( * i );
-			_staleHashes.erase( hash );
+        for ( auto & i : listLabels() ) {
+            Container< Hash > hash;
+            try {
+			    hash.emplace( _labels.readLabelNoLog( i ) );
+            } catch ( Error & error ) {
+                TRACE_WARNING( "While purging, found a bad label '" << i << "', erasing (" << error.what() << ")" );
+                _labels.erase( i );
+                continue;
+            }
+			_staleHashes.erase( * hash );
 
-			std::ifstream dirListFile( _store.filenameForExisting( hash ).string() );
+			std::ifstream dirListFile( _store.filenameForExisting( * hash ).string() );
 			takeOutDirListFile( dirListFile );
 		}
 	}
@@ -61,6 +68,14 @@ private:
 				_staleHashes.erase( * hash );
 		}
 	}
+
+    std::list< std::string > listLabels()
+    {
+        std::list< std::string > labels;
+		for ( auto i = _labels.list( "" ); not i.done(); i.next() )
+            labels.push_back( * i );
+        return std::move( labels );
+    }
 
 	Purge( const Purge & rhs ) = delete;
 	Purge & operator= ( const Purge & rhs ) = delete;

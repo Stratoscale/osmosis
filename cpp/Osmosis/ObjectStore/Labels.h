@@ -6,6 +6,7 @@
 #include "Osmosis/ObjectStore/LabelsIterator.h"
 #include "Osmosis/ObjectStore/DirectoryNames.h"
 #include "Osmosis/ObjectStore/LabelLogAppender.h"
+#include "Common/Container.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -75,7 +76,14 @@ public:
 			return;
 		}
 		TRACE_INFO("Erasing label '" << label << "'");
-		_log.remove( label, readLabelNoLog( label ) );
+        Container< Hash > hash;
+        try {
+            hash.emplace( readLabelNoLog( label ) );
+        } catch ( Error & e ) {
+            TRACE_WARNING( "Unable to read label hash when erasing, filling in with FFFF hash" );
+            hash.emplace( std::string( "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" ) );
+        }
+		_log.remove( label, * hash );
 		boost::filesystem::remove( absoluteFilename( label ) );
 	}
 

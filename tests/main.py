@@ -740,6 +740,13 @@ class Test(unittest.TestCase):
         after = self.server.labelLog(flush=False)
         self.assertLess(len(before), len(after))
 
+    def test_Bugfix_purgeCrashesIfLabelFileWasTruncated_HappensOnLocalSSDCaches(self):
+        self.assertEquals(self.client.listLabels(), [])
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        open(os.path.join(self.server.path, "labels", "yuvu"), "w").close()
+        self.server.purge()
+
 
 if __name__ == '__main__':
     unittest.main()
