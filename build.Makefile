@@ -21,9 +21,8 @@ CFLAGS += -pg
 LDFLAGS += -pg
 endif
 
-ifneq ($(shell locate boost_filesystem-mt | grep '^/usr'),)
-BOOST_MT =-mt
-endif
+STATIC_BOOST_LIBS_DIR = $(shell if [ -e /usr/lib/x86_64-linux-gnu/libboost_regex.a ]; then echo /usr/lib/x86_64-linux-gnu; else echo /usr/lib64; fi)
+BOOST_MT = $(shell if [ -e /usr/lib/x86_64-linux-gnu/libboost_regex.a ]; then echo ''; else echo -mt; fi)
 
 include targets.Makefile
 
