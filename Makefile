@@ -58,3 +58,6 @@ dist/osmosis-1.0.linux-x86_64.tar.gz:
 	-mkdir build
 	mv py/build build/pybuild
 	mv py/osmosis.egg-info ./
+
+prepareForCleanBuild:
+	sudo yum install boost-static --assumeyes
