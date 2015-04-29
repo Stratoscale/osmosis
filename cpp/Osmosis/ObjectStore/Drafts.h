@@ -4,6 +4,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <mutex>
 #include "Osmosis/OSUtils.h"
+#include "Common/PrintTrace.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -15,15 +16,16 @@ public:
 	Drafts( const boost::filesystem::path & rootPath ) :
 		_draftsPath( rootPath / DirectoryNames::DRAFTS ),
 		_counter( 0 ),
-		_pidPrefix(pidPrefix())
+		_pidPrefix( pidPrefix() ),
+		_directoryExists( false )
 	{
-		if ( not boost::filesystem::is_directory( _draftsPath ) )
-			boost::filesystem::create_directories( _draftsPath );
 		cleanUp();
 	}
 
 	void cleanUp()
 	{
+		if ( not boost::filesystem::is_directory( _draftsPath ) )
+			return;
 		std::time_t now = std::time(nullptr);
 		for ( auto i = boost::filesystem::directory_iterator( _draftsPath );
 				i != boost::filesystem::directory_iterator(); ++ i ) {
@@ -45,12 +47,13 @@ public:
 	{
 		cleanUp();
 		bool removed = boost::filesystem::remove( _draftsPath );
-		if ( not removed )
+		if ( not removed && _directoryExists )
 			TRACE_ERROR( "File was removed under my feet " << _draftsPath );
 	}
 
 	boost::filesystem::path allocateFilename()
 	{
+		makeSureDirectoryExists();
 		size_t value;
 		{
 			std::lock_guard< std::mutex > lock( _counterLock );
@@ -72,10 +75,21 @@ private:
 	size_t                   _counter;
 	std::mutex               _counterLock;
 	std::string              _pidPrefix;
+	bool                     _directoryExists;
 
 	static std::string pidPrefix()
 	{
 		return std::to_string( OSUtils::pid() ) + ".";
+	}
+
+	void makeSureDirectoryExists()
+	{
+		if ( _directoryExists )
+			return;
+		_directoryExists = true;
+		if ( boost::filesystem::is_directory( _draftsPath ) )
+			return;
+		boost::filesystem::create_directories( _draftsPath );
 	}
 
 	Drafts( const Drafts & rhs ) = delete;

@@ -10,11 +10,13 @@ class LabelLogIterator
 public:
 	LabelLogIterator( boost::filesystem::path rootPath )
 	{
-		for ( boost::filesystem::directory_iterator i( rootPath / DirectoryNames::LABEL_LOG );
-				i != boost::filesystem::directory_iterator(); ++ i ) {
-			boost::filesystem::path path( i->path() );
-			_logFiles.emplace( created( path ), path );
-		}
+		rootPath /= DirectoryNames::LABEL_LOG;
+		if ( boost::filesystem::is_directory( rootPath ) )
+			for ( boost::filesystem::directory_iterator i( rootPath );
+					i != boost::filesystem::directory_iterator(); ++ i ) {
+				boost::filesystem::path path( i->path() );
+				_logFiles.emplace( created( path ), path );
+			}
 		nextEntry();
 	}
 

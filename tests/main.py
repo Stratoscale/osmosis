@@ -747,6 +747,36 @@ class Test(unittest.TestCase):
         open(os.path.join(self.server.path, "labels", "yuvu"), "w").close()
         self.server.purge()
 
+    def test_ReadOnlyFileSystem_LabelLogDoesNotExist(self):
+        objectStoreDir = tempfile.mkdtemp()
+        try:
+            self.client.objectStores = [objectStoreDir]
+            self.client.writeFile("aFile", "123456")
+            self.client.checkin("yuvu")
+            self.assertEquals(self.client.listLabels(), ["yuvu"])
+
+            os.unlink(self.client.abspath("aFile"))
+            self.client.checkout("yuvu")
+            self.assertEquals(self.client.fileCount(), 1)
+            self.assertEquals(self.client.readFile("aFile"), "123456")
+
+            os.unlink(self.client.abspath("aFile"))
+            shutil.rmtree(os.path.join(objectStoreDir, "labelLog"))
+            os.chmod(objectStoreDir, 0555)
+            self.client.checkout("yuvu")
+            self.assertEquals(self.client.fileCount(), 1)
+            self.assertEquals(self.client.readFile("aFile"), "123456")
+
+            os.unlink(self.client.abspath("aFile"))
+            os.chmod(objectStoreDir, 0777)
+            shutil.rmtree(os.path.join(objectStoreDir, "osmosisDrafts"))
+            os.chmod(objectStoreDir, 0555)
+            self.client.checkout("yuvu")
+            self.assertEquals(self.client.fileCount(), 1)
+            self.assertEquals(self.client.readFile("aFile"), "123456")
+        finally:
+            shutil.rmtree(objectStoreDir, ignore_errors=True)
+
 
 if __name__ == '__main__':
     unittest.main()

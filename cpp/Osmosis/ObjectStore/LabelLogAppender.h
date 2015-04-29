@@ -12,11 +12,9 @@ class LabelLogAppender
 {
 public:
 	LabelLogAppender( const boost::filesystem::path & rootPath ) :
-		_labelLogsPath( rootPath / DirectoryNames::LABEL_LOG )
-	{
-		if ( not boost::filesystem::is_directory( _labelLogsPath ) )
-			boost::filesystem::create_directories( _labelLogsPath );
-	}
+		_labelLogsPath( rootPath / DirectoryNames::LABEL_LOG ),
+		_directoryExists( false )
+	{}
 
 	~LabelLogAppender()
 	{
@@ -49,6 +47,7 @@ public:
 			std::lock_guard< std::mutex > lock( _logLock );
 			temp.splice(temp.begin(), _log);
 		}
+		makeSureDirectoryExists();
 		boost::filesystem::path logFilePath = _labelLogsPath / logBasename();
 		std::ofstream output( logFilePath.string() );
 		for ( auto & entry : temp )
@@ -63,6 +62,7 @@ private:
 	boost::filesystem::path  _labelLogsPath;
 	Log                      _log;
 	std::mutex               _logLock;
+	bool                     _directoryExists;
 
 	void append( LabelLogEntry::Operation operation, const std::string & label, const Hash & hash )
 	{
@@ -93,6 +93,16 @@ private:
 		std::time_t now = std::time( nullptr );
 		std::string hostname( boost::asio::ip::host_name() );
 		return std::to_string( now ) + "__" + hostname + "__" + randomHex();
+	}
+
+	void makeSureDirectoryExists()
+	{
+		if ( _directoryExists )
+			return;
+		_directoryExists = true;
+		if ( boost::filesystem::is_directory( _labelLogsPath ) )
+			return;
+		boost::filesystem::create_directories( _labelLogsPath );
 	}
 
 	LabelLogAppender( const LabelLogAppender & rhs ) = delete;
