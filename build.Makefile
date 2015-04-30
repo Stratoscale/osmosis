@@ -21,8 +21,20 @@ CFLAGS += -pg
 LDFLAGS += -pg
 endif
 
-STATIC_BOOST_LIBS_DIR = $(shell if [ -e /usr/lib/x86_64-linux-gnu/libboost_regex.a ]; then echo /usr/lib/x86_64-linux-gnu; else echo /usr/lib64; fi)
-BOOST_MT = $(shell if [ -e /usr/lib/x86_64-linux-gnu/libboost_regex.a ]; then echo ''; else echo -mt; fi)
+STATIC_BOOST_LIBS_DIR = $(shell \
+if [ -e /usr/lib/x86_64-linux-gnu/libboost_regex-mt.a ] || [ -e /usr/lib/x86_64-linux-gnu/libboost_regex.a ]; then \
+	echo /usr/lib/x86_64-linux-gnu; \
+else \
+	if [ -e /usr/lib64/libboost_regex-mt.a ] || [ -e /usr/lib64/libboost_regex.a ]; then \
+		echo /usr/lib64; \
+	else \
+		echo BOOST_STATIC_NOT_INSTALLED; \
+	fi; \
+fi)
+ifeq "$(STATIC_BOOST_LIBS_DIR)" "BOOST_STATIC_NOT_INSTALLED"
+$(error BOOST static libraries were not found)
+endif
+BOOST_MT = $(shell if [ -e $(STATIC_BOOST_LIBS_DIR)/libboost_thread-mt.a ]; then echo '-mt'; fi)
 
 include targets.Makefile
 

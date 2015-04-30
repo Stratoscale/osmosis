@@ -1,4 +1,4 @@
-TARGET_osmosis = cpp/Osmosis/main.cpp
+TARGET_osmosis = cpp/Osmosis/main.cpp cpp/Osmosis/cppnetlib.cpp
 osmosis_LIBRARIES = -pthread \
 	$(STATIC_BOOST_LIBS_DIR)/libboost_regex$(BOOST_MT).a \
 	$(STATIC_BOOST_LIBS_DIR)/libboost_filesystem$(BOOST_MT).a \

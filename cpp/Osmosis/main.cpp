@@ -4,7 +4,6 @@
 #include "Osmosis/Client/CheckOut.h"
 #include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/LabelOps.h"
-#include "Osmosis/includecppnetlib.h"
 #include "Osmosis/ObjectStore/LabelLogIterator.h"
 #include "Osmosis/ObjectStore/LeastRecentlyUsed.h"
 
