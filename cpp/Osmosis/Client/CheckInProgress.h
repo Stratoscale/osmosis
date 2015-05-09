@@ -22,7 +22,8 @@ public:
 		_path( path ),
 		_digestDirectory( digestDirectory ),
 		_putQueue( putQueue ),
-		_reportIntervalSeconds( reportIntervalSeconds )
+		_reportIntervalSeconds( reportIntervalSeconds ),
+		_preWaitStopCondition( false )
 	{
 		_thread = std::thread( & CheckInProgress::threadEntryPoint, this );
 	}
@@ -37,6 +38,9 @@ public:
 		if ( ! _thread.joinable() )
 			return;
 		_stop.notify_one();
+		_preWaitStopLock.lock();
+		_preWaitStopCondition = true;
+		_preWaitStopLock.unlock();
 		_thread.join();
 		report( true );
 	}
@@ -49,9 +53,16 @@ private:
 	std::thread                    	_thread;
 	std::mutex                     	_stopLock;
 	std::condition_variable        	_stop;
+	std::mutex                      _preWaitStopLock;
+	bool				_preWaitStopCondition;
 
 	bool sleep()
 	{
+		_preWaitStopLock.lock();
+		if ( _preWaitStopCondition ) {
+			return false;
+		}
+		_preWaitStopLock.unlock();
 		std::unique_lock< std::mutex > lock( _stopLock );
 		auto result = _stop.wait_for( lock, std::chrono::seconds( _reportIntervalSeconds ) );
 		return result == std::cv_status::timeout;
