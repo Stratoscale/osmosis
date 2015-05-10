@@ -7,6 +7,7 @@
 #include "Osmosis/Stream/BufferToSocket.h"
 #include "Common/NumberOfCPUs.h"
 #include "Common/ProgressPercent.h"
+#include "Common/ThreadStopCondition.h"
 
 namespace Osmosis {
 namespace Client
@@ -22,7 +23,7 @@ public:
 		_path( path ),
 		_digestDirectory( digestDirectory ),
 		_putQueue( putQueue ),
-		_reportIntervalSeconds( reportIntervalSeconds )
+		_threadStopCondition( reportIntervalSeconds )
 	{
 		_thread = std::thread( & CheckInProgress::threadEntryPoint, this );
 	}
@@ -36,7 +37,7 @@ public:
 	{
 		if ( ! _thread.joinable() )
 			return;
-		_stop.notify_one();
+		_threadStopCondition.stop();
 		_thread.join();
 		report( true );
 	}
@@ -47,19 +48,11 @@ private:
 	DigestedTaskQueue &		_putQueue;
 	unsigned                       	_reportIntervalSeconds;
 	std::thread                    	_thread;
-	std::mutex                     	_stopLock;
-	std::condition_variable        	_stop;
-
-	bool sleep()
-	{
-		std::unique_lock< std::mutex > lock( _stopLock );
-		auto result = _stop.wait_for( lock, std::chrono::seconds( _reportIntervalSeconds ) );
-		return result == std::cv_status::timeout;
-	}
+	ThreadStopCondition             _threadStopCondition;
 
 	void threadEntryPoint()
 	{
-		while ( sleep() )
+		while ( _threadStopCondition.sleep() )
 			report( false );
 	}
 

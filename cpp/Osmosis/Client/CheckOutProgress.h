@@ -5,6 +5,7 @@
 #include "Osmosis/Client/CheckExistingThread.h"
 #include "Osmosis/Client/PutThread.h"
 #include "Osmosis/Stream/BufferToSocket.h"
+#include "Common/ThreadStopCondition.h"
 
 namespace Osmosis {
 namespace Client
@@ -18,8 +19,8 @@ public:
 				unsigned                         reportIntervalSeconds ):
 		_path( path ),
 		_digestDirectory( digestDirectory ),
-		_reportIntervalSeconds( reportIntervalSeconds ),
-		_fetchFiles( NULL )
+		_fetchFiles( NULL ),
+		_threadStopCondition( reportIntervalSeconds )
 	{
 		_thread = std::thread( & CheckOutProgress::threadEntryPoint, this );
 	}
@@ -33,7 +34,7 @@ public:
 	{
 		if ( ! _thread.joinable() )
 			return;
-		_stop.notify_one();
+		_threadStopCondition.stop();
 		_thread.join();
 		report( true );
 	}
@@ -47,22 +48,13 @@ public:
 private:
         const boost::filesystem::path  _path;
 	DigestDirectory &              _digestDirectory;
-	unsigned                       _reportIntervalSeconds;
 	FetchFiles *                   _fetchFiles;
 	std::thread                    _thread;
-	std::mutex                     _stopLock;
-	std::condition_variable        _stop;
-
-	bool sleep()
-	{
-		std::unique_lock< std::mutex > lock( _stopLock );
-		auto result = _stop.wait_for( lock, std::chrono::seconds( _reportIntervalSeconds ) );
-		return result == std::cv_status::timeout;
-	}
+	ThreadStopCondition            _threadStopCondition;
 
 	void threadEntryPoint()
 	{
-		while ( sleep() )
+		while ( _threadStopCondition.sleep() )
 			report( false );
 	}
 
