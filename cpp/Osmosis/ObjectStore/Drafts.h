@@ -5,7 +5,7 @@
 #include <mutex>
 #include "Osmosis/OSUtils.h"
 #include "Common/PrintTrace.h"
-#include "Osmosis/ObjectStore/DirectoryValidator.h"
+#include "Osmosis/ObjectStore/MakeDirectory.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -18,7 +18,7 @@ public:
 		_draftsPath( rootPath / DirectoryNames::DRAFTS ),
 		_counter( 0 ),
 		_pidPrefix( pidPrefix() ),
-		_dirValidator( rootPath / DirectoryNames::DRAFTS )
+		_makeDirectory( rootPath / DirectoryNames::DRAFTS )
 	{
 		cleanUp();
 	}
@@ -47,7 +47,7 @@ public:
 	void eraseDirectory()
 	{
 		cleanUp();
-		_dirValidator.erase();
+		_makeDirectory.erase();
 	}
 
 	boost::filesystem::path allocateFilename()
@@ -74,7 +74,7 @@ private:
 	size_t                   _counter;
 	std::mutex               _counterLock;
 	std::string              _pidPrefix;
-	DirectoryValidator       _dirValidator;
+	MakeDirectory            _makeDirectory;
 
 	static std::string pidPrefix()
 	{
@@ -83,7 +83,7 @@ private:
 
 	void makeSureDirectoryExists()
 	{
-		_dirValidator.makeSureExists();
+		_makeDirectory.makeSureExists();
 	}
 
 	Drafts( const Drafts & rhs ) = delete;

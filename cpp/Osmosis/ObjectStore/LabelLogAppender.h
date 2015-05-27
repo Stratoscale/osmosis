@@ -2,7 +2,7 @@
 #define __OSMOSIS_OBJECT_STORE_LABEL_LOG_APPENDER_H__
 
 #include "Osmosis/ObjectStore/LabelLogEntry.h"
-#include "Osmosis/ObjectStore/DirectoryValidator.h"
+#include "Osmosis/ObjectStore/MakeDirectory.h"
 #include "Osmosis/Debug.h"
 
 namespace Osmosis {
@@ -14,7 +14,7 @@ class LabelLogAppender
 public:
 	LabelLogAppender( const boost::filesystem::path & rootPath ) :
 		_labelLogsPath( rootPath / DirectoryNames::LABEL_LOG ),
-		_dirValidator( rootPath / DirectoryNames::LABEL_LOG )
+		_makeDirectory( rootPath / DirectoryNames::LABEL_LOG )
 	{}
 
 	~LabelLogAppender()
@@ -63,7 +63,7 @@ private:
 	boost::filesystem::path  _labelLogsPath;
 	Log                      _log;
 	std::mutex               _logLock;
-	DirectoryValidator       _dirValidator;
+	MakeDirectory            _makeDirectory;
 
 	void append( LabelLogEntry::Operation operation, const std::string & label, const Hash & hash )
 	{
@@ -98,7 +98,7 @@ private:
 
 	void makeSureDirectoryExists()
 	{
-		_dirValidator.makeSureExists();
+		_makeDirectory.makeSureExists();
 	}
 
 	LabelLogAppender( const LabelLogAppender & rhs ) = delete;
