@@ -5,6 +5,7 @@
 #include <mutex>
 #include "Osmosis/OSUtils.h"
 #include "Common/PrintTrace.h"
+#include "Osmosis/ObjectStore/MakeDirectory.h"
 
 namespace Osmosis {
 namespace ObjectStore
@@ -17,7 +18,7 @@ public:
 		_draftsPath( rootPath / DirectoryNames::DRAFTS ),
 		_counter( 0 ),
 		_pidPrefix( pidPrefix() ),
-		_directoryExists( false )
+		_makeDirectory( rootPath / DirectoryNames::DRAFTS )
 	{
 		cleanUp();
 	}
@@ -46,9 +47,7 @@ public:
 	void eraseDirectory()
 	{
 		cleanUp();
-		bool removed = boost::filesystem::remove( _draftsPath );
-		if ( not removed && _directoryExists )
-			TRACE_ERROR( "File was removed under my feet " << _draftsPath );
+		_makeDirectory.erase();
 	}
 
 	boost::filesystem::path allocateFilename()
@@ -75,7 +74,7 @@ private:
 	size_t                   _counter;
 	std::mutex               _counterLock;
 	std::string              _pidPrefix;
-	bool                     _directoryExists;
+	MakeDirectory            _makeDirectory;
 
 	static std::string pidPrefix()
 	{
@@ -84,12 +83,7 @@ private:
 
 	void makeSureDirectoryExists()
 	{
-		if ( _directoryExists )
-			return;
-		_directoryExists = true;
-		if ( boost::filesystem::is_directory( _draftsPath ) )
-			return;
-		boost::filesystem::create_directories( _draftsPath );
+		_makeDirectory.makeSureExists();
 	}
 
 	Drafts( const Drafts & rhs ) = delete;
