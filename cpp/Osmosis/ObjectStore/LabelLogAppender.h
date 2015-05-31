@@ -2,6 +2,7 @@
 #define __OSMOSIS_OBJECT_STORE_LABEL_LOG_APPENDER_H__
 
 #include "Osmosis/ObjectStore/LabelLogEntry.h"
+#include "Osmosis/ObjectStore/MakeDirectory.h"
 #include "Osmosis/Debug.h"
 
 namespace Osmosis {
@@ -13,7 +14,7 @@ class LabelLogAppender
 public:
 	LabelLogAppender( const boost::filesystem::path & rootPath ) :
 		_labelLogsPath( rootPath / DirectoryNames::LABEL_LOG ),
-		_directoryExists( false )
+		_makeDirectory( rootPath / DirectoryNames::LABEL_LOG )
 	{}
 
 	~LabelLogAppender()
@@ -47,7 +48,7 @@ public:
 			std::lock_guard< std::mutex > lock( _logLock );
 			temp.splice(temp.begin(), _log);
 		}
-		makeSureDirectoryExists();
+		_makeDirectory.makeSureExists();
 		boost::filesystem::path logFilePath = _labelLogsPath / logBasename();
 		std::ofstream output( logFilePath.string() );
 		for ( auto & entry : temp )
@@ -62,7 +63,7 @@ private:
 	boost::filesystem::path  _labelLogsPath;
 	Log                      _log;
 	std::mutex               _logLock;
-	bool                     _directoryExists;
+	MakeDirectory            _makeDirectory;
 
 	void append( LabelLogEntry::Operation operation, const std::string & label, const Hash & hash )
 	{
@@ -93,16 +94,6 @@ private:
 		std::time_t now = std::time( nullptr );
 		std::string hostname( boost::asio::ip::host_name() );
 		return std::to_string( now ) + "__" + hostname + "__" + randomHex();
-	}
-
-	void makeSureDirectoryExists()
-	{
-		if ( _directoryExists )
-			return;
-		_directoryExists = true;
-		if ( boost::filesystem::is_directory( _labelLogsPath ) )
-			return;
-		boost::filesystem::create_directories( _labelLogsPath );
 	}
 
 	LabelLogAppender( const LabelLogAppender & rhs ) = delete;
