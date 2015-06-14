@@ -15,6 +15,7 @@ public:
 
 	void set( const Hash & hash, const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		unsigned char buffer[ 1024 ];
 		struct Tongue::Header * header = reinterpret_cast< struct Tongue::Header * >( buffer );
 		struct Tongue::Label * labelHeader = reinterpret_cast< struct Tongue::Label * >( header + 1 );
@@ -30,10 +31,12 @@ public:
 		size_t size = reinterpret_cast< unsigned char * >( rawHash + 1 ) - buffer;
 		_socket.sendAll( buffer, size );
 		Stream::AckOps( _socket ).wait( "setting label" );
+		BACKTRACE_END_VERBOSE( "Hash " << hash << " Label " << label );
 	}
 
 	Hash get( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		sendLabelCommand( label, Tongue::Opcode::GET_LABEL );
 		try {
 			Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
@@ -44,10 +47,12 @@ public:
 						label << " hash: maybe the label does not exist?" );
 			throw;
 		}
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	std::list< std::string > list( const std::string regex )
 	{
+		BACKTRACE_BEGIN
 		sendLabelCommand( regex, Tongue::Opcode::LIST_LABELS );
 		std::list< std::string > result;
 		for ( Stream::Incoming incoming( _socket ); not incoming.done(); incoming.next() ) {
@@ -55,22 +60,28 @@ public:
 			result.push_back( std::move( label ) );
 		}
 		return std::move( result );
+		BACKTRACE_END_VERBOSE( "Regex " << regex );
 	}
 
 	void rename( const std::string & from, const std::string & to )
 	{
+		BACKTRACE_BEGIN
 		sendRenameCommand( from, to );
 		Stream::AckOps( _socket ).wait( "Rename operation" );
+		BACKTRACE_END_VERBOSE( "From " << from << " To " << to );
 	}
 
 	void erase( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		sendLabelCommand( label, Tongue::Opcode::ERASE_LABEL );
 		Stream::AckOps( _socket ).wait( "Erased label" );
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	void sendLabelCommand( const std::string & label, Tongue::Opcode opcode )
 	{
+		BACKTRACE_BEGIN
 		unsigned char buffer[ 1024 ];
 		struct Tongue::Header * header = reinterpret_cast< struct Tongue::Header * >( buffer );
 		struct Tongue::Label * labelHeader = reinterpret_cast< struct Tongue::Label * >( header + 1 );
@@ -83,6 +94,7 @@ public:
 		labelHeader->length = static_cast< unsigned short >( label.size() );
 		memcpy( labelText, label.c_str(), label.size() );
 		_socket.sendAll( buffer, size );
+		BACKTRACE_END_VERBOSE( "Label " << label << " Opcode " << static_cast< unsigned >( opcode ) );
 	}
 
 private:

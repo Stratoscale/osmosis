@@ -15,10 +15,12 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
 		struct Tongue::IsExistsResponse response = { static_cast< unsigned char >(
 			_store.exists( hash ) ? Tongue::IsExists::YES : Tongue::IsExists::NO ) };
 		_socket.sendAll( response );
+		BACKTRACE_END
 	}
 
 private:

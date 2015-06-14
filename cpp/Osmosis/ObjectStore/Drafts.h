@@ -25,6 +25,7 @@ public:
 
 	void cleanUp()
 	{
+		BACKTRACE_BEGIN
 		if ( not boost::filesystem::is_directory( _draftsPath ) )
 			return;
 		std::time_t now = std::time(nullptr);
@@ -42,16 +43,20 @@ public:
 			if ( not removed )
 				TRACE_ERROR( "File was removed under my feet " << i->path() );
 		}
+		BACKTRACE_END
 	}
 
 	void eraseDirectory()
 	{
+		BACKTRACE_BEGIN
 		cleanUp();
 		_makeDirectory.erase();
+		BACKTRACE_END
 	}
 
 	boost::filesystem::path allocateFilename()
 	{
+		BACKTRACE_BEGIN
 		_makeDirectory.makeSureExists();
 		size_t value;
 		{
@@ -60,6 +65,7 @@ public:
 			value = _counter;
 		}
 		return std::move( _draftsPath / ( _pidPrefix + std::to_string( value ) ) );
+		BACKTRACE_END
 	}
 
 	boost::filesystem::path path() const

@@ -15,9 +15,11 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
 		_store.verifyOrDestroy( hash );
 		Stream::AckOps( _socket ).sendAck();
+		BACKTRACE_END
 	}
 
 private:

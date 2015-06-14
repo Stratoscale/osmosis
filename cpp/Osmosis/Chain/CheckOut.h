@@ -27,6 +27,7 @@ public:
 
 	std::string getString( const Hash & hash )
 	{
+		BACKTRACE_BEGIN
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
 			if ( connection( i ).exists( hash ) ) {
 				std::string content = connection( i ).getString( hash );
@@ -38,17 +39,21 @@ public:
 				return std::move( content );
 			}
 		}
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 		THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
 	}
 
 	void verify( const Hash & hash )
 	{
+		BACKTRACE_BEGIN
 		for ( unsigned i = 0; i < _connections.size(); ++ i )
 			connection( i ).verify( hash );
+		BACKTRACE_END
 	}
 
 	void getFile( const boost::filesystem::path & path, const Hash & hash )
 	{
+		BACKTRACE_BEGIN
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
 			if ( connection( i ).exists( hash ) ) {
 				connection( i ).getFile( path, hash );
@@ -60,11 +65,13 @@ public:
 				return;
 			}
 		}
+		BACKTRACE_END_VERBOSE( "Path " << path << " Hash " << hash );
 		THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
 	}
 
 	Hash getLabel( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
 			bool exists = connection( i ).listLabels( "^" + label + "$" ).size() > 0;
 			if ( exists ) {
@@ -87,6 +94,7 @@ public:
 				return hash;
 			}
 		}
+		BACKTRACE_END_VERBOSE( "Label " << label );
 		THROW( Error, "The label '" << label << "' does not exist in any of the object stores" );
 	}
 

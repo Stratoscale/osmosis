@@ -69,6 +69,7 @@ private:
 
 	void traverseDirectoryAndFillUpDigestionQueue()
 	{
+		BACKTRACE_BEGIN
 		static const unsigned DELIMITER_SIZE = 1;
 		unsigned prefixLength = _directory.string().size() + DELIMITER_SIZE;
 		for ( boost::filesystem::recursive_directory_iterator i( _directory );
@@ -93,6 +94,7 @@ private:
 				_toDigestTaskQueue.put( std::move( relative ) );
 		}
 		_toDigestTaskQueue.producerDone();
+		BACKTRACE_END
 	}
 
 	static unsigned digestionThreads() { return numberOfCPUs() + 1; }

@@ -28,11 +28,13 @@ public:
 		_putQueue( CHECK_EXISTING_THREADS ),
 		_checkInProgress( progressReport, _digestDirectory, _putQueue, progressReportIntervalSeconds )
 	{
+		BACKTRACE_BEGIN
 		for ( unsigned i = 0; i < CHECK_EXISTING_THREADS; ++ i )
 			_threads.push_back( std::thread(
 				CheckExistingThread::task, std::ref( _digestDirectory.digestedQueue() ), std::ref( _putQueue ), std::ref( objectStore ),
 				std::ref( _checkExistingAlreadyProcessed ), std::ref( _checkExistingAlreadyProcessedLock ) ) );
 		_threads.push_back( std::thread( PutThread::task, std::ref( _putQueue ), std::ref( * _putConnection ), std::ref( directory ) ) );
+		BACKTRACE_END
 	}
 
 	~CheckIn()
@@ -45,11 +47,13 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		_digestDirectory.join();
 		for ( auto & i : _threads )
 			i.join();
 		Hash hash = putDirList();
 		_putConnection->setLabel( hash, _label );
+		BACKTRACE_END
 	}
 
 private:
@@ -70,6 +74,7 @@ private:
 
 	Hash putDirList()
 	{
+		BACKTRACE_BEGIN
 		std::ostringstream out;
 		out << _digestDirectory.dirList();
 		std::string text( out.str() );
@@ -78,6 +83,7 @@ private:
 			return hash;
 		_putConnection->putString( text, hash );
 		return hash;
+		BACKTRACE_END
 	}
 
 	static unsigned digestionThreads() { return numberOfCPUs() + 1; }

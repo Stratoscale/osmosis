@@ -54,6 +54,7 @@ private:
 
 	void work()
 	{
+		BACKTRACE_BEGIN
 		ToVerify task = _toDigestTaskQueue.get();
 		if ( not CalculateHash::verify( task.draft, task.hash ) ) {
 			TRACE_ERROR( "Draft failed hash verification: " << task.hash << " (" << task.path << ")" );
@@ -61,6 +62,7 @@ private:
 			task.draft = boost::filesystem::path();
 		}
 		_digestedTaskQueue.put( std::move( task ) );
+		BACKTRACE_END
 	}
 
 	static unsigned digestionThreads() { return numberOfCPUs() + 1; }

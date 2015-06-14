@@ -22,6 +22,7 @@ public:
 
 	void putString( const std::string & blob, const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path draft = _drafts.allocateFilename();
 		Stream::WriteFile write( draft.string().c_str() );
 		size_t offset = 0;
@@ -32,10 +33,12 @@ public:
 			offset += length;
 		} while ( offset < blob.size() );
 		_store.putExistingFile( hash, draft );
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	std::string getString( const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path original = _store.filenameForExisting( hash );
 		std::ostringstream accumulator;
 		Stream::ReadFile read( original.string().c_str() );
@@ -44,19 +47,24 @@ public:
 			read.next();
 		}
 		return accumulator.str();
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	void putFile( const boost::filesystem::path & path, const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path draft = _drafts.allocateFilename();
 		Stream::CopyFile( path.string().c_str(), draft.string().c_str() ).copy();
 		_store.putExistingFile( hash, draft );
+		BACKTRACE_END_VERBOSE( "Path " << path << " Hash " << hash );
 	}
 
 	void getFile( const boost::filesystem::path & path, const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path original = _store.filenameForExisting( hash );
 		Stream::CopyFile( original.string().c_str(), path.string().c_str() ).copy();
+		BACKTRACE_END_VERBOSE( "Path " << path << " Hash " << hash );
 	}
 
 	bool exists( const Hash & hash ) override
@@ -91,10 +99,12 @@ public:
 
 	std::list< std::string > listLabels( const std::string & regex ) override
 	{
+		BACKTRACE_BEGIN
 		std::list< std::string > result;
 		for ( auto i = _labels.list( regex ); not i.done(); i.next() )
 			result.emplace_back( * i );
 		return result;
+		BACKTRACE_END_VERBOSE( "Regex " << regex );
 	}
 
 private:

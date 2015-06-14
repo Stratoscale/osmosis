@@ -33,6 +33,7 @@ boost::filesystem::path stripTrailingSlash( boost::filesystem::path path )
 
 void checkIn( const boost::program_options::variables_map & options )
 {
+	BACKTRACE_BEGIN
 	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
 	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
@@ -48,10 +49,12 @@ void checkIn( const boost::program_options::variables_map & options )
 
 	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5, reportFile, reportIntervalSeconds );
 	instance.go();
+	BACKTRACE_END
 }
 
 void checkOut( const boost::program_options::variables_map & options )
 {
+	BACKTRACE_BEGIN
 	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
 	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
@@ -84,6 +87,7 @@ void checkOut( const boost::program_options::variables_map & options )
 	Osmosis::Client::CheckOut instance( workDir, label, chain, md5, removeUnknownFiles,
 			myUIDandGIDcheckout, ignoresInstance, reportFile, reportIntervalSeconds, chainTouch );
 	instance.go();
+	BACKTRACE_END
 }
 
 void transfer( const boost::program_options::variables_map & options )
@@ -325,7 +329,7 @@ int main( int argc, char * argv [] )
 		TRACE_BOOST_EXCEPTION( e, "Terminated on a boost exception" );
 		return 1;
 	} catch ( Error & e ) {
-		TRACE_ERROR( "Terminated on 'Error' exception: '" << e.what() << "' at " << e.filename << ':' << e.line );
+		TRACE_ERROR( "Terminated on 'Error' exception: '" << e.what() << "' from " << e.backtrace() );
 		return 1;
 	} catch ( std::exception & e ) {
 		TRACE_ERROR( "Terminated on std::exception: '" << e.what() );

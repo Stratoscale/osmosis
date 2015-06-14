@@ -14,17 +14,23 @@ public:
 
 	void eraseLabel( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		_connection->eraseLabel( label );
+		BACKTRACE_END
 	}
 
 	void renameLabel( const std::string & currentLabel, const std::string & renameLabelTo )
 	{
+		BACKTRACE_BEGIN
 		_connection->renameLabel( currentLabel, renameLabelTo );
+		BACKTRACE_END
 	}
 
 	std::list< std::string > listLabels( const std::string & regex )
 	{
+		BACKTRACE_BEGIN
 		return std::move( _connection->listLabels( regex ) );
+		BACKTRACE_END
 	}
 
 private:

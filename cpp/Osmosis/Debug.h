@@ -12,7 +12,7 @@
 	} catch ( Error & e ) { \
 		TRACE_ERROR( detailsSerialization << \
 				" on 'Error' exception: '" \
-				<< e.what() << "' at " << e.filename << ':' << e.line ); \
+				<< e.what() << "' from " << e.backtrace() ); \
 		__code \
 	} catch ( std::exception & e ) { \
 		TRACE_ERROR( detailsSerialization << \

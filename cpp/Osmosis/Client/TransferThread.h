@@ -28,6 +28,7 @@ private:
 
 	void work()
 	{
+		BACKTRACE_BEGIN
 		struct Digested task = _inputQueue.get();
 		try {
 			std::string content = _checkOut.getString( task.hash );
@@ -36,6 +37,7 @@ private:
 			TRACE_ERROR( "While transferring hash: " << task.hash );
 			throw;
 		}
+		BACKTRACE_END
 	}
 
 	void go()

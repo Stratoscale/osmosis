@@ -11,6 +11,7 @@ namespace Chain
 
 std::unique_ptr< ObjectStoreInterface > factory( const std::string & location )
 {
+	BACKTRACE_BEGIN
 	if ( location.size() == 0 )
 		THROW( Error, "Location '" << location << "' is in invalid format: zero length" );
 	if ( location[ 0 ] == '/' ) {
@@ -28,6 +29,7 @@ std::unique_ptr< ObjectStoreInterface > factory( const std::string & location )
 			THROW( Error, "Port '" << location << "' must be in the range 1-65535" );
 		return std::unique_ptr< ObjectStoreInterface >( new Remote::ObjectStore( split[ 0 ], (unsigned short) port ) );
 	}
+	BACKTRACE_END
 }
 
 } // namespace Chain

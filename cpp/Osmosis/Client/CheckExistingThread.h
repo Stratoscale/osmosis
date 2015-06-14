@@ -40,6 +40,7 @@ private:
 
 	void work()
 	{
+		BACKTRACE_BEGIN
 		Digested task = _inputQueue.get();
 		if ( alreadyProccessed( task.hash ) )
 			return;
@@ -49,10 +50,12 @@ private:
 			TRACE_DEBUG( "!EXISTS " << task.hash );
 			_outputQueue.put( std::move( task ) );
 		}
+		BACKTRACE_END
 	}
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		try {
 			while ( true )
 				work();
@@ -60,6 +63,7 @@ private:
 			_outputQueue.producerDone();
 			TRACE_DEBUG( "CheckExistingThread done" );
 		}
+		BACKTRACE_END
 	}
 
 	bool alreadyProccessed( const Hash & hash )

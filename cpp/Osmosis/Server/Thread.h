@@ -42,11 +42,13 @@ public:
 
 	void run()
 	{
+		BACKTRACE_BEGIN
 		ASSERT( _boostSocket.is_open() );
 		TRACE_INFO( "Connected to " << _boostSocket.remote_endpoint() << ", starting server thread" );
 		setTCPNoDelay( true );
 		std::thread thread( & Thread::thread, shared_from_this() );
 		thread.detach();
+		BACKTRACE_END
 	}
 
 private:
@@ -123,6 +125,7 @@ private:
 
 	void handshake()
 	{
+		BACKTRACE_BEGIN
 		auto handshake = _socket.recieveAll< struct Tongue::Handshake >();
 		if ( handshake.protocolVersion != static_cast< unsigned >( Tongue::PROTOCOL_VERSION ) )
 			THROW( Error, "Client with protocol version " << handshake.protocolVersion <<
@@ -131,6 +134,7 @@ private:
 		if ( handshake.compression != static_cast< unsigned >( Tongue::Compression::UNCOMPRESSED ) )
 			THROW( Error, "Compression not yet implemented" );
 		Stream::AckOps( _socket ).sendAck();
+		BACKTRACE_END
 	}
 
 	void setTCPNoDelay( bool value )

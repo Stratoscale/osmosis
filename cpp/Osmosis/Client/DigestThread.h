@@ -41,6 +41,7 @@ private:
 
 	void work()
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path task = _inputQueue.get();
 		boost::filesystem::path absolute = _directory / task;
 		Hash hash = _md5 ? CalculateHash::MD5( absolute ) : CalculateHash::SHA1( absolute );
@@ -48,6 +49,7 @@ private:
 		_outputQueue.put( std::move( result ) );
 		std::lock_guard< std::mutex > lock( _dirListMutex );
 		_dirList.setHash( task, hash );
+		BACKTRACE_END
 	}
 
 	void go()

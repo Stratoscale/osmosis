@@ -19,6 +19,7 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
 		if ( _store.exists( hash ) )
 			THROW( Error, "Will not store an object that already exists: " << hash );
@@ -29,6 +30,7 @@ public:
 			THROW( Error, "Incoming draft did not match hash: " << hash );
 		_store.putExistingFile( hash, filename );
 		Stream::AckOps( _socket ).sendAck();
+		BACKTRACE_END
 	}
 
 private:

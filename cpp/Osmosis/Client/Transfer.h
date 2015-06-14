@@ -40,6 +40,7 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		auto connection = _destination.connect();
 		checkLabelDoesNotExistInDestination( * connection );
 
@@ -51,6 +52,7 @@ public:
 		for ( auto & i : _threads )
 			i.join();
 		connection->setLabel( labelHash, _label );
+		BACKTRACE_END
 	}
 
 private:
@@ -76,15 +78,18 @@ private:
 
 	void populateToCheckExistingQueue( const Hash & labelHash, const DirList & labelDirList )
 	{
+		BACKTRACE_BEGIN
 		for ( auto & entry : labelDirList.entries() )
 			if ( entry.hash )
 				_toCheckExistingQueue.put( Digested( { entry.path, * entry.hash } ) );
 		_toCheckExistingQueue.put( Digested( { boost::filesystem::path( "label" ), labelHash } ) );
 		_toCheckExistingQueue.producerDone();
+		BACKTRACE_END
 	}
 
 	DirList fetchDirList( const Hash & labelHash, Chain::CheckOut & checkOut )
 	{
+		BACKTRACE_BEGIN
 		std::string dirListText = checkOut.getString( labelHash );
 		if ( not CalculateHash::verify( dirListText.c_str(), dirListText.size(), labelHash ) )
 			THROW( Error, "Dir list hash did not match contents" );
@@ -92,6 +97,7 @@ private:
 		DirList labelDirList;
 		dirListTextStream >> labelDirList;
 		return std::move( labelDirList );
+		BACKTRACE_END
 	}
 
 	Transfer( const Transfer & rhs ) = delete;

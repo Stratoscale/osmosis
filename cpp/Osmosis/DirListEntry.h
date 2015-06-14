@@ -20,6 +20,7 @@ struct DirListEntry
 
 	DirListEntry( std::string line )
 	{
+		BACKTRACE_BEGIN
 		boost::trim( line );
 		SplitString split( line, '\t' );
 		path = boost::trim_copy_if( split.asString(), boost::is_any_of( "\"" ) );
@@ -45,6 +46,7 @@ struct DirListEntry
 		split.next();
 		if ( not split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
+		BACKTRACE_END_VERBOSE( "Line '" << line << '\'' );
 	}
 
 	friend std::ostream & operator<<( std::ostream & os, const DirListEntry & entry )
@@ -60,6 +62,7 @@ struct DirListEntry
 
 	static void parseOnlyHashFromLine( const std::string & line, Container< Hash > & result )
 	{
+		BACKTRACE_BEGIN
 		SplitString split( line, '\t' );
 		if ( split.done() )
 			THROW( Error, "'" << line << "' is in an invalid format for a dir list entry" );
@@ -73,6 +76,7 @@ struct DirListEntry
 		if ( split.asCharPtr()[0] == 'n' ) //nohash
 			return;
 		result.emplace( split.asCharPtr(), split.charCount() );
+		BACKTRACE_END_VERBOSE( "Line '" << line << '\'' );
 	}
 
 private:

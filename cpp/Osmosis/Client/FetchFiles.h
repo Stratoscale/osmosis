@@ -96,12 +96,14 @@ private:
 
 	void fetchOne()
 	{
+		BACKTRACE_BEGIN
 		struct ToVerify entry = _fetchQueue.get();
 		if ( entry.draft == "verify" )
 			_checkOut.verify( entry.hash );
 		entry.draft = _drafts.allocateFilename();
 		_checkOut.getFile( entry.draft, entry.hash );
 		_digestDrafts.toDigestTaskQueue().put( std::move( entry ) );
+		BACKTRACE_END
 	}
 
 	void afterVerifiedThreadEntryPoint()
@@ -116,6 +118,7 @@ private:
 
 	void commitOne()
 	{
+		BACKTRACE_BEGIN
 		auto task = _digestDrafts.digestedTaskQueue().get();
 		if ( task.draft == boost::filesystem::path() ) {
 			TRACE_INFO( "Reenqueueing '" << task.path << "' (" << task.hash <<
@@ -131,6 +134,7 @@ private:
 				absolute << ": " << FileStatus( absolute ) << " != " << task.status );
 		_fetchCompleted += 1;
 		possiblySignalProducerDone();
+		BACKTRACE_END
 	}
 
 	void possiblySignalProducerDone()

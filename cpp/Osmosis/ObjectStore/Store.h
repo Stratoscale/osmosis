@@ -18,11 +18,14 @@ public:
 
 	bool exists( const Hash & hash ) const
 	{
+		BACKTRACE_BEGIN
 		return boost::filesystem::exists( absoluteFilename( hash ) );
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	void verifyOrDestroy( const Hash & hash ) const
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path absolute = absoluteFilename( hash );
 		if ( not boost::filesystem::exists( absolute ) ) {
 			TRACE_WARNING( "Verify for a non existing object: " << hash );
@@ -32,27 +35,34 @@ public:
 			TRACE_ERROR( "Object " << hash << " is malformed, removing from object store" );
 			boost::filesystem::remove( absolute );
 		}
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	boost::filesystem::path filenameForExisting( const Hash & hash ) const
 	{
+		BACKTRACE_BEGIN
 		ASSERT( exists( hash ) );
 		return absoluteFilename( hash );
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	void putExistingFile( const Hash & hash, const boost::filesystem::path & filename )
 	{
+		BACKTRACE_BEGIN
 		if ( not CalculateHash::verify( filename, hash ) )
 			THROW( Error, "Will not put file that does not match it's hash " << hash );
 		boost::filesystem::path absolute = absoluteFilename( hash );
 		boost::filesystem::create_directories( absolute.parent_path() );
 		boost::filesystem::rename( filename, absolute );
+		BACKTRACE_END_VERBOSE( "Hash " << hash << " Filename " << filename );
 	}
 
 	void erase( const Hash & hash )
 	{
+		BACKTRACE_BEGIN
 		boost::filesystem::path absolute = absoluteFilename( hash );
 		boost::filesystem::remove( absolute );
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	ObjectsIterator list() const

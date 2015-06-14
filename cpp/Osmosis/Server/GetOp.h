@@ -20,6 +20,7 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
 		if ( not _store.exists( hash ) )
 			THROW( Error, "Hash " << hash << " is not in object store, can not get" );
@@ -35,6 +36,7 @@ public:
 #endif // DEBUG
 		Stream::FileToSocket transfer( _store.filenameForExisting( hash ).string().c_str(), _socket );
 		transfer.transfer();
+		BACKTRACE_END
 	}
 
 private:

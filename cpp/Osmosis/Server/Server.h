@@ -30,11 +30,13 @@ public:
 	void run()
 	{
 		TRACE_INFO( "Osmosis server up and running, waiting for connections" );
+		BACKTRACE_BEGIN
 		while ( true ) {
 			std::shared_ptr< Thread > thread = std::make_shared< Thread >( _rootPath, _store, _drafts, _labels );
 			_acceptor.accept( thread->socketForAccept() );
 			thread->run();
 		}
+		BACKTRACE_END
 	}
 
 private:

@@ -18,6 +18,7 @@ public:
 
 	void purge()
 	{
+		BACKTRACE_BEGIN
 		startWithAllObjects();
 		size_t before = _staleHashes.size();
 		TRACE_INFO( "Found " << before << " objects" );
@@ -27,6 +28,7 @@ public:
 				( before - after ) << " remain)" );
 		for ( auto & hash : _staleHashes )
 			boost::filesystem::remove( _store.filenameForExisting( hash ) );
+		BACKTRACE_END
 	}
 
 private:
@@ -36,30 +38,35 @@ private:
 
 	void startWithAllObjects()
 	{
+		BACKTRACE_BEGIN
 		for ( auto i = _store.list(); not i.done(); i.next() )
 			_staleHashes.emplace( * i );
+		BACKTRACE_END
 	}
 
 	void takeOutAllLabels()
 	{
-        for ( auto & i : listLabels() ) {
-            Container< Hash > hash;
-            try {
-			    hash.emplace( _labels.readLabelNoLog( i ) );
-            } catch ( Error & error ) {
-                TRACE_WARNING( "While purging, found a bad label '" << i << "', erasing (" << error.what() << ")" );
-                _labels.erase( i );
-                continue;
-            }
+		BACKTRACE_BEGIN
+		for ( auto & i : listLabels() ) {
+			Container< Hash > hash;
+			try {
+				hash.emplace( _labels.readLabelNoLog( i ) );
+			} catch ( Error & error ) {
+				TRACE_WARNING( "While purging, found a bad label '" << i << "', erasing (" << error.what() << ")" );
+				_labels.erase( i );
+				continue;
+			}
 			_staleHashes.erase( * hash );
 
 			std::ifstream dirListFile( _store.filenameForExisting( * hash ).string() );
 			takeOutDirListFile( dirListFile );
 		}
+		BACKTRACE_END
 	}
 
 	void takeOutDirListFile( std::ifstream & dirListFile )
 	{
+		BACKTRACE_BEGIN
 		std::string line;
 		while ( std::getline( dirListFile, line ) ) {
 			Container< Hash > hash;
@@ -67,15 +74,18 @@ private:
 			if ( hash.constructed() )
 				_staleHashes.erase( * hash );
 		}
+		BACKTRACE_END
 	}
 
-    std::list< std::string > listLabels()
-    {
-        std::list< std::string > labels;
+	std::list< std::string > listLabels()
+	{
+		BACKTRACE_BEGIN
+		std::list< std::string > labels;
 		for ( auto i = _labels.list( "" ); not i.done(); i.next() )
-            labels.push_back( * i );
-        return std::move( labels );
-    }
+			labels.push_back( * i );
+		return std::move( labels );
+		BACKTRACE_END
+	}
 
 	Purge( const Purge & rhs ) = delete;
 	Purge & operator= ( const Purge & rhs ) = delete;

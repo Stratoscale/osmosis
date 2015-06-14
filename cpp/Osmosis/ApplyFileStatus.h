@@ -14,15 +14,18 @@ public:
 
 	void applyExistingRegular()
 	{
+		BACKTRACE_BEGIN
 		chown();
 		setmtime();
 		chmod();
 		ASSERT_VERBOSE( FileStatus( _path ) == _status,
 				_path << ": " << FileStatus( _path ) << " != " << _status );
+		BACKTRACE_END_VERBOSE( "Path " << _path );
 	}
 
 	void createNonRegular()
 	{
+		BACKTRACE_BEGIN
 		ASSERT( not _status.syncContent() );
 		if ( _status.isSymlink() )
 			boost::filesystem::create_symlink( _status.symlink(), _path );
@@ -41,10 +44,12 @@ public:
 		chown();
 		ASSERT_VERBOSE( FileStatus( _path ) == _status,
 				_path << ": " << FileStatus( _path ) << " != " << _status );
+		BACKTRACE_END_VERBOSE( "Path " << _path );
 	}
 
 	void applyNonRegular( const FileStatus & existingStatus )
 	{
+		BACKTRACE_BEGIN
 		if ( _status.type() == existingStatus.type() ) {
 			if ( _status.isSymlink() ) {
 				if ( _status.symlink() != existingStatus.symlink() ) {
@@ -70,6 +75,7 @@ public:
 			ASSERT_VERBOSE( FileStatus( _path ) == _status,
 					_path << ": " << FileStatus( _path ) << " != " << _status );
 		}
+		BACKTRACE_END_VERBOSE( "Path " << _path );
 	}
 
 private:

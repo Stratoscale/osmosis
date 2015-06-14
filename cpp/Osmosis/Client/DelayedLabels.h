@@ -23,6 +23,7 @@ public:
 
 	void fetch()
 	{
+		BACKTRACE_BEGIN
 		if ( _labels.size() > 0 )
 			return;
 		TRACE_INFO( "Enter label name on next line:" );
@@ -32,6 +33,7 @@ public:
 			THROW( Error, "Invalid label from stdin: '" << line << "'" );
 		TRACE_INFO( "Got label name: '" << line << "'" );
 		fromLabel( line );
+		BACKTRACE_END
 	}
 
 private:

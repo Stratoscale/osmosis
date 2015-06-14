@@ -27,6 +27,7 @@ public:
 
 	void label( const Hash & hash, const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		if ( not _store.exists( hash ) )
 			THROW( Error, "Hash " << hash << " does not exist in store. Can't apply "
 					"label '" << label << "'" );
@@ -37,38 +38,46 @@ public:
 			hashFile << hash;
 		}
 		_log.set( label, hash );
+		BACKTRACE_END_VERBOSE( "Hash " << hash << " Label " << label );
 	}
 
 	bool exists( const std::string & label ) const
 	{
+		BACKTRACE_BEGIN
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
 		bool result = boost::filesystem::exists( absoluteFilename( label ) );
 		if ( result )
 			_log.get( label, readLabelNoLog( label ) );
 		return result;
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	Hash readLabelNoLog( const std::string & label ) const
 	{
+		BACKTRACE_BEGIN
 		ASSERT( FilesystemUtils::safeFilename( label ) );
 		std::ifstream hashFile( absoluteFilename( label ).string() );
 		std::string hex;
 		hashFile >> hex;
 		return Hash( hex );
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	Hash readLabel( const std::string & label ) const
 	{
+		BACKTRACE_BEGIN
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
 		Hash hash( readLabelNoLog( label ) );
 		_log.get( label, hash );
 		return hash;
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	void erase( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
 		if ( not boost::filesystem::exists( absoluteFilename( label ) ) ) {
@@ -76,19 +85,21 @@ public:
 			return;
 		}
 		TRACE_INFO("Erasing label '" << label << "'");
-        Container< Hash > hash;
-        try {
-            hash.emplace( readLabelNoLog( label ) );
-        } catch ( Error & e ) {
-            TRACE_WARNING( "Unable to read label hash when erasing, filling in with FFFF hash" );
-            hash.emplace( std::string( "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" ) );
-        }
+		Container< Hash > hash;
+		try {
+		    hash.emplace( readLabelNoLog( label ) );
+		} catch ( Error & e ) {
+		    TRACE_WARNING( "Unable to read label hash when erasing, filling in with FFFF hash" );
+		    hash.emplace( std::string( "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" ) );
+		}
 		_log.remove( label, * hash );
 		boost::filesystem::remove( absoluteFilename( label ) );
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	void rename( const std::string & from, const std::string & to )
 	{
+		BACKTRACE_BEGIN
 		ASSERT( exists( from ) );
 		ASSERT( not exists( to ) );
 		ASSERT( FilesystemUtils::safeFilename( from ) );
@@ -97,6 +108,7 @@ public:
 		Hash hash( readLabelNoLog( to ) );
 		_log.remove( from, hash );
 		_log.set( to, hash );
+		BACKTRACE_END_VERBOSE( "From " << from << " To " << to );
 	}
 
 	LabelsIterator list( const std::string & regex ) const
@@ -107,7 +119,9 @@ public:
 
 	void flushLog()
 	{
+		BACKTRACE_BEGIN
 		_log.write();
+		BACKTRACE_END
 	}
 
 private:

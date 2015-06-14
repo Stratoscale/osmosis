@@ -18,12 +18,14 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		std::string regex( ReceiveLabel( _socket ).label() );
 		for ( auto i = _labels.list( regex ); not i.done(); i.next() ) {
 			std::string label = * i;
 			_outgoing.send( 0, label.c_str(), label.size() );
 		}
 		_outgoing.sendEOF();
+		BACKTRACE_END
 	}
 
 private:

@@ -24,6 +24,7 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		keepAllLabelsMatchingKeepRegex();
 		TRACE_INFO( "All labels matching keep regex: " << _alreadyProcessedLabels.size() << " on disk: " << _sizeOnDisk );
 		keepLabelsFromLabelLogUntilExceedingMaximumDiskUsage();
@@ -33,6 +34,7 @@ public:
 		TRACE_INFO( "Scanning excessive objects, keeping " << _keptHashes.size() << " objects" );
 		count = eraseAllNonUsedHashes();
 		TRACE_INFO( "Erased " << count << " objects" );
+		BACKTRACE_END
 	}
 
 private:
@@ -57,6 +59,7 @@ private:
 
 	std::list< Hash > newObjectsInLabel( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		std::list< Hash > result;
 		Hash hash = _labels.readLabelNoLog( label );
 		if ( _keptHashes.find( hash ) == _keptHashes.end() )
@@ -73,6 +76,7 @@ private:
 				result.emplace_back( * hash );
 		}
 		return std::move( result );
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	size_t totalSize( const std::list< Hash > & hashes )
@@ -88,6 +92,7 @@ private:
 
 	void keepAllLabelsMatchingKeepRegex()
 	{
+		BACKTRACE_BEGIN
 		for ( auto label = _labels.list( _keepRegex ); not label.done(); label.next() ) {
 			auto newObjects = newObjectsInLabel( * label );
 			size_t newObjectsSize = totalSize( newObjects );
@@ -95,10 +100,12 @@ private:
 			_sizeOnDisk += newObjectsSize;
 			_alreadyProcessedLabels.emplace( * label );
 		}
+		BACKTRACE_END
 	}
 
 	void keepLabelsFromLabelLogUntilExceedingMaximumDiskUsage()
 	{
+		BACKTRACE_BEGIN
 		for ( LabelLogIterator iterator( _rootPath ); not iterator.done(); iterator.next() ) {
 			const LabelLogEntry & entry = * iterator;
 			if ( entry.operation == LabelLogEntry::REMOVE ) {
@@ -116,11 +123,12 @@ private:
 			_sizeOnDisk += newObjectsSize;
 			_alreadyProcessedLabels.emplace( entry.label );
 		}
-
+		BACKTRACE_END
 	}
 
 	unsigned eraseAllNonProcessedLabels()
 	{
+		BACKTRACE_BEGIN
 		std::list< std::string > toErase;
 		for ( auto label = _labels.list( ".*" ); not label.done(); label.next() ) {
 			if ( _alreadyProcessedLabels.find( * label ) != _alreadyProcessedLabels.end() )
@@ -130,10 +138,12 @@ private:
 		for ( auto & label: toErase )
 			_labels.erase( label );
 		return toErase.size();
+		BACKTRACE_END
 	}
 
 	unsigned eraseAllNonUsedHashes()
 	{
+		BACKTRACE_BEGIN
 		std::list< Hash > toErase;
 		for ( auto i = _store.list(); not i.done(); i.next() ) {
 			if ( _keptHashes.find( * i ) != _keptHashes.end() )
@@ -146,6 +156,7 @@ private:
 		for ( auto & hash: toErase )
 			_store.erase( hash );
 		return toErase.size();
+		BACKTRACE_END
 	}
 
 	LeastRecentlyUsed( const LeastRecentlyUsed & rhs ) = delete;

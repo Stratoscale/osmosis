@@ -25,11 +25,13 @@ public:
 
 	std::string getString( const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::network::http::client::request request( hashUrl( hash ) );
 		boost::network::http::client::response response = _client.get( request );
 		std::ostringstream out;
 		out << boost::network::http::body( response );
 		return std::move( out.str() );
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	void putFile( const boost::filesystem::path & path, const Hash & hash ) override
@@ -41,18 +43,22 @@ public:
 
 	void getFile( const boost::filesystem::path & path, const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::network::http::client::request request( hashUrl( hash ) );
 		boost::network::http::client::response response = _client.get( request );
 		std::ofstream out( path.string(), std::ios::out | std::ios::binary );
 		out << boost::network::http::body( response );
+		BACKTRACE_END_VERBOSE( "Path " << path << " Hash " << hash );
 	}
 
 	bool exists( const Hash & hash ) override
 	{
+		BACKTRACE_BEGIN
 		boost::network::http::client::request request( hashUrl( hash ) );
 		boost::network::http::client::response response = _client.head( request );
 		auto status = boost::network::http::status( response );
 		return status == 200;
+		BACKTRACE_END_VERBOSE( "Hash " << hash );
 	}
 
 	void verify( const Hash & hash ) override
@@ -74,12 +80,14 @@ public:
 
 	Hash getLabel( const std::string & label ) override
 	{
+		BACKTRACE_BEGIN
 		std::string url = _url + "/" + ObjectStore::DirectoryNames::LABELS + "/" + label;
 		boost::network::http::client::request request( url );
 		boost::network::http::client::response response = _client.get( request );
 		std::ostringstream out;
 		out << boost::network::http::body( response );
 		return Hash( out.str() );
+		BACKTRACE_END_VERBOSE( "Label " << label );
 	}
 
 	void renameLabel( const std::string & currentLabel, const std::string & renameLabelTo ) override
@@ -91,6 +99,7 @@ public:
 
 	std::list< std::string > listLabels( const std::string & regex ) override
 	{
+		BACKTRACE_BEGIN
 		if ( regex[ 0 ] != '^' and regex[ regex.size() - 1 ] != '$' )
 			THROW( Error, "'http://' object store does not support the listLabels operation "
 					"(this kind of object store can only be used for checkout operations "
@@ -104,6 +113,7 @@ public:
 		if ( status == 200 )
 			result.push_back( label );
 		return result;
+		BACKTRACE_END_VERBOSE( "Regex " << regex );
 	}
 
 private:

@@ -28,10 +28,12 @@ private:
 
 	void work()
 	{
+		BACKTRACE_BEGIN
 		Digested task = _inputQueue.get();
 		boost::filesystem::path absolute = _directory / task.path;
 		_connection.putFile( absolute, task.hash );
 		TRACE_DEBUG( "Transferred file " << task.path );
+		BACKTRACE_END
 	}
 
 	void go()

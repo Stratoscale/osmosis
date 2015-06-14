@@ -20,11 +20,13 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		std::string label( ReceiveLabel( _socket ).label() );
 		if ( not _labels.exists( label ) )
 			THROW( Error, "Label '" << label << "' does not exist, can not erase" );
 		_labels.erase( label );
 		Stream::AckOps( _socket ).sendAck();
+		BACKTRACE_END
 	}
 
 private:

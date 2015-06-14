@@ -39,6 +39,7 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		_labels.fetch();
 		DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain, _chainTouch ).joined() );
 		_digestDirectory.join();
@@ -68,6 +69,7 @@ public:
 		} CATCH_ALL( "Dumping dirlists", dumpDirLists( labelsDirList, _digestDirectory.dirList() ); throw; );
 		_checkOutProgress.stop();
 		TRACE_DEBUG( "Checkout Complete" );
+		BACKTRACE_END
 	}
 
 private:
@@ -83,6 +85,7 @@ private:
 
 	void removeUnknownFiles( const DirList & digested, const DirList & label, const FetchFiles & fetchFiles )
 	{
+		BACKTRACE_BEGIN
 		if ( not _removeUnknownFiles )
 			return;
 		boost::filesystem::path leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased = fetchFiles.draftsPath();
@@ -102,6 +105,7 @@ private:
 					boost::filesystem::remove_all( absolute );
 				} CATCH_TRACEBACK_EXCEPTION
 			}
+		BACKTRACE_END
 	}
 
 	void decideWhatToDo(    FetchFiles &                     fetchFiles,
@@ -155,12 +159,14 @@ private:
 
 	static void dumpDirLists( const DirList & labelsDirList, const DirList & digestedDirlist )
 	{
+		BACKTRACE_BEGIN
 		try {
 			std::ofstream labelsDirListFile( "/tmp/labels.dirList" );
 			labelsDirListFile << labelsDirList;
 			std::ofstream digestedDirListFile( "/tmp/digested.dirList" );
 			digestedDirListFile << digestedDirlist;
 		} CATCH_ALL_IGNORE( "Unable to dump dirlists" );
+		BACKTRACE_END
 	}
 
 	CheckOut( const CheckOut & rhs ) = delete;

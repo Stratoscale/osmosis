@@ -16,6 +16,7 @@ public:
 
 	DirList joined()
 	{
+		BACKTRACE_BEGIN
 		DirList result;
 		for ( auto & label : _labels ) {
 			DirList dirList = getLabelDirList( label );
@@ -42,6 +43,7 @@ public:
 			}
 		}
 		return std::move( result );
+		BACKTRACE_END
 	}
 
 private:
@@ -51,20 +53,24 @@ private:
 
 	DirList getLabelDirList( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		std::istringstream dirListTextStream( std::move( getLabelDirListText( label ) ) );
 		DirList labelDirList;
 		dirListTextStream >> labelDirList;
 		return std::move( labelDirList );
+		BACKTRACE_END
 	}
 
 	std::string getLabelDirListText( const std::string & label )
 	{
+		BACKTRACE_BEGIN
 		Hash hash = _checkOut.getLabel( label );
 		std::string dirListText = _checkOut.getString( hash );
 		if ( not CalculateHash::verify( dirListText.c_str(), dirListText.size(), hash ) )
 			THROW( Error, "Dir list hash did not match contents" );
 		TRACE_DEBUG( "Transferred dirList '" << label << "'" );
 		return std::move( dirListText );
+		BACKTRACE_END
 	}
 
 	FetchJointDirlistFromLabels( const FetchJointDirlistFromLabels & rhs ) = delete;

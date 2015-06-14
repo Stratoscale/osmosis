@@ -18,21 +18,25 @@ public:
 
 	void makeSureExists()
 	{
+		BACKTRACE_BEGIN
 		if ( _directoryExists )
 			return;
 		std::lock_guard< std::mutex > lock( _directoryExistsLock );
 		if ( _directoryExists )
 			return;
 		makeDirectory();
+		BACKTRACE_END_VERBOSE( "Path " << _path );
 	}
 
 	void erase()
 	{
+		BACKTRACE_BEGIN
 		std::lock_guard< std::mutex > lock( _directoryExistsLock );
 		bool removed = boost::filesystem::remove( _path );
 		if ( not removed && _directoryExists )
 			TRACE_ERROR( "File was removed under my feet " << _path );
 		_directoryExists = false;
+		BACKTRACE_END_VERBOSE( "Path " << _path );
 	}
 
 private:

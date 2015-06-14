@@ -16,6 +16,7 @@ public:
 
 	void go()
 	{
+		BACKTRACE_BEGIN
 		std::string currentLabel( ReceiveLabel( _socket ).label() );
 		if ( not _labels.exists( currentLabel ) )
 			THROW( Error, "Label '" << currentLabel << "' does not exist, can not rename" );
@@ -24,6 +25,7 @@ public:
 			THROW( Error, "Label '" << renameTo << "' already exists" );
 		_labels.rename( currentLabel, renameTo );
 		Stream::AckOps( _socket ).sendAck();
+		BACKTRACE_END
 	}
 
 private:
