@@ -26,10 +26,14 @@ unittest: build
 check_convention:
 	pep8 py tests --max-line-length=109
 
+.PHONY: install_binary
+install_binary:
+	sudo cp -f build/cpp/osmosis.bin /usr/bin/osmosis
+
 install:
 	-sudo systemctl stop osmosis
 	-sudo service osmosis stop
-	sudo cp build/cpp/osmosis.bin /usr/bin/osmosis
+	make install_binary
 	if grep -i ubuntu /etc/os-release >/dev/null 2>/dev/null; then make install_service_upstart; else make install_service_systemd; fi
 
 install_service_systemd:
