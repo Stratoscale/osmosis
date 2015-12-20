@@ -34,10 +34,13 @@ install:
 	-sudo systemctl stop osmosis
 	-sudo service osmosis stop
 	make install_binary
-	if grep -i ubuntu /etc/os-release >/dev/null 2>/dev/null; then make install_service_upstart; else make install_service_systemd; fi
+	python py/get_system_setting.py systemManager
+	make install_service_`python py/get_system_setting.py systemManager`
 
 install_service_systemd:
-	sudo cp osmosis.service /usr/lib/systemd/system/osmosis.service
+	python py/get_system_setting.py serviceFilesDirPath
+	$(eval SERVICE_FILES_DIRPATH := $(shell python py/get_system_setting.py serviceFilesDirPath))
+	sudo cp osmosis.service ${SERVICE_FILES_DIRPATH}
 	sudo systemctl enable osmosis.service
 	if ["$(DONT_START_SERVICE)" == ""]; then sudo systemctl start osmosis; fi
 
