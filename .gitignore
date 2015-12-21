@@ -6,3 +6,7 @@ tags
 diff
 dist
 osmosis.egg-info
+.project
+.cproject
+.idea
+CMakeLists.txt
