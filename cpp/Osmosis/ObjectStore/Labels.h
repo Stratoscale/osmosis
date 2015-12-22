@@ -69,7 +69,7 @@ public:
 		BACKTRACE_BEGIN
 		if ( not FilesystemUtils::safeFilename( label ) )
 			THROW( Error, "Label '" << label << "' contains forbidden characters" );
-		if ( !boost::filesystem::exists( absoluteFilename( label ) ) )
+		if ( not boost::filesystem::exists( absoluteFilename( label ) ) )
 			THROW( Error, "Label '" << label << "' does not exist in object store." );
 		Hash hash( readLabelNoLog( label ) );
 		_log.get( label, hash );
