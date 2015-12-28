@@ -52,7 +52,9 @@ public:
 		if ( not CalculateHash::verify( filename, hash ) )
 			THROW( Error, "Will not put file that does not match it's hash " << hash );
 		boost::filesystem::path absolute = absoluteFilename( hash );
-		boost::filesystem::create_directories( absolute.parent_path() );
+		boost::filesystem::path dirPath = absolute.parent_path();
+		recoverInCaseOfDirectoryCorruption( dirPath );
+		boost::filesystem::create_directories( dirPath );
 		boost::filesystem::rename( filename, absolute );
 		BACKTRACE_END_VERBOSE( "Hash " << hash << " Filename " << filename );
 	}
@@ -77,6 +79,19 @@ private:
 	boost::filesystem::path absoluteFilename( const Hash & hash ) const
 	{
 		return _rootPath / hash.relativeFilename();
+	}
+
+	void recoverInCaseOfDirectoryCorruption( boost::filesystem::path dirPath ) {
+		if ( not boost::filesystem::exists( dirPath ) )
+			return;
+		const boost::filesystem::file_status status = boost::filesystem::status(dirPath);
+		const boost::filesystem::file_type fileType = status.type();
+		if ( fileType != boost::filesystem::file_type::directory_file ) {
+			TRACE_WARNING("Trying to recover from a possible corruption in the local cache;"
+			              << " The following path is unexpectedly of type " << fileType <<
+			              " (instead of a directory): '" << dirPath << "'.");
+			boost::filesystem::remove(dirPath);
+		}
 	}
 
 	Store( const Store & rhs ) = delete;

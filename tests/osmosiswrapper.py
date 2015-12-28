@@ -89,6 +89,7 @@ class Client:
         hash2 = self._runAny("sha1sum", absolute).strip().split(" ")[0]
         if hash1 != hash2:
             raise Exception("Hashes not equal:\n" + hash1 + "\n" + hash2)
+        return hash1
 
     def _moreArgs(self, kwargs):
         moreArgs = []
@@ -203,6 +204,29 @@ class Server:
                     continue
                 with open(os.path.join(root, filename), "wb") as f:
                     f.write(malformedContent)
+
+    def insertMalformedFileInsteadOfDir(self, dirPath, fileType):
+        dirPath = os.path.normpath(os.path.join(self.path, dirPath))
+        if os.path.exists(dirPath):
+            shutil.rmtree(dirPath)
+        else:
+            os.makedirs(os.path.dirname(dirPath))
+        if fileType == "fifo":
+            print dirPath
+            os.mkfifo(dirPath)
+        elif fileType == "regular file":
+            assert False
+        elif fileType == "character special file":
+            assert False
+        elif fileType == "block special file":
+            assert False
+        elif fileType == "symbolic link":
+            assert False
+        elif fileType == "socket":
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.bind(dirPath)
+        else:
+            assert False
 
     def labelLog(self, flush=True):
         if flush:

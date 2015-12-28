@@ -777,6 +777,26 @@ class Test(unittest.TestCase):
         finally:
             shutil.rmtree(objectStoreDir, ignore_errors=True)
 
+    def test_Bugfix_PutFileInLocalObjectStoreCrashesIfParentDirIsCorruptedAndTurnedIntoNonDirFile(self):
+        self.client.objectStores = [self.server.path]
+        self.client.writeFile("aFile", "123456")
+        fileHash = self.client.testHash("aFile")
+        designatedParentDirInCache = os.path.join(fileHash[:2], fileHash[2:4])
+        corruptedPath = os.path.join(self.server.path, designatedParentDirInCache)
+        self.server.insertMalformedFileInsteadOfDir(corruptedPath, "fifo")
+        self.assertFalse(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
+        self.client.checkin("yuvu")
+        self.assertTrue(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
+        self.client.eraseLabel("yuvu")
+        self.server.insertMalformedFileInsteadOfDir(corruptedPath, "socket")
+        self.assertFalse(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
+        self.client.checkin("yuvu")
+        self.assertTrue(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
+        self.client.writeFile("aFile", "not 123456")
+        self.client.checkout("yuvu")
+        self.assertEquals(self.client.fileCount(), 1)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+
 
 if __name__ == '__main__':
     unittest.main()
