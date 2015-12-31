@@ -158,6 +158,9 @@ class Client:
         with open(self.abspath(relpath), "wb") as f:
             f.write(content)
 
+    def createSymlink(self, relTargetPath, relLinkPath):
+        os.symlink(self.abspath(relTargetPath), self.abspath(relLinkPath))
+
     def fileCount(self):
         count = 0
         for root, dirs, files in os.walk(self._path):

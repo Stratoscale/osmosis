@@ -101,11 +101,27 @@ private:
 					continue;
 				if ( not boost::filesystem::exists( absolute ) and not boost::filesystem::symbolic_link_exists( absolute ) )
 					continue;
+				if ( areOneOrMoreAncestorsSymlinks( entry.path ) )
+					continue;
 				try {
 					boost::filesystem::remove_all( absolute );
 				} CATCH_TRACEBACK_EXCEPTION
 			}
 		BACKTRACE_END
+	}
+
+	inline bool areOneOrMoreAncestorsSymlinks( const boost::filesystem::path entry ) const
+	{
+		boost::filesystem::path closestAncestor = entry.parent_path();
+		boost::filesystem::path curAncestor = _directory;
+		for (auto & component : closestAncestor) {
+			curAncestor /= component;
+			const FileStatus fileStatus( const_cast< const boost::filesystem::path& > ( curAncestor ) );
+			if ( fileStatus.isSymlink() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	void decideWhatToDo(    FetchFiles &                     fetchFiles,

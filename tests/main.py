@@ -797,6 +797,17 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.fileCount(), 1)
         self.assertEquals(self.client.readFile("aFile"), "123456")
 
+    def test_Bugfix_DontRemoveAnUnknownFileWhichOneOfItsAncestorsIsASymlinkSinceItMightBelongToLabel(self):
+        self.client.writeFile("a/b", "123456")
+        self.client.createSymlink(relTargetPath="a", relLinkPath="c")
+        self.client.checkin("yuvu")
+        self.client.clean()
+        self.client.writeFile("a/b", "123456")
+        self.client.writeFile("c/b", "123456")
+        self.assertEquals(self.client.readFile("a/b"), "123456")
+        self.client.checkout("yuvu", removeUnknownFiles=True)
+        self.assertEquals(self.client.readFile("a/b"), "123456")
+
 
 if __name__ == '__main__':
     unittest.main()
