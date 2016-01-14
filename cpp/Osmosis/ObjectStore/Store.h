@@ -90,7 +90,7 @@ private:
 			TRACE_WARNING("Trying to recover from a possible corruption in the local cache;"
 			              << " The following path is unexpectedly of type " << fileType <<
 			              " (instead of a directory): '" << dirPath << "'.");
-			boost::filesystem::remove(dirPath);
+			boost::filesystem::remove( dirPath );
 		}
 	}
 
