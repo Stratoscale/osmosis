@@ -13,13 +13,27 @@ class Client:
         self._server = server
         self._server2 = server2
         self._path = tempfile.mkdtemp()
-        self.objectStores = ["localhost:%d" % server.port()]
+        self._remoteObjectStore = "localhost:%d" % server.port()
+        self.objectStores = None
+        self.useRemoteObjectStoreOnly()
+        self.objectStores = [self._remoteObjectStore]
         self.additionalObjectStoresForCheckout = []
         if server2 is not None:
             self.additionalObjectStoresForCheckout.append("localhost:%d" % server2.port())
+        self.localObjectStorePath = tempfile.mkdtemp()
+
+    def useLocalObjectStoreOnly(self):
+        self.objectStores = [self.localObjectStorePath]
+
+    def useRemoteObjectStoreOnly(self):
+        self.objectStores = [self._remoteObjectStore]
+
+    def useLocalAndRemoteObjectStores(self):
+        self.objectStores = [self.localObjectStorePath, self._remoteObjectStore]
 
     def clean(self):
         shutil.rmtree(self._path, ignore_errors=True)
+        shutil.rmtree(self.localObjectStorePath, ignore_errors=True)
 
     def path(self):
         return self._path
@@ -121,10 +135,9 @@ class Client:
         objectStores = list(self.objectStores)
         if cmd == "checkout":
             objectStores += self.additionalObjectStoresForCheckout
+        cmd = ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args)
         try:
-            return subprocess.check_output(
-                ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args),
-                close_fds=True, stderr=subprocess.STDOUT)
+            return subprocess.check_output(cmd, close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             logging.exception("\n\n\nClientOutput:\n" + e.output)
             logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
@@ -167,6 +180,30 @@ class Client:
             count += len(files) + len(dirs)
         return count
 
+    def insertMalformedFileInsteadOfDirInLocalObjectStore(self, dirPath, fileType):
+        assert self.localObjectStorePath is not None
+        dirPath = os.path.normpath(os.path.join(self.localObjectStorePath, dirPath))
+        if os.path.exists(dirPath):
+            shutil.rmtree(dirPath)
+        else:
+            os.makedirs(os.path.dirname(dirPath))
+        if fileType == "fifo":
+            print dirPath
+            os.mkfifo(dirPath)
+        elif fileType == "regular file":
+            assert False
+        elif fileType == "character special file":
+            assert False
+        elif fileType == "block special file":
+            assert False
+        elif fileType == "symbolic link":
+            assert False
+        elif fileType == "socket":
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.bind(dirPath)
+        else:
+            assert False
+
 
 class Server:
     def __init__(self):
@@ -207,29 +244,6 @@ class Server:
                     continue
                 with open(os.path.join(root, filename), "wb") as f:
                     f.write(malformedContent)
-
-    def insertMalformedFileInsteadOfDir(self, dirPath, fileType):
-        dirPath = os.path.normpath(os.path.join(self.path, dirPath))
-        if os.path.exists(dirPath):
-            shutil.rmtree(dirPath)
-        else:
-            os.makedirs(os.path.dirname(dirPath))
-        if fileType == "fifo":
-            print dirPath
-            os.mkfifo(dirPath)
-        elif fileType == "regular file":
-            assert False
-        elif fileType == "character special file":
-            assert False
-        elif fileType == "block special file":
-            assert False
-        elif fileType == "symbolic link":
-            assert False
-        elif fileType == "socket":
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.bind(dirPath)
-        else:
-            assert False
 
     def labelLog(self, flush=True):
         if flush:

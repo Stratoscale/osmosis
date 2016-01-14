@@ -60,6 +60,11 @@ public:
 		std::ifstream hashFile( absoluteFilename( label ).string() );
 		std::string hex;
 		hashFile >> hex;
+		if ( hex.empty() ) {
+			TRACE_WARNING("Label '" << label << "' file is empty. Erasing it.");
+			boost::filesystem::remove( absoluteFilename( label ) );
+			THROW( LabelFileIsCorrupted, "Empty label file" );
+		}
 		return Hash( hex );
 		BACKTRACE_END_VERBOSE( "Label " << label );
 	}

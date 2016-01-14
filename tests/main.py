@@ -10,6 +10,7 @@ import logging
 import fakeshell
 import tempfile
 import json
+import subprocess
 from osmosis.policy import cleanupremovelabelsuntildiskusage
 from osmosis import objectstore
 
@@ -18,6 +19,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.server = osmosiswrapper.Server()
         self.client = osmosiswrapper.Client(self.server)
+        self.localObjectStore = tempfile.mkdtemp()
 
     def tearDown(self):
         self.client.clean()
@@ -778,17 +780,17 @@ class Test(unittest.TestCase):
             shutil.rmtree(objectStoreDir, ignore_errors=True)
 
     def test_Bugfix_PutFileInLocalObjectStoreCrashesIfParentDirIsCorruptedAndTurnedIntoNonDirFile(self):
-        self.client.objectStores = [self.server.path]
+        self.client.useLocalObjectStoreOnly()
         self.client.writeFile("aFile", "123456")
         fileHash = self.client.testHash("aFile")
         designatedParentDirInCache = os.path.join(fileHash[:2], fileHash[2:4])
-        corruptedPath = os.path.join(self.server.path, designatedParentDirInCache)
-        self.server.insertMalformedFileInsteadOfDir(corruptedPath, "fifo")
+        corruptedPath = os.path.join(self.client.localObjectStorePath, designatedParentDirInCache)
+        self.client.insertMalformedFileInsteadOfDirInLocalObjectStore(corruptedPath, "fifo")
         self.assertFalse(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
         self.client.checkin("yuvu")
         self.assertTrue(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
         self.client.eraseLabel("yuvu")
-        self.server.insertMalformedFileInsteadOfDir(corruptedPath, "socket")
+        self.client.insertMalformedFileInsteadOfDirInLocalObjectStore(corruptedPath, "socket")
         self.assertFalse(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
         self.client.checkin("yuvu")
         self.assertTrue(stat.S_ISDIR(os.stat(corruptedPath).st_mode))
@@ -807,6 +809,30 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("a/b"), "123456")
         self.client.checkout("yuvu", removeUnknownFiles=True)
         self.assertEquals(self.client.readFile("a/b"), "123456")
+
+    def test_CheckoutRecoversLocalObjectStoreIfLabelFileWasTruncatedByErasingIt_LocalStoreOnly(self):
+        self.client.useLocalObjectStoreOnly()
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        labelFilePath = os.path.join(self.client.localObjectStorePath, "labels", "yuvu")
+        self.assertTrue(os.path.exists(labelFilePath))
+        open(labelFilePath, "w").close()
+        self.assertRaises(subprocess.CalledProcessError, self.client.checkout, "yuvu")
+        self.assertFalse(os.path.exists(labelFilePath))
+
+    def test_CheckoutRecoversLocalObjectStoreIfLabelFileWasTruncatedByErasingIt_LocalAndRemoteStores(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.useLocalObjectStoreOnly()
+        self.client.checkin("yuvu")
+        self.client.useRemoteObjectStoreOnly()
+        self.client.checkin("yuvu")
+        labelFilePath = os.path.join(self.client.localObjectStorePath, "labels", "yuvu")
+        self.assertTrue(os.path.exists(labelFilePath))
+        open(labelFilePath, "w").close()
+        self.client.useLocalAndRemoteObjectStores()
+        self.client.checkout("yuvu")
+        self.assertFalse(os.path.exists(labelFilePath))
+        self.assertEquals(self.client.readFile("aFile"), "123456")
 
 
 if __name__ == '__main__':

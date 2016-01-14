@@ -75,23 +75,13 @@ public:
 		for ( unsigned i = 0; i < _connections.size(); ++ i ) {
 			bool exists = connection( i ).listLabels( "^" + label + "$" ).size() > 0;
 			if ( exists ) {
-				Hash hash = connection( i ).getLabel( label );
-				if ( _putIfMissing ) {
-					std::string content = connection( i ).getString( hash );
-					for ( int j = i - 1; j >= 0; -- j ) {
-						if ( not connection( j ).exists( hash ) )
-							connection( j ).putString( content, hash );
-						connection( j ).setLabel( hash, label );
-					}
+				try {
+					Hash hash = getLabelFromConnection( i, label );
+					return hash;
+				} catch ( LabelFileIsCorrupted& ex ) {
+					TRACE_WARNING( "Label file was corrupted in connection #" << i << "."
+					               " Trying next connection..." );
 				}
-				if ( _touch ) {
-					TRACE_INFO( "Touching chain for label: " << label );
-					for ( unsigned j = i + 1; j < _connections.size(); ++ j )
-						try {
-							connection( j ).getLabel( label );
-						} CATCH_ALL_IGNORE( "While touching label on object store " << j << ", ignoring" );
-				}
-				return hash;
 			}
 		}
 		BACKTRACE_END_VERBOSE( "Label " << label );
@@ -108,6 +98,26 @@ private:
 	std::vector< std::unique_ptr< ObjectStoreConnectionInterface > >  _connections;
 	GetCountStats                                                     _getCount;
 
+	Hash getLabelFromConnection( unsigned objectStoreIndex, const std::string &label )
+	{
+		Hash hash = connection( objectStoreIndex ).getLabel( label );
+		if ( _putIfMissing ) {
+			std::string content = connection( objectStoreIndex ).getString( hash );
+			for ( int j = objectStoreIndex - 1; j >= 0; -- j ) {
+				if ( not connection( j ).exists( hash ) )
+					connection( j ).putString( content, hash );
+				connection( j ).setLabel( hash, label );
+			}
+		}
+		if ( _touch ) {
+			TRACE_INFO( "Touching chain for label: " << label );
+			for ( unsigned j = objectStoreIndex + 1; j < _connections.size(); ++ j )
+				try {
+					connection( j ).getLabel( label );
+				} CATCH_ALL_IGNORE( "While touching label on object store " << j << ", ignoring" );
+		}
+		return hash;
+	}
 	ObjectStoreConnectionInterface & connection( unsigned objectStoreIndex )
 	{
 		ASSERT( objectStoreIndex < _connections.size() );

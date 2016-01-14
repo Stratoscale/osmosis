@@ -54,6 +54,16 @@ public:
 	}
 };
 
+
+class LabelFileIsCorrupted final : public Error
+{
+public:
+	LabelFileIsCorrupted( const std::string & what, const char * filename, unsigned line ) :
+		Error( what, filename, line )
+	{
+	}
+};
+
 #define EXCEPTION_SUBCLASS( __name, __superclass ) \
 	class __name : public __superclass \
 	{ \
