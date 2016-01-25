@@ -105,6 +105,33 @@ class Client:
             raise Exception("Hashes not equal:\n" + hash1 + "\n" + hash2)
         return hash1
 
+    def createAPathLargerThanPATH_MAX(self, maxAllowedPathSize):
+        maxAllowedPathSize += 100
+        origPath = os.getcwd()
+        filePath = os.path.realpath(self._path)
+        try:
+            os.chdir(self._path)
+            while len(filePath) < maxAllowedPathSize:
+                os.mkdir("anotherDir")
+                os.chdir("anotherDir")
+                filePath = os.path.join(filePath, "anotherDir")
+        finally:
+            os.chdir(origPath)
+        return filePath
+
+    @staticmethod
+    def assertLargePathExists(fullPath):
+        pathComponents = fullPath.split(os.path.sep)
+        pathComponents = [component for component in pathComponents if component]
+        pathSoFar = os.path.sep
+        origPath = os.getcwd()
+        try:
+            os.chdir(pathSoFar)
+            for pathComponent in pathComponents:
+                os.chdir(pathComponent)
+        finally:
+            os.chdir(origPath)
+
     def _moreArgs(self, kwargs):
         moreArgs = []
         if kwargs.get('removeUnknownFiles', False):

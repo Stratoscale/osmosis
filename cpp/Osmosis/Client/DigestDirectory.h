@@ -1,6 +1,7 @@
 #ifndef __OSMOSIS_CLIENT_DIGEST_DIRECTORY_H__
 #define __OSMOSIS_CLIENT_DIGEST_DIRECTORY_H__
 
+#include <limits.h>
 #include "Osmosis/Client/DigestThread.h"
 #include "Osmosis/Client/Ignores.h"
 #include "Common/NumberOfCPUs.h"
@@ -83,6 +84,14 @@ private:
 			FileStatus status( path );
 			if ( not status.isSymlink() and status.isSocket() ) {
 				TRACE_WARNING( "Will not digest socket file: " << path );
+				continue;
+			}
+			const static auto maxAllowedPathSize = PATH_MAX - NAME_MAX;
+			if ( status.isDirectory() and path.string().length() > maxAllowedPathSize ) {
+				TRACE_WARNING( "Skipping traversal of the following directory " <<
+				               "since its path size is above the allowed threshold (" <<
+				               maxAllowedPathSize << "):" << path.string() );
+				i.no_push();
 				continue;
 			}
 			boost::filesystem::path relative = path.string().substr( prefixLength );
