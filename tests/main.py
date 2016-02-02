@@ -836,12 +836,11 @@ class Test(unittest.TestCase):
 
     def test_IgnorePathsLongerThanPATH_MAXWhenRemovingUnknownFiles(self):
         PATH_MAX = int(subprocess.check_output(["getconf", "PATH_MAX", "/"]).strip())
-        NAME_MAX = int(subprocess.check_output(["getconf", "NAME_MAX", "/"]).strip())
-        maxAllowedPathSize = PATH_MAX - NAME_MAX
+        maxAllowedPathSize = PATH_MAX + 200
         self.client.writeFile("aFile", "123456")
         self.client.checkin("yuvu")
         largePath = self.client.createAPathLargerThanPATH_MAX(maxAllowedPathSize)
-        self.client.checkout("yuvu")
+        self.client.checkout("yuvu", removeUnknownFiles=True)
         self.assertEquals(self.client.readFile("aFile"), "123456")
         self.client.assertLargePathExists(largePath)
 

@@ -105,6 +105,14 @@ private:
 					continue;
 				try {
 					boost::filesystem::remove_all( absolute );
+				} catch ( boost::filesystem::filesystem_error &ex ) {
+					if ( ex.code().value() == ENAMETOOLONG ) {
+						TRACE_WARNING("Will not remove a directory which either has a path or "
+						              "contains a path too long:'" << relative << "'");
+						continue;
+					}
+					TRACE_BOOST_EXCEPTION( ex, "While removing unknown files" );
+					throw;
 				} CATCH_TRACEBACK_EXCEPTION
 			}
 		BACKTRACE_END

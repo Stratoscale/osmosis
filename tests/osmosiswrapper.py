@@ -115,6 +115,7 @@ class Client:
                 os.mkdir("anotherDir")
                 os.chdir("anotherDir")
                 filePath = os.path.join(filePath, "anotherDir")
+            open("fileWithALongPath.txt", "w").write("contents of a file with a long path")
         finally:
             os.chdir(origPath)
         return filePath
