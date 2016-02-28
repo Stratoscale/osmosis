@@ -46,6 +46,7 @@ public:
 		ASSERT( _boostSocket.is_open() );
 		TRACE_INFO( "Connected to " << _boostSocket.remote_endpoint() << ", starting server thread" );
 		setTCPNoDelay( true );
+		setTCPKeepalive( true );
 		std::thread thread( & Thread::thread, shared_from_this() );
 		thread.detach();
 		BACKTRACE_END
@@ -140,8 +141,14 @@ private:
 	void setTCPNoDelay( bool value )
 	{
 		boost::asio::ip::tcp::no_delay option( value );
-		_boostSocket.set_option(option);
+		_boostSocket.set_option( option );
 		_tcpNoDelay = value;
+	}
+
+	void setTCPKeepalive( bool value )
+	{
+		boost::asio::socket_base::keep_alive option( value );
+		_boostSocket.set_option( option );
 	}
 
 	Thread( const Thread & rhs ) = delete;
