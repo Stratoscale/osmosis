@@ -57,9 +57,15 @@ public:
 	{
 		BACKTRACE_BEGIN
 		ASSERT( FilesystemUtils::safeFilename( label ) );
-		std::ifstream hashFile( absoluteFilename( label ).string() );
+		std::string absolute =  absoluteFilename( label ).string();
 		std::string hex;
-		hashFile >> hex;
+		try {
+			std::ifstream hashFile( absolute );
+			hashFile >> hex;
+		} catch ( std::exception &ex ) {
+			TRACE_ERROR( "Cannot read label file '" << absolute << "'." );
+			throw ex;
+		}
 		if ( hex.empty() ) {
 			TRACE_WARNING("Label '" << label << "' file is empty. Erasing it.");
 			boost::filesystem::remove( absoluteFilename( label ) );
