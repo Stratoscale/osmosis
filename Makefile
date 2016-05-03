@@ -36,6 +36,9 @@ install:
 	make install_binary
 	python py/get_system_setting.py systemManager
 	make install_service_`python py/get_system_setting.py systemManager`
+	if [ -d "/etc/bash_completion.d" ]; then \
+		sudo cp bash.completion.sh /etc/bash_completion.d/osmosis.sh; \
+	fi
 
 install_service_systemd:
 	python py/get_system_setting.py serviceFilesDirPath
