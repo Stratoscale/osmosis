@@ -16,7 +16,7 @@ public:
 	void go()
 	{
 		BACKTRACE_BEGIN
-		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
+		Hash hash( _socket.receiveAll< struct Tongue::Hash >() );
 		_store.verifyOrDestroy( hash );
 		Stream::AckOps( _socket ).sendAck();
 		BACKTRACE_END

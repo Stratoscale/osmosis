@@ -19,7 +19,7 @@ public:
 		std::string label( ReceiveLabel( _socket ).label() );
 		if ( _labels.exists( label ) )
 			THROW( Error, "Label '" << label << "' already exists, can not set" );
-		auto rawHash = _socket.recieveAll< struct Tongue::Hash >();
+		auto rawHash = _socket.receiveAll< struct Tongue::Hash >();
 		_labels.label( Hash( rawHash ), label );
 		Stream::AckOps( _socket ).sendAck();
 		BACKTRACE_END

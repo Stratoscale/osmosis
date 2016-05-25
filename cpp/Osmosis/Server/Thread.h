@@ -76,7 +76,7 @@ private:
 	{
 		struct Tongue::Header header;
 		try {
-			header = _socket.recieveAll< struct Tongue::Header >();
+			header = _socket.receiveAll< struct Tongue::Header >();
 		} catch ( boost::system::system_error & e ) {
 			if ( e.code() == boost::asio::error::eof )
 				return false;
@@ -127,7 +127,7 @@ private:
 	void handshake()
 	{
 		BACKTRACE_BEGIN
-		auto handshake = _socket.recieveAll< struct Tongue::Handshake >();
+		auto handshake = _socket.receiveAll< struct Tongue::Handshake >();
 		if ( handshake.protocolVersion != static_cast< unsigned >( Tongue::PROTOCOL_VERSION ) )
 			THROW( Error, "Client with protocol version " << handshake.protocolVersion <<
 					" attempted to connect to us, but our protocol version is " <<
