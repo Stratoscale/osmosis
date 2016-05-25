@@ -39,7 +39,7 @@ public:
 		BACKTRACE_BEGIN
 		sendLabelCommand( label, Tongue::Opcode::GET_LABEL );
 		try {
-			Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
+			Hash hash( _socket.receiveAll< struct Tongue::Hash >() );
 			return hash;
 		} catch ( boost::system::system_error & e ) {
 			if ( e.code() == boost::asio::error::eof )

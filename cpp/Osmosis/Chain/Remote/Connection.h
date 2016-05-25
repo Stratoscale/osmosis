@@ -82,7 +82,7 @@ public:
 		BACKTRACE_BEGIN
 		struct Tongue::Header header = { static_cast< unsigned char >( Tongue::Opcode::IS_EXISTS ) };
 		_connection.socket().sendAllConcated( header, hash.raw() );
-		auto response = _connection.socket().recieveAll< struct Tongue::IsExistsResponse >();
+		auto response = _connection.socket().receiveAll< struct Tongue::IsExistsResponse >();
 		if ( response.response != static_cast< unsigned char >( Tongue::IsExists::YES ) and
 				response.response != static_cast< unsigned char > ( Tongue::IsExists::NO ) )
 			THROW( Error, "Invalid response from server for an exists query: " << static_cast< unsigned >( response.response ) );

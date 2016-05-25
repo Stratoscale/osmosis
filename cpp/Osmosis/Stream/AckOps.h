@@ -15,7 +15,7 @@ public:
 	void wait( const char * waitReason )
 	{
 		try {
-			struct Tongue::Header header = _socket.recieveAll< struct Tongue::Header >();
+			struct Tongue::Header header = _socket.receiveAll< struct Tongue::Header >();
 			if ( header.opcode != static_cast< unsigned >( Tongue::Opcode::ACK ) )
 				THROW( Error, "Peer did not ack, found byte " << header.opcode << ", when " << waitReason );
 		} catch ( boost::system::system_error & e ) {
