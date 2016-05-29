@@ -1,6 +1,11 @@
 #ifndef __OSMOSIS_CHAIN_OBJECT_STORE_CONNECTION_INTERFACE_H__
 #define __OSMOSIS_CHAIN_OBJECT_STORE_CONNECTION_INTERFACE_H__
 
+#include <list>
+#include <string>
+#include <boost/filesystem/path.hpp>
+#include "Osmosis/Hash.h"
+
 namespace Osmosis {
 namespace Chain
 {

@@ -1,6 +1,10 @@
 #ifndef __OSMOSIS_CHAIN_REMOTE_LABEL_OPS_H__
 #define __OSMOSIS_CHAIN_REMOTE_LABEL_OPS_H__
 
+#include <Osmosis/TCPSocket.h>
+#include <Osmosis/Stream/AckOps.h>
+#include <Osmosis/Stream/Incoming.h>
+
 namespace Osmosis {
 namespace Chain {
 namespace Remote
