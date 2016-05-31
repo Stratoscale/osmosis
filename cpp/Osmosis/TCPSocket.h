@@ -59,6 +59,10 @@ public:
 		sendAll( buffer, sizeof( buffer ) );
 	}
 
+	void close() {
+		_socket.close();
+	}
+
 private:
 	boost::asio::ip::tcp::socket & _socket;
 

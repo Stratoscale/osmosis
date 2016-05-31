@@ -1,6 +1,7 @@
 #ifndef __OSMOSIS_HANDLE_SIGNAL_H__
 #define __OSMOSIS_HANDLE_SIGNAL_H__
 
+#include <unordered_map>
 #include <signal.h>
 
 namespace Osmosis
