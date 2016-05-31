@@ -1,6 +1,8 @@
 #ifndef __OSMOSIS_HEX_H__
 #define __OSMOSIS_HEX_H__
 
+#include "Common/Error.h"
+
 namespace Osmosis {
 namespace Hex
 {

@@ -2,16 +2,12 @@
 #define __OSMOSIS_SERVER_THREAD_H__
 
 #include <boost/filesystem.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <thread>
-#include "Osmosis/Server/GetOp.h"
-#include "Osmosis/Server/PutOp.h"
-#include "Osmosis/Server/IsExistsOp.h"
-#include "Osmosis/Server/VerifyOp.h"
-#include "Osmosis/Server/GetLabelOp.h"
-#include "Osmosis/Server/SetLabelOp.h"
-#include "Osmosis/Server/ListLabelsOp.h"
-#include "Osmosis/Server/EraseLabelOp.h"
-#include "Osmosis/Server/RenameLabelOp.h"
+#include <Osmosis/TCPSocket.h>
+#include <Osmosis/ObjectStore/Store.h>
+#include <Osmosis/ObjectStore/Labels.h>
+#include <Osmosis/ObjectStore/Drafts.h>
 #include "Osmosis/Debug.h"
 
 namespace Osmosis {

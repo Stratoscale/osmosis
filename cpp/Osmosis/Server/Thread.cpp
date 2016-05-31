@@ -1,5 +1,14 @@
 #include <boost/asio/ip/tcp.hpp>
-#include <Osmosis/Server/Thread.h>
+#include "Osmosis/Server/Thread.h"
+#include "Osmosis/Server/GetOp.h"
+#include "Osmosis/Server/PutOp.h"
+#include "Osmosis/Server/IsExistsOp.h"
+#include "Osmosis/Server/VerifyOp.h"
+#include "Osmosis/Server/GetLabelOp.h"
+#include "Osmosis/Server/SetLabelOp.h"
+#include "Osmosis/Server/ListLabelsOp.h"
+#include "Osmosis/Server/EraseLabelOp.h"
+#include "Osmosis/Server/RenameLabelOp.h"
 
 
 namespace Osmosis {

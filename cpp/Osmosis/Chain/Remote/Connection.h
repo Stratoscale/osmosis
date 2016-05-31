@@ -44,6 +44,7 @@ private:
 	LabelOps       _labelOps;
 
 	Connection( const Connection & rhs ) = delete;
+
 	Connection & operator= ( const Connection & rhs ) = delete;
 };
 
