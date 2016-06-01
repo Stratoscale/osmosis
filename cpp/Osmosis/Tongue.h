@@ -1,11 +1,15 @@
 #ifndef __OSMOSIS_TONGUE_H__
 #define __OSMOSIS_TONGUE_H__
 
+#include <cstdint>
+
 namespace Osmosis {
 namespace Tongue
 {
 
-enum { PROTOCOL_VERSION = 1000001 };
+enum { FIRST_PROTOCOL_VERSION = 1000001,
+	   MIN_SUPPORTED_PROTOCOL_VERSION = 1000001,
+       MAX_SUPPORTED_PROTOCOL_VERSION = 1000002 };
 
 enum class Compression
 {
@@ -33,6 +37,9 @@ enum class Opcode
 	LIST_LABELS = 13,
 	ERASE_LABEL = 14,
 	RENAME_LABEL = 15,
+
+	GET_SUPPORTED_PROTOCOL_VERSIONS = 16,
+	UPGRADE_PROTOCOL_VERSION = 17,
 
 	ACK = 0xAC,
 };
@@ -64,6 +71,12 @@ struct Label
 {
 	unsigned short length;
 	char label[ 0 ];
+} __attribute__((packed));
+
+struct SupportedProtocolVersions
+{
+	uint32_t min;
+	uint32_t max;
 } __attribute__((packed));
 
 struct Chunk

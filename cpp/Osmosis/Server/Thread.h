@@ -34,6 +34,7 @@ private:
 	boost::asio::io_service       _ioService;
 	boost::asio::ip::tcp::socket  _boostSocket;
 	TCPSocket                     _socket; 
+	uint32_t                      _protocolVersion;
 	bool                          _tcpNoDelay;
 
 	void thread();

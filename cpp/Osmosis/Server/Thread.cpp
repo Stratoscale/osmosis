@@ -9,6 +9,8 @@
 #include "Osmosis/Server/ListLabelsOp.h"
 #include "Osmosis/Server/EraseLabelOp.h"
 #include "Osmosis/Server/RenameLabelOp.h"
+#include "Osmosis/Server/GetSupportedProtocolVersionsOp.h"
+#include "Osmosis/Server/UpgradeProtocolOp.h"
 
 
 namespace Osmosis {
@@ -25,6 +27,7 @@ Thread::Thread( boost::filesystem::path  rootPath,
 	_labels( labels ),
 	_boostSocket( _ioService ),
 	_socket( _boostSocket ),
+	_protocolVersion( Tongue::MIN_SUPPORTED_PROTOCOL_VERSION ),
 	_tcpNoDelay( false )
 {}
 
@@ -101,6 +104,12 @@ bool Thread::work()
 		case Tongue::Opcode::ACK:
 			THROW( Error, "Unexpected ack" );
 			break;
+		case Tongue::Opcode::GET_SUPPORTED_PROTOCOL_VERSIONS:
+			GetSupportedProtocolVersionsOp( _socket ).go();
+			break;
+		case Tongue::Opcode::UPGRADE_PROTOCOL_VERSION:
+			UpgradeProtocolOp( _socket, _protocolVersion ).go();
+			break;
 		default:
 			THROW( Error, "Protocol Error: unknown opcode: " << header.opcode );
 			break;
@@ -112,10 +121,13 @@ void Thread::handshake()
 {
 	BACKTRACE_BEGIN
 	auto handshake = _socket.receiveAll< struct Tongue::Handshake >();
-	if ( handshake.protocolVersion != static_cast< unsigned >( Tongue::PROTOCOL_VERSION ) )
+	const auto minSupportedVersion = static_cast< unsigned >( Tongue::MIN_SUPPORTED_PROTOCOL_VERSION );
+	const auto maxSupportedVersion = static_cast< unsigned >( Tongue::MAX_SUPPORTED_PROTOCOL_VERSION );
+	if ( handshake.protocolVersion < minSupportedVersion or handshake.protocolVersion > maxSupportedVersion  )
 		THROW( Error, "Client with protocol version " << handshake.protocolVersion <<
-				" attempted to connect to us, but our protocol version is " <<
-				Tongue::PROTOCOL_VERSION );
+				" attempted to connect to us, but the server only supports versions from " <<
+				Tongue::MIN_SUPPORTED_PROTOCOL_VERSION << " to " << Tongue::MAX_SUPPORTED_PROTOCOL_VERSION );
+	_protocolVersion = handshake.protocolVersion;
 	if ( handshake.compression != static_cast< unsigned >( Tongue::Compression::UNCOMPRESSED ) )
 		THROW( Error, "Compression not yet implemented" );
 	Stream::AckOps( _socket ).sendAck();
