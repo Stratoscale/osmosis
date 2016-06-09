@@ -56,6 +56,9 @@ uninstall:
 	sudo rm -f /usr/lib/systemd/system/osmosis.service /etc/init/osmosis.conf
 	echo "CONSIDER ERASING /var/lib/osmosis"
 
+checkin:
+	$(Q)component-tool checkin -v --repo=osmosis osmosis
+
 dist/osmosis-1.0.linux-x86_64.tar.gz:
 	cd py; python ../setup.py build
 	cd py; python ../setup.py bdist
