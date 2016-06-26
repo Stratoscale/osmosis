@@ -2,7 +2,7 @@ all: all-targets
 
 CONFIGURATION ?= RELEASE
 SHELL ?= /bin/bash
-COMMON_CXXFLAGS = -Ic -Icpp -I/usr/include/python2.7 -Ibuild/cpp-netlib-0.11.1-final -std=gnu++0x -Werror -Wall
+COMMON_CXXFLAGS = -Ic -Icpp -I/usr/include/python2.7 -Ibuild/cpp-netlib-0.11.1-final -Icxxtest -std=gnu++0x -Werror -Wall
 COMMON_CFLAGS = -Ic -Werror -Wall
 
 DEBUG_CXXFLAGS = -ggdb -DDEBUG
@@ -35,6 +35,7 @@ ifeq "$(STATIC_BOOST_LIBS_DIR)" "BOOST_STATIC_NOT_INSTALLED"
 $(error BOOST static libraries were not found)
 endif
 BOOST_MT = $(shell if [ -e $(STATIC_BOOST_LIBS_DIR)/libboost_thread-mt.a ]; then echo '-mt'; fi)
+
 
 include targets.Makefile
 
@@ -89,30 +90,50 @@ endif
 
 build/cpp/%.o: cpp/%.cpp
 	@mkdir -p $(@D)
-	@echo 'C++     ' $@
+	@echo 'C++        ' $@
 	$(Q)g++ $(CXXFLAGS) $($(subst /,_,$(subst .,_,$*))_o_CFLAGS) -MMD -MF $@.deps -c $< -o $@
 
 build/c/%.o: c/%.c
 	@mkdir -p $(@D)
-	@echo 'C       ' $@
+	@echo 'C          ' $@
 	$(Q)gcc $(CFLAGS) $($(subst /,_,$(subst .,_,$*))_o_CFLAGS) -MMD -MF $@.deps -c $< -o $@
 
 build/cpp/%.bin:
 	@mkdir -p $(@D)
-	@echo 'LINK++  ' $@
+	@echo 'LINK++     ' $@
 	$(Q)g++ $(LDFLAGS) -o $@ $^ $($*_LDFLAGS) $($*_LIBRARIES)
 
 build/c/%.bin:
 	@mkdir -p $(@D)
-	@echo 'LINK    ' $@
+	@echo 'LINK       ' $@
 	$(Q)gcc $(LDFLAGS) -o $@ $^ $($*_LDFLAGS) $($*_LIBRARIES)
 
 build/cpp/%.so:
 	@mkdir -p $(@D)
-	@echo 'LINK++  ' $@
+	@echo 'LINK++     ' $@
 	$(Q)g++ -shared $(LDFLAGS) -o $@ $^ $($*_LDFLAGS) $($*_LIBRARIES)
 
 build/c/%.so:
 	@mkdir -p $(@D)
-	@echo 'LINK    ' $@
+	@echo 'LINK       ' $@
 	$(Q)gcc -shared $(LDFLAGS) -o $@ $^ $($*_LDFLAGS) $($*_LIBRARIES)
+
+build/cpp/Unittests/runner_Test%.o: build/cpp/Unittests/runner_%.cpp
+	@mkdir -p $(@D)
+	@echo 'C++        ' $@
+	$(Q)g++ $(CXXFLAGS) $($(subst /,_,$(subst .,_,$*))_o_CFLAGS) -MMD -MF $@.deps -c $< -o $@
+
+build/cpp/Unittests/runner_Test%.cpp: cpp/Unittests/Test%.cpp
+	@mkdir -p $(@D)
+	@echo 'CXXTESTGEN ' $@
+	$(Q)cxxtest/bin/cxxtestgen --error-printer -o $@ $^
+
+build/cpp/runner_Test%.bin:
+	$(MAKE) -f build.Makefile cxxtest/cxxtest
+	@mkdir -p $(@D)
+	@echo 'LINKTEST++ ' $@
+	$(Q)g++ $(LDFLAGS) -o $@ $^ $($*_LDFLAGS) $(runner_Test$*_LIBRARIES) $(CXXFLAGS)
+
+cxxtest/cxxtest:
+	git submodule init
+	git submodule update -f

@@ -6,6 +6,7 @@
 #include "Osmosis/Chain/Remote/LabelOps.h"
 #include "Osmosis/TCPConnection.h"
 #include "Osmosis/Hash.h"
+#include "Osmosis/Chain/Remote/ProtocolVersionNegotiator.h"
 
 namespace Osmosis {
 namespace Chain {
@@ -42,6 +43,7 @@ public:
 private:
 	TCPConnection  _connection;
 	LabelOps       _labelOps;
+	uint32_t       _protocolVersion;
 
 	Connection( const Connection & rhs ) = delete;
 

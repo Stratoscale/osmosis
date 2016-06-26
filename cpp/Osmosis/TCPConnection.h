@@ -14,9 +14,12 @@ public:
 
 	TCPSocket & socket();
 
+	void connect();
+
 private:
 	boost::asio::io_service        _ioService;
 	boost::asio::ip::tcp::socket   _socket;
+	boost::asio::ip::tcp::endpoint _endpoint;
 	TCPSocket                      _tcpSocket;
 
 	void sendHandshake();

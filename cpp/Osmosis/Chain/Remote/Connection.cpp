@@ -13,8 +13,12 @@ namespace Remote
 
 Connection::Connection( const std::string & hostname, unsigned short port ) :
 	_connection( hostname, port ),
-	_labelOps( _connection.socket() )
-{}
+	_labelOps( _connection.socket() ),
+	_protocolVersion( Tongue::MIN_SUPPORTED_PROTOCOL_VERSION )
+{
+	ProtocolVersionNegotiator negotiator( _connection, Tongue::MIN_SUPPORTED_PROTOCOL_VERSION );
+	_protocolVersion = negotiator.negotiate();
+}
 
 void Connection::putString( const std::string & blob, const Hash & hash )
 {
