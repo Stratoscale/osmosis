@@ -1,6 +1,9 @@
 #ifndef __OSMOSIS_CLIENT_TRANSFER_THREAD_H__
 #define __OSMOSIS_CLIENT_TRANSFER_THREAD_H__
 
+#include "Osmosis/Client/Typedefs.h"
+#include "Osmosis/Chain/Chain.h"
+
 namespace Osmosis {
 namespace Client
 {

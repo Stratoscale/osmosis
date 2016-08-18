@@ -1,6 +1,9 @@
 #ifndef __OSMOSIS_STREAM_INCOMING_H__
 #define __OSMOSIS_STREAM_INCOMING_H__
 
+#include "Osmosis/TCPSocket.h"
+#include "Osmosis/Tongue.h"
+
 namespace Osmosis {
 namespace Stream
 {
