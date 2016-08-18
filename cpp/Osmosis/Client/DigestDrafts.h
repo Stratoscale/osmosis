@@ -1,6 +1,9 @@
 #ifndef __OSMOSIS_CLIENT_DIGEST_DRAFTS_H__
 #define __OSMOSIS_CLIENT_DIGEST_DRAFTS_H__
 
+#include "Osmosis/Client/Typedefs.h"
+#include "Common/NumberOfCPUs.h"
+
 namespace Osmosis {
 namespace Client
 {
