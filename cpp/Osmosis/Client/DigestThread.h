@@ -4,6 +4,7 @@
 #include "Osmosis/Client/Typedefs.h"
 #include "Osmosis/DirList.h"
 #include "Osmosis/Debug.h"
+#include "Osmosis/CalculateHash.h"
 
 namespace Osmosis {
 namespace Client
