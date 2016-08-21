@@ -13,7 +13,7 @@ WriteFile::WriteFile( const char * filename ) :
 	_offset( 0 )
 {}
 
-void WriteFile::write( size_t offset, const void * data, unsigned length )
+void WriteFile::write( size_t offset, const void * data, const unsigned length )
 {
 	ASSERT( data != nullptr );
 	if ( length == 0 )
@@ -21,14 +21,22 @@ void WriteFile::write( size_t offset, const void * data, unsigned length )
 	if ( offset != _offset )
 		seek( offset );
 
-	ssize_t written = ::write( _descriptor.fd(), data, length );
-	if ( written < 0 )
-		THROW_BOOST_ERRNO_EXCEPTION( errno, "Unable to write to '" << _filename <<
-			"' at offset " << _offset );
-	if ( written != length )
-		THROW( Error, "linux write system call return partial data was written: " <<
-				"expected: " << length << " but only " << written << " was written" );
-	_offset += length;
+	auto nrBytesLeftToWrite = length;
+	unsigned char *datap = (unsigned char *) data;
+	while ( nrBytesLeftToWrite > 0 ) {
+		ssize_t written = ::write( _descriptor.fd(), datap, nrBytesLeftToWrite );
+		if ( written <= 0 )
+			THROW_BOOST_ERRNO_EXCEPTION( errno, "Unable to write to '" << _filename <<
+				"' at offset " << _offset );
+		if ( written != nrBytesLeftToWrite )
+			TRACE_WARNING("While writing to file '" << _filename << "': linux 'write' system call return "
+				"value indicates that partial data was written: " <<
+				"expected: " << nrBytesLeftToWrite << " but only " << written << " was written. " <<
+				nrBytesLeftToWrite << "bytes left to write." );
+		_offset += written;
+		nrBytesLeftToWrite -= written;
+		datap += written;
+	}
 }
 
 

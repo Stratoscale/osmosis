@@ -14,7 +14,7 @@ class WriteFile
 public:
 	WriteFile( const char * filename );
 
-	void write( size_t offset, const void * data, unsigned length );
+	void write( size_t offset, const void * data, const unsigned length );
 
 private:
 	const std::string _filename;
