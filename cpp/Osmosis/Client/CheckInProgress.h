@@ -3,7 +3,7 @@
 
 #include <boost/filesystem.hpp>
 #include "Osmosis/Client/DigestDirectory.h"
-#include "Common/ThreadStopCondition.h"
+#include "Osmosis/WaitCondition.h"
 
 namespace Osmosis {
 namespace Client
@@ -27,7 +27,7 @@ private:
 	DigestedTaskQueue &		_putQueue;
 	unsigned                       	_reportIntervalSeconds;
 	std::thread                    	_thread;
-	ThreadStopCondition             _threadStopCondition;
+	WaitCondition                   _threadStopCondition;
 
 	void threadEntryPoint();
 
