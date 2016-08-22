@@ -12,118 +12,35 @@ namespace Http
 class Connection : public ObjectStoreConnectionInterface
 {
 public:
-	Connection( const std::string & url ):
-		_url( url )
-	{}
+	Connection( const std::string & url );
 
-	void putString( const std::string & blob, const Hash & hash ) override
-	{
-		THROW( Error, "'http://' object store does not support the putString operation "
-				"(this kind of object store can only be used for checkout operations "
-				"as the last in the chain)" );
-	}
+	void putString( const std::string & blob, const Hash & hash ) override;
 
-	std::string getString( const Hash & hash ) override
-	{
-		BACKTRACE_BEGIN
-		boost::network::http::client::request request( hashUrl( hash ) );
-		boost::network::http::client::response response = _client.get( request );
-		std::ostringstream out;
-		out << boost::network::http::body( response );
-		return std::move( out.str() );
-		BACKTRACE_END_VERBOSE( "Hash " << hash );
-	}
+	std::string getString( const Hash & hash ) override;
 
-	void putFile( const boost::filesystem::path & path, const Hash & hash ) override
-	{
-		THROW( Error, "'http://' object store does not support the putFile operation "
-				"(this kind of object store can only be used for checkout operations "
-				"as the last in the chain)" );
-	}
+	void putFile( const boost::filesystem::path & path, const Hash & hash ) override;
 
-	void getFile( const boost::filesystem::path & path, const Hash & hash ) override
-	{
-		BACKTRACE_BEGIN
-		boost::network::http::client::request request( hashUrl( hash ) );
-		boost::network::http::client::response response = _client.get( request );
-		std::ofstream out( path.string(), std::ios::out | std::ios::binary );
-		out << boost::network::http::body( response );
-		BACKTRACE_END_VERBOSE( "Path " << path << " Hash " << hash );
-	}
+	void getFile( const boost::filesystem::path & path, const Hash & hash ) override;
 
-	bool exists( const Hash & hash ) override
-	{
-		BACKTRACE_BEGIN
-		boost::network::http::client::request request( hashUrl( hash ) );
-		boost::network::http::client::response response = _client.head( request );
-		auto status = boost::network::http::status( response );
-		return status == 200;
-		BACKTRACE_END_VERBOSE( "Hash " << hash );
-	}
+	bool exists( const Hash & hash ) override;
 
-	void verify( const Hash & hash ) override
-	{}
+	void verify( const Hash & hash ) override;
 
-	void eraseLabel( const std::string & label ) override
-	{
-		THROW( Error, "'http://' object store does not support the eraseLabel operation "
-				"(this kind of object store can only be used for checkout operations "
-				"as the last in the chain)" );
-	}
+	void eraseLabel( const std::string & label ) override;
 
-	void setLabel( const Hash & hash, const std::string & label ) override
-	{
-		THROW( Error, "'http://' object store does not support the setLabel operation "
-				"(this kind of object store can only be used for checkout operations "
-				"as the last in the chain)" );
-	}
+	void setLabel( const Hash & hash, const std::string & label ) override;
 
-	Hash getLabel( const std::string & label ) override
-	{
-		BACKTRACE_BEGIN
-		std::string url = _url + "/" + ObjectStore::DirectoryNames::LABELS + "/" + label;
-		boost::network::http::client::request request( url );
-		boost::network::http::client::response response = _client.get( request );
-		std::ostringstream out;
-		out << boost::network::http::body( response );
-		return Hash( out.str() );
-		BACKTRACE_END_VERBOSE( "Label " << label );
-	}
+	Hash getLabel( const std::string & label ) override;
 
-	void renameLabel( const std::string & currentLabel, const std::string & renameLabelTo ) override
-	{
-		THROW( Error, "'http://' object store does not support the renameLabel operation "
-				"(this kind of object store can only be used for checkout operations "
-				"as the last in the chain)" );
-	}
+	void renameLabel( const std::string & currentLabel, const std::string & renameLabelTo ) override;
 
-	std::list< std::string > listLabels( const std::string & regex ) override
-	{
-		BACKTRACE_BEGIN
-		if ( regex[ 0 ] != '^' and regex[ regex.size() - 1 ] != '$' )
-			THROW( Error, "'http://' object store does not support the listLabels operation "
-					"(this kind of object store can only be used for checkout operations "
-					"as the last in the chain)" );
-		std::string label = regex.substr( 1, regex.size() - 2 );
-		std::string url = _url + "/" + ObjectStore::DirectoryNames::LABELS + "/" + label;
-		boost::network::http::client::request request( url );
-		boost::network::http::client::response response = _client.head( request );
-		std::list< std::string > result;
-		auto status = boost::network::http::status( response );
-		if ( status == 200 )
-			result.push_back( label );
-		return result;
-		BACKTRACE_END_VERBOSE( "Regex " << regex );
-	}
+	std::list< std::string > listLabels( const std::string & regex ) override;
 
 private:
 	const std::string             _url;
 	boost::network::http::client  _client;
 
-	std::string hashUrl( const Hash & hash )
-	{
-		return _url + "/" + hash.relativeFilename().string();
-	}
+	std::string hashUrl( const Hash & hash );
 
 	Connection( const Connection & rhs ) = delete;
 	Connection & operator= ( const Connection & rhs ) = delete;

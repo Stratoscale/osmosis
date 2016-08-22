@@ -11,19 +11,9 @@ namespace Stream
 class SocketToFile
 {
 public:
-	SocketToFile( TCPSocket & socket, const char * filename ) :
-		_socket( socket ),
-		_incoming( socket ),
-		_write( filename )
-	{}
+	SocketToFile( TCPSocket & socket, const char * filename );
 
-	void transfer()
-	{
-		while ( not _incoming.done() ) {
-			_write.write( _incoming.offset(), _incoming.buffer(), _incoming.bufferLength() );
-			_incoming.next();
-		}
-	}
+	void transfer();
 
 private:
 	TCPSocket & _socket;

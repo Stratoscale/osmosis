@@ -2,6 +2,7 @@
 #define __OSMOSIS_STREAM_OUTGOING_H__
 
 #include "Osmosis/TCPSocket.h"
+#include "Osmosis/Tongue.h"
 
 namespace Osmosis {
 namespace Stream

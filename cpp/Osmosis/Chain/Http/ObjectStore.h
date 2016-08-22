@@ -1,6 +1,7 @@
 #ifndef __OSMOSIS_CHAIN_HTTP_OBJECT_STORE_H__
 #define __OSMOSIS_CHAIN_HTTP_OBJECT_STORE_H__
 
+#include <string>
 #include "Osmosis/Chain/ObjectStoreInterface.h"
 #include "Osmosis/Chain/Http/Connection.h"
 
@@ -12,16 +13,9 @@ namespace Http
 class ObjectStore : public ObjectStoreInterface
 {
 public:
-	ObjectStore( const std::string & url ):
-		_url( url )
-	{
-		ASSERT( boost::starts_with( url, "http://" ) );
-	}
+	ObjectStore( const std::string & url );
 
-	std::unique_ptr< ObjectStoreConnectionInterface > connect() override
-	{
-		return std::unique_ptr< ObjectStoreConnectionInterface >( new Connection( _url ) );
-	}
+	std::unique_ptr< ObjectStoreConnectionInterface > connect() override;
 
 private:
 	const std::string _url;

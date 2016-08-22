@@ -3,6 +3,7 @@
 
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
+#include "Common/Debug.h"
 
 namespace Osmosis {
 namespace ObjectStore
