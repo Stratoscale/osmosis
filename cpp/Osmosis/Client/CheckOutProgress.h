@@ -6,7 +6,7 @@
 #include "Osmosis/Client/PutThread.h"
 #include "Osmosis/Client/FetchFiles.h"
 #include "Osmosis/Stream/BufferToSocket.h"
-#include "Common/ThreadStopCondition.h"
+#include "Osmosis/WaitCondition.h"
 
 namespace Osmosis {
 namespace Client
@@ -30,7 +30,7 @@ private:
 	DigestDirectory &              _digestDirectory;
 	FetchFiles *                   _fetchFiles;
 	std::thread                    _thread;
-	ThreadStopCondition            _threadStopCondition;
+	WaitCondition                  _threadStopCondition;
 
 	void threadEntryPoint();
 
