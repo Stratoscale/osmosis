@@ -3,6 +3,7 @@
 
 #include "Osmosis/ObjectStore/Drafts.h"
 #include "Osmosis/Stream/SocketToFile.h"
+#include "Osmosis/CalculateHash.h"
 
 namespace Osmosis {
 namespace Server

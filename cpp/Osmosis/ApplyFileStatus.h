@@ -3,6 +3,7 @@
 
 #include "Osmosis/FileStatus.h"
 #include "Osmosis/Debug.h"
+#include "Common/Error.h"
 
 namespace Osmosis
 {

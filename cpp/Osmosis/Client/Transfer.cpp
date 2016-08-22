@@ -1,4 +1,5 @@
 #include <boost/filesystem.hpp>
+#include "Osmosis/CalculateHash.h"
 #include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/TransferThread.h"
 #include "Osmosis/Client/CheckExistingThread.h"
