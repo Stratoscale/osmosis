@@ -76,6 +76,8 @@ private:
 		BACKTRACE_END
 	}
 
+	void _go();
+
 	CheckOut( const CheckOut & rhs ) = delete;
 	CheckOut & operator= ( const CheckOut & rhs ) = delete;
 };

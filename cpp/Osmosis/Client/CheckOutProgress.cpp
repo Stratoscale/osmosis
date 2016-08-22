@@ -13,7 +13,8 @@ CheckOutProgress::CheckOutProgress(	   const boost::filesystem::path &  path,
 	_path( path ),
 	_digestDirectory( digestDirectory ),
 	_fetchFiles( NULL ),
-	_threadStopCondition( reportIntervalSeconds )
+	_threadStopCondition( reportIntervalSeconds ),
+	_fetchFilesStarted( 0 )
 {
 	_thread = std::thread( & CheckOutProgress::threadEntryPoint, this );
 }
@@ -28,6 +29,7 @@ void CheckOutProgress::stop()
 	if ( ! _thread.joinable() )
 		return;
 	_threadStopCondition.stop();
+	_fetchFilesStarted.stop();
 	_thread.join();
 	report( true );
 }
@@ -86,6 +88,9 @@ void CheckOutProgress::report( bool zeroIsDone )
 				"{ \"state\": \"digesting\", \"percent\": " << digestionPercent << ", \"digestion\": { " <<
 				"\"done\": " << _digestDirectory.toDigestTaskQueue().getCount() <<
 				", \"total\": " << _digestDirectory.toDigestTaskQueue().putCount() << "}}";
+		}
+		if ( digestionPercent == 100 ) {
+			_fetchFilesStarted.sleep();
 		}
 	}
 }

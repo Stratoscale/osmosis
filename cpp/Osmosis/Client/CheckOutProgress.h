@@ -31,6 +31,7 @@ private:
 	FetchFiles *                   _fetchFiles;
 	std::thread                    _thread;
 	WaitCondition                  _threadStopCondition;
+	WaitCondition                  _fetchFilesStarted;
 
 	void threadEntryPoint();
 
