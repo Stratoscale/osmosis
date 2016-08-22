@@ -35,6 +35,16 @@ CheckOut::CheckOut(       const boost::filesystem::path &  directory,
 
 void CheckOut::go()
 {
+    try {
+        _go();
+    } CATCH_ALL( "Stopping progress thread",
+        _checkOutProgress.stop();
+        throw;
+    );
+}
+
+void CheckOut::_go()
+{
 	BACKTRACE_BEGIN
 	_labels.fetch();
 	DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain, _chainTouch ).joined() );

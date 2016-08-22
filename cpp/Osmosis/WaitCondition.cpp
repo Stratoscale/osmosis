@@ -20,6 +20,9 @@ bool WaitCondition::sleep()
 	std::unique_lock< std::mutex > lock( _stopLock );
 	if ( _stopped )
 		return false;
-	_stop.wait_for( lock, std::chrono::seconds( _sleepInterval ) );
+	if ( _sleepInterval )
+		_stop.wait_for( lock, std::chrono::seconds( _sleepInterval ) );
+	else
+		_stop.wait( lock );
 	return not _stopped;
 }
