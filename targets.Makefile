@@ -7,5 +7,5 @@ osmosis_LIBRARIES = -pthread \
 	-lcrypto \
 	$(STATIC_BOOST_LIBS_DIR)/libboost_thread$(BOOST_MT).a
 
-TARGET_testtaskqueue = cpp/Common/WhiteboxTests/testtaskqueue.cpp
+TARGET_testtaskqueue = cpp/WhiteboxTests/testtaskqueue.cpp
 testtaskqueue_LIBRARIES = -pthread $(STATIC_BOOST_LIBS_DIR)/libboost_system$(BOOST_MT).a
