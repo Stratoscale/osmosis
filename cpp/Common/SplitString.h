@@ -6,52 +6,17 @@
 class SplitString
 {
 public:
-	SplitString( const std::string & data, char delimiter ) :
-		_data( data ),
-		_delimiter( delimiter ),
-		_start( 0 )
-	{
-		_end = _data.find_first_of( _delimiter, _start );
-	}
+	SplitString( const std::string & data, char delimiter );
 
-	bool done() const { return _start == std::string::npos; }
+	bool done() const;
 
-	void next()
-	{
-		ASSERT( not done() );
-		if ( _end == std::string::npos ) {
-			_start = std::string::npos;
-			return;
-		}
-		_start = _end + 1;
-		_end = _data.find_first_of( _delimiter, _start );
-	}
+	void next();
 
-	std::string asString() const
-	{
-		ASSERT( not done() );
-		std::string result;
-		if ( _end == std::string::npos )
-			result = _data.substr( _start );
-		else
-			result = _data.substr( _start, _end - _start );
-		return std::move( result );
-	}
+	std::string asString() const;
 
-	const char * asCharPtr() const
-	{
-		ASSERT( not done() );
-		return _data.c_str() + _start;
-	}
+	const char * asCharPtr() const;
 
-	unsigned charCount() const
-	{
-		ASSERT( not done() );
-		if ( _end == std::string::npos )
-			return _data.size() - _start;
-		else
-			return _end - _start;
-	}
+	unsigned charCount() const;
 
 private:
 	const std::string & _data;
