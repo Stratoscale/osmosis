@@ -1,6 +1,6 @@
 include $(WORKSPACE_TOP)/common/Makefile.env
 
-MY_COMPONENT_PATH := $(shell component-tool localpath --repo=osmosis osmosis)
+MY_COMPONENT_PATH := $(shell component-tool localpath --repo=osmosis --type=$(BUILDTYPE) osmosis)
 OSMOSIS_INSTALL_DIR:=./
 
 .PHONY: install clean build install_dir install checkin
@@ -20,4 +20,4 @@ install: build install_dir
 	$(Q)cp -f build/cpp/osmosis.bin $(MY_COMPONENT_PATH)/$(OSMOSIS_INSTALL_DIR)/
 
 checkin:
-	$(Q)component-tool checkin -v --repo=osmosis osmosis
+	$(Q)component-tool checkin -v --repo=osmosis --type=$(BUILDTYPE) osmosis
