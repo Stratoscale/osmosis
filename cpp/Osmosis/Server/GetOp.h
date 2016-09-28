@@ -5,6 +5,7 @@
 #include "Osmosis/ObjectStore/Store.h"
 #include "Osmosis/Stream/FileToSocket.h"
 #include "Osmosis/Stream/BufferToSocket.h"
+#include "Osmosis/CalculateHash.h"
 
 namespace Osmosis {
 namespace Server
