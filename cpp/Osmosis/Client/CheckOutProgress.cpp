@@ -38,6 +38,7 @@ void CheckOutProgress::setFetchFiles( FetchFiles & fetchFiles )
 {
 	ASSERT( _fetchFiles == NULL );
 	_fetchFiles = & fetchFiles;
+	_fetchFilesStarted.stop();
 }
 
 void CheckOutProgress::threadEntryPoint()
