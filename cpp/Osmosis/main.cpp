@@ -6,6 +6,8 @@
 #include "Osmosis/Client/LabelOps.h"
 #include "Osmosis/ObjectStore/LabelLogIterator.h"
 #include "Osmosis/ObjectStore/LeastRecentlyUsed.h"
+#include "Osmosis/ObjectStore/Purge.h"
+#include "Osmosis/FilesystemUtils.h"
 
 std::mutex globalTraceLock;
 

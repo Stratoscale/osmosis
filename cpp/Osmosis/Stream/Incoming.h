@@ -1,6 +1,9 @@
 #ifndef __OSMOSIS_STREAM_INCOMING_H__
 #define __OSMOSIS_STREAM_INCOMING_H__
 
+#include "Osmosis/TCPSocket.h"
+#include "Osmosis/Tongue.h"
+
 namespace Osmosis {
 namespace Stream
 {
@@ -16,12 +19,12 @@ public:
 
 	void next()
 	{
-		struct Tongue::Chunk chunk = _socket.recieveAll< struct Tongue::Chunk >();
+		struct Tongue::Chunk chunk = _socket.receiveAll< struct Tongue::Chunk >();
 		_bytesInBuffer = chunk.bytes;
 		_offset = chunk.offset;
 		if ( _bytesInBuffer == 0 )
 			return;
-		_socket.recieveAll( _buffer, _bytesInBuffer );
+		_socket.receiveAll( _buffer, _bytesInBuffer );
 	}
 
 	bool done() const

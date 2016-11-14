@@ -3,6 +3,9 @@
 
 #include "Osmosis/Chain/ObjectStoreConnectionInterface.h"
 #include "Osmosis/Stream/CopyFile.h"
+#include "Osmosis/ObjectStore/Store.h"
+#include "Osmosis/ObjectStore/Drafts.h"
+#include "Osmosis/ObjectStore/Labels.h"
 
 namespace Osmosis {
 namespace Chain {

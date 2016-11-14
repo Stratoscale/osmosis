@@ -1,6 +1,7 @@
 #ifndef __OSMOSIS_DIR_LIST_ENTRY_H__
 #define __OSMOSIS_DIR_LIST_ENTRY_H__
 
+#include "Osmosis/Hash.h"
 #include "Osmosis/FileStatus.h"
 #include "Common/Container.h"
 

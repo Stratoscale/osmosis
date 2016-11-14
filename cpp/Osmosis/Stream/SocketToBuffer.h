@@ -2,6 +2,7 @@
 #define __OSMOSIS_STREAM_SOCKET_TO_BUFFER_H__
 
 #include "Osmosis/Stream/Incoming.h"
+#include "Common/Error.h"
 
 namespace Osmosis {
 namespace Stream

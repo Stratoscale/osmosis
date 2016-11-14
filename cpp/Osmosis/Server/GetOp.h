@@ -5,6 +5,7 @@
 #include "Osmosis/ObjectStore/Store.h"
 #include "Osmosis/Stream/FileToSocket.h"
 #include "Osmosis/Stream/BufferToSocket.h"
+#include "Osmosis/CalculateHash.h"
 
 namespace Osmosis {
 namespace Server
@@ -21,7 +22,7 @@ public:
 	void go()
 	{
 		BACKTRACE_BEGIN
-		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
+		Hash hash( _socket.receiveAll< struct Tongue::Hash >() );
 		if ( not _store.exists( hash ) )
 			THROW( Error, "Hash " << hash << " is not in object store, can not get" );
 #ifdef DEBUG

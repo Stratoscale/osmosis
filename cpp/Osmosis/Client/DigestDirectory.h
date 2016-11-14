@@ -2,6 +2,7 @@
 #define __OSMOSIS_CLIENT_DIGEST_DIRECTORY_H__
 
 #include <limits.h>
+#include <thread>
 #include "Osmosis/Client/DigestThread.h"
 #include "Osmosis/Client/Ignores.h"
 #include "Common/NumberOfCPUs.h"

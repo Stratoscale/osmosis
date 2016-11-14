@@ -11,10 +11,10 @@ public:
 	ReceiveLabel( TCPSocket & socket )
 	{
 		char buffer[ 1024 ];
-		auto raw = socket.recieveAll< struct Tongue::Label >();
+		auto raw = socket.receiveAll< struct Tongue::Label >();
 		if ( raw.length > sizeof( buffer ) )
 			THROW( Error, "Label maximum size of " << sizeof( buffer ) << " exceeded" );
-		socket.recieveAll( buffer, raw.length );
+		socket.receiveAll( buffer, raw.length );
 		_label = std::move( std::string( buffer, raw.length ) );
 	}
 

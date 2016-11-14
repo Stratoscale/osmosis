@@ -2,7 +2,6 @@
 #define __OSMOSIS_DIR_LIST_H__
 
 #include <unordered_map>
-#include <boost/algorithm/string.hpp>
 #include "Osmosis/DirListEntry.h"
 
 namespace std
@@ -24,35 +23,15 @@ namespace Osmosis
 class DirList
 {
 public:
-	DirList() {}
+	DirList();
 
-	DirList( DirList && rhs ) :
-		_entries( std::move( rhs._entries ) ),
-		_index( std::move( rhs._index ) )
-	{}
+	DirList( DirList && rhs );
 
-	void add( const boost::filesystem::path & path, const FileStatus & status )
-	{
-		ASSERT( _index.find( path ) == _index.end() );
-		_entries.emplace_back( path, status );
-		_index[ path ] = & _entries.back();
-	}
+	void add( const boost::filesystem::path & path, const FileStatus & status );
 
-	void setHash( boost::filesystem::path path, const Hash & hash )
-	{
-		ASSERT( _index.find( path ) != _index.end() );
-		ASSERT( _index.at( path ) != nullptr );
-		ASSERT( not _index.at( path )->hash );
-		_index.at( path )->hash.reset( new Hash( hash ) );
-	}
+	void setHash( boost::filesystem::path path, const Hash & hash );
 
-	const DirListEntry * find( boost::filesystem::path path ) const
-	{
-		auto found = _index.find( path );
-		if ( found == _index.end() )
-			return nullptr;
-		return found->second;
-	}
+	const DirListEntry * find( boost::filesystem::path path ) const;
 
 	friend std::ostream & operator<<( std::ostream & os, const DirList & dirList )
 	{
@@ -71,10 +50,10 @@ public:
 		return is;
 	}
 
-	size_t size() const { return _index.size(); }
+	inline size_t size() const { return _index.size(); }
 
 	typedef std::list< DirListEntry > List;
-	const List & entries() const { return _entries; }
+	inline const List & entries() const { return _entries; }
 
 private:
 	typedef std::unordered_map< boost::filesystem::path, struct DirListEntry * > Index;

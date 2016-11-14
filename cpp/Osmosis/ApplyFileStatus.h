@@ -1,6 +1,10 @@
 #ifndef __OSMOSIS_APPLY_FILE_STATUS_H__
 #define __OSMOSIS_APPLY_FILE_STATUS_H__
 
+#include "Osmosis/FileStatus.h"
+#include "Osmosis/Debug.h"
+#include "Common/Error.h"
+
 namespace Osmosis
 {
 

@@ -14,7 +14,7 @@ public:
 		_socket( socket )
 	{}
 
-	void recieveAll( void * data, size_t length )
+	void receiveAll( void * data, size_t length )
 	{
 		while ( length > 0 ) {
 			auto buffer = boost::asio::buffer( data, length );
@@ -26,10 +26,10 @@ public:
 	}
 
 	template < class Struct >
-	Struct recieveAll()
+	Struct receiveAll()
 	{
 		Struct result;
-		recieveAll( & result, sizeof( result ) );
+		receiveAll( & result, sizeof( result ) );
 		return result;
 	}
 
@@ -57,6 +57,10 @@ public:
 		memcpy( buffer, & data1, sizeof( data1 ) );
 		memcpy( buffer + sizeof( data1 ), & data2, sizeof( data2 ) );
 		sendAll( buffer, sizeof( buffer ) );
+	}
+
+	void close() {
+		_socket.close();
 	}
 
 private:

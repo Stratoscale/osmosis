@@ -1,6 +1,9 @@
 #ifndef __OSMOSIS_CLIENT_DELAYED_LABELS_H__
 #define __OSMOSIS_CLIENT_DELAYED_LABELS_H__
 
+#include <string>
+#include <vector>
+
 namespace Osmosis {
 namespace Client
 {
@@ -8,41 +11,16 @@ namespace Client
 class DelayedLabels
 {
 public:
-	DelayedLabels( const std::string & label )
-	{
-		if ( label == "+" )
-			return;
-		fromLabel( label );
-	}
+	DelayedLabels( const std::string & label );
 
-	const std::vector< std::string > & labels()
-	{
-		ASSERT( _labels.size() > 0 );
-		return _labels;
-	}
+	const std::vector< std::string > & labels();
 
-	void fetch()
-	{
-		BACKTRACE_BEGIN
-		if ( _labels.size() > 0 )
-			return;
-		TRACE_INFO( "Enter label name on next line:" );
-		std::string line;
-		std::getline( std::cin, line );
-		if ( line.size() <= 0 )
-			THROW( Error, "Invalid label from stdin: '" << line << "'" );
-		TRACE_INFO( "Got label name: '" << line << "'" );
-		fromLabel( line );
-		BACKTRACE_END
-	}
+	void fetch();
 
 private:
 	std::vector< std::string > _labels;
 
-	void fromLabel( const std::string & label )
-	{
-		boost::split( _labels, label, boost::is_any_of( "+" ) );
-	}
+	void fromLabel( const std::string & label );
 
 	DelayedLabels( const DelayedLabels & rhs ) = delete;
 	DelayedLabels & operator= ( const DelayedLabels & rhs ) = delete;

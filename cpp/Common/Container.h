@@ -35,7 +35,12 @@ public:
 
 	bool constructed() const { return _constructed; }
 
-	T & operator* () { return * (T *) (void *) _data; }
+	T & operator* ()
+	{
+		T * datap = (T *) (void *) _data;
+		return *datap;
+	}
+
 	const T & operator* () const { return * (T *) (void *) _data; }
 	T * operator-> () { return (T *) (void *) _data; }
 	const T * operator-> () const { return (T *) (void *) _data; }

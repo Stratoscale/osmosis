@@ -3,6 +3,7 @@
 
 #include "Osmosis/ObjectStore/Drafts.h"
 #include "Osmosis/Stream/SocketToFile.h"
+#include "Osmosis/CalculateHash.h"
 
 namespace Osmosis {
 namespace Server
@@ -20,7 +21,7 @@ public:
 	void go()
 	{
 		BACKTRACE_BEGIN
-		Hash hash( _socket.recieveAll< struct Tongue::Hash >() );
+		Hash hash( _socket.receiveAll< struct Tongue::Hash >() );
 		if ( _store.exists( hash ) )
 			THROW( Error, "Will not store an object that already exists: " << hash );
 		auto filename = _drafts.allocateFilename();
