@@ -2,7 +2,7 @@ include $(WORKSPACE_TOP)/common/Makefile.env
 
 DOCKER_REGISTRY=lbdocker:5000
 OSMOSIS_DOCKER=$(DOCKER_REGISTRY)/osmosis_server:$(shell $(WORKSPACE_TOP)/common/tools/version.py osmosis:osmosis)
-MY_COMPONENT_PATH := $(shell component-tool localpath --repo=osmosis --type=$(BUILDTYPE) osmosis)
+MY_COMPONENT_PATH := $(shell component-tool localpath --repo=osmosis --type=$(BUILD_TYPE) osmosis)
 OSMOSIS_INSTALL_DIR:=./
 
 .PHONY: install clean build install_dir install checkin
@@ -27,4 +27,4 @@ osmosis_server_docker:
 	$(Q)docker push $(DOCKER_REGISTRY)/osmosis_server:candidate
 
 checkin:
-	$(Q)component-tool checkin -v --repo=osmosis --type=$(BUILDTYPE) osmosis
+	$(Q)component-tool checkin -v --repo=osmosis --type=$(BUILD_TYPE) osmosis
