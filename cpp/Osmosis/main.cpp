@@ -20,8 +20,9 @@ void server( const boost::program_options::variables_map & options )
 	Osmosis::ObjectStore::Store store( rootPath );
 	Osmosis::ObjectStore::Drafts drafts( rootPath );
 	Osmosis::ObjectStore::Labels labels( rootPath, store );
-	Osmosis::Server::Server server( rootPath, endpoint, store, drafts, labels );
-	server.run();
+	boost::asio::io_service ioService;
+	Osmosis::Server::Server server( rootPath, endpoint, store, drafts, labels, ioService );
+	ioService.run();
 }
 
 boost::filesystem::path stripTrailingSlash( boost::filesystem::path path )
