@@ -33,7 +33,7 @@ private:
 	ObjectStore::Labels &         _labels;
 	boost::asio::io_service       _ioService;
 	boost::asio::ip::tcp::socket  _boostSocket;
-	TCPSocket                     _socket; 
+	TCPSocket                     _socket;
 	bool                          _tcpNoDelay;
 
 	void thread();
