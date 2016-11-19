@@ -72,9 +72,7 @@ class Client:
         popen.stdout.close()
         if result != 0:
             logging.error("\n\n\nClientOutput:\n" + output)
-            logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
-            if self._server2 is not None:
-                logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
+            self._printServerOutput()
             raise Exception("checkoutUsingDelayedLabel failed")
         return output
 
@@ -159,6 +157,11 @@ class Client:
             logging.exception("\n\n\nOutput:\n" + e.output)
             raise
 
+    def _printServerOutput(self):
+        logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
+        if self._server2 is not None:
+            logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
+
     def _run(self, cmd, *args):
         objectStores = list(self.objectStores)
         if cmd == "checkout":
@@ -168,9 +171,7 @@ class Client:
             return subprocess.check_output(cmd, close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             logging.exception("\n\n\nClientOutput:\n" + e.output)
-            logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
-            if self._server2 is not None:
-                logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
+            self._printServerOutput()
             raise
 
     def _failedRun(self, cmd, *args):
@@ -183,6 +184,8 @@ class Client:
                 close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             return e.output
+        except KeyboardInterrupt:
+            self._printServerOutput()
         else:
             raise Exception("running with args '%s' should have failed" % (args, ))
 
