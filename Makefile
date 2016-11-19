@@ -20,7 +20,7 @@ build/cpp-netlib-0.11.1-final/.unpacked: cpp-netlib-0.11.1-final.tar.gz
 egg: dist/osmosis-1.0.linux-x86_64.tar.gz
 
 unittest: build
-	PYTHONPATH=py python tests/main.py
+	PYTHONPATH=py python tests/main.py $(TESTS)
 	build/cpp/testtaskqueue.bin
 
 check_convention:
