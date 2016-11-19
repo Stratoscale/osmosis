@@ -8,14 +8,11 @@ namespace Server
 
 Server::Server( boost::filesystem::path         rootPath,
 	boost::asio::ip::tcp::endpoint  endpoint,
-	ObjectStore::Store &            store,
-	ObjectStore::Drafts &           drafts,
-	ObjectStore::Labels &           labels,
 	boost::asio::io_service & ioService ) :
 	_rootPath( rootPath ),
-	_store( store ),
-	_drafts( drafts ),
-	_labels( labels ),
+	_store( rootPath ),
+	_drafts( rootPath ),
+	_labels( rootPath, _store ),
 	_acceptor( ioService, endpoint )
 {
 	boost::asio::socket_base::reuse_address option( true );

@@ -17,11 +17,8 @@ void server( const boost::program_options::variables_map & options )
 	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
 	boost::asio::ip::tcp::endpoint endpoint( boost::asio::ip::tcp::v4(), port );
 
-	Osmosis::ObjectStore::Store store( rootPath );
-	Osmosis::ObjectStore::Drafts drafts( rootPath );
-	Osmosis::ObjectStore::Labels labels( rootPath, store );
 	boost::asio::io_service ioService;
-	Osmosis::Server::Server server( rootPath, endpoint, store, drafts, labels, ioService );
+	Osmosis::Server::Server server( rootPath, endpoint, ioService );
 	ioService.run();
 }
 

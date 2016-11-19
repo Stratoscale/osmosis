@@ -14,18 +14,15 @@ class Server
 public:
 	Server( boost::filesystem::path         rootPath,
 		boost::asio::ip::tcp::endpoint  endpoint,
-		ObjectStore::Store &            store,
-		ObjectStore::Drafts &           drafts,
-		ObjectStore::Labels &           labels,
 		boost::asio::io_service &       ioService );
 
 	void run();
 
 private:
 	boost::filesystem::path         _rootPath;
-	ObjectStore::Store &            _store;
-	ObjectStore::Drafts &           _drafts;
-	ObjectStore::Labels &           _labels;
+	ObjectStore::Store              _store;
+	ObjectStore::Drafts             _drafts;
+	ObjectStore::Labels             _labels;
 	boost::asio::ip::tcp::acceptor  _acceptor;
 	std::shared_ptr< Thread >       _thread;
 
