@@ -19,11 +19,14 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.server = osmosiswrapper.Server()
         self.client = osmosiswrapper.Client(self.server)
-        self.localObjectStore = tempfile.mkdtemp()
+        self.broadcastServer = osmosiswrapper.BroadcastServer(rootPath=self.server.path)
+        self.client.setBroadcastServerPort(port=self.broadcastServer.port())
 
     def tearDown(self):
         self.client.clean()
         self.server.exit()
+        if self.broadcastServer is not None:
+            self.broadcastServer.exit()
 
     def test_ZeroFiles(self):
         self.client.checkin("yuvu")
@@ -853,6 +856,17 @@ class Test(unittest.TestCase):
         self.client.checkout("yuvu", removeUnknownFiles=True)
         self.assertEquals(self.client.readFile("aFile"), "123456")
         self.assertFalse(os.path.exists('a'))
+
+    def test_WhoHasLabel(self):
+        self.broadcastServer.start()
+        self.assertEquals(self.client.whoHasLabel("yuvu"), [])
+        self.assertEquals(self.client.whoHasLabel("yu"), [])
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        objectStore = "127.0.0.1:%(port)s" % dict(port=self.broadcastServer.port())
+        self.assertEquals(self.client.whoHasLabel("yuvu"), [objectStore])
+        self.assertEquals(self.client.whoHasLabel("yu"), [])
+
 
 if __name__ == '__main__':
     unittest.main()

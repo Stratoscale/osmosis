@@ -6,6 +6,7 @@ import logging
 import os
 import time
 import signal
+import socket
 
 
 class Client:
@@ -103,6 +104,13 @@ class Client:
             raise Exception("Hashes not equal:\n" + hash1 + "\n" + hash2)
         return hash1
 
+    def whoHasLabel(self, label, timeout=30):
+        return self._run("whohaslabel",
+                         label,
+                         "--broadcastToLocalhost",
+                         * self._moreArgs(dict(timeout=timeout,
+                                               serverUDPPort=self._broadcastServerPort))).splitlines()
+
     def createAPathLargerThanPATH_MAX(self, maxAllowedPathSize):
         maxAllowedPathSize += 100
         origPath = os.getcwd()
@@ -131,6 +139,9 @@ class Client:
         finally:
             os.chdir(origPath)
 
+    def setBroadcastServerPort(self, port):
+        self._broadcastServerPort = port
+
     def _moreArgs(self, kwargs):
         moreArgs = []
         if kwargs.get('removeUnknownFiles', False):
@@ -147,6 +158,10 @@ class Client:
             moreArgs.append("--ignore=" + kwargs['ignore'])
         if 'reportFile' in kwargs:
             moreArgs.append("--reportFile=" + kwargs['reportFile'])
+        if 'timeout' in kwargs:
+            moreArgs.append("--timeout=" + str(kwargs['timeout']))
+        if 'serverUDPPort' in kwargs:
+            moreArgs.append("--serverUDPPort=" + str(kwargs['serverUDPPort']))
         return moreArgs
 
     def _runAny(self, *args):
@@ -323,3 +338,55 @@ class Server:
             return False
         finally:
             s.close()
+
+
+class BroadcastServer:
+    def __init__(self, rootPath=None, port=None):
+        self._port = self._freePort() if port is None else port
+        self._rootPath = rootPath
+        self._proc = None
+
+    def start(self):
+        self.path = tempfile.mkdtemp() if self._rootPath is None else self._rootPath
+        self._log = tempfile.NamedTemporaryFile()
+        self._proc = subprocess.Popen([
+            "build/cpp/osmosis.bin", "broadcastserver", "--objectStoreRootPath=" + self.path,
+            "--serverUDPPort=%d" % self._port], close_fds=True, stdout=self._log, stderr=self._log)
+        self._waitForUDPServer()
+
+    def exit(self):
+        if self._proc is not None:
+            self._proc.terminate()
+            self._proc.wait()
+            shutil.rmtree(self.path, ignore_errors=True)
+
+    def port(self):
+        return self._port
+
+    def _freePort(self):
+        sock = socket.socket()
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('localhost', 0))
+            return sock.getsockname()[1]
+        finally:
+            sock.close()
+
+    def _waitForUDPServer(self, timeout=30, interval=0.1):
+        before = time.time()
+        while time.time() - before < timeout:
+            if self._rawUDPSend("localhost", self._port):
+                return
+            time.sleep(interval)
+        raise Exception("Osmosis TCP Server 'localhost:%(port)s' did not respond within timeout" % dict(
+            port=self._port))
+
+    def _rawUDPSend(self, address, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            sock.sendto("\xFF\xFF", (address, port))
+            return True
+        except:
+            return False
+        finally:
+            sock.close()
