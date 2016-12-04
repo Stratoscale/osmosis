@@ -844,6 +844,15 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("aFile"), "123456")
         self.client.assertLargePathExists(largePath)
 
+    def test_CheckoutRecoversWhenDeleteUnknownFilesInBadFileState(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        # Link that points to itself causes file to become in bad state
+        # trying to this link info will result in errno ELOOP
+        self.client.createSymlink(relTargetPath="a", relLinkPath="a")
+        self.client.checkout("yuvu", removeUnknownFiles=True)
+        self.assertEquals(self.client.readFile("aFile"), "123456")
+        self.assertFalse(os.path.exists('a'))
 
 if __name__ == '__main__':
     unittest.main()
