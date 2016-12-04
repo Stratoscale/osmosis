@@ -89,15 +89,21 @@ void CheckOut::removeUnknownFiles( const DirList & digested, const DirList & lab
 		if ( label.find( entry.path ) == nullptr ) {
 			boost::filesystem::path absolute = _directory / entry.path;
 			std::string relative = entry.path.string();
-			if ( entry.path == leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased and
-					startsWith( entry.path.string(), leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErasedPrefix ) )
-				continue;
-			if ( _ignores.parentOfAnIgnored( absolute ) )
-				continue;
-			if ( not boost::filesystem::exists( absolute ) and not boost::filesystem::symbolic_link_exists( absolute ) )
-				continue;
-			if ( areOneOrMoreAncestorsSymlinks( entry.path ) )
-				continue;
+
+			if (fileInValidCondition(absolute)) {
+				if ( entry.path == leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased and
+						startsWith( entry.path.string(), leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErasedPrefix ) )
+					continue;
+				if ( _ignores.parentOfAnIgnored( absolute ) )
+					continue;
+
+				if ( not boost::filesystem::exists( absolute ) and not boost::filesystem::symbolic_link_exists( absolute ) )
+					continue;
+				if ( areOneOrMoreAncestorsSymlinks( entry.path ) )
+					continue;
+			} else
+				TRACE_INFO("Remove dangling file '" << absolute << "'");
+
 			try {
 				boost::filesystem::remove_all( absolute );
 			} catch ( boost::filesystem::filesystem_error &ex ) {
