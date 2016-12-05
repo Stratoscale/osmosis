@@ -90,7 +90,7 @@ void CheckOut::removeUnknownFiles( const DirList & digested, const DirList & lab
 			boost::filesystem::path absolute = _directory / entry.path;
 			std::string relative = entry.path.string();
 
-			if (fileInValidCondition(absolute)) {
+			if ( isFileInValidCondition(absolute ) ) {
 				if ( entry.path == leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErased and
 						startsWith( entry.path.string(), leftOversFromPreviousFailedOsmosisAttemptThatWillAnywaysBeErasedPrefix ) )
 					continue;
@@ -102,7 +102,7 @@ void CheckOut::removeUnknownFiles( const DirList & digested, const DirList & lab
 				if ( areOneOrMoreAncestorsSymlinks( entry.path ) )
 					continue;
 			} else
-				TRACE_INFO("Remove dangling file '" << absolute << "'");
+				TRACE_WARNING( "Remove dangling file '" << absolute << "'" );
 
 			try {
 				boost::filesystem::remove_all( absolute );
