@@ -47,11 +47,12 @@ void CheckOut::_go()
 {
 	BACKTRACE_BEGIN
 	_labels.fetch();
-	DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain, _chainTouch ).joined() );
+	Chain::CheckOut chainCheckOut = _chain.checkOut();
+	DirList labelsDirList( FetchJointDirlistFromLabels( _labels.labels(), _chain, _chainTouch, chainCheckOut ).joined() );
 	_digestDirectory.join();
 
 	try {
-		FetchFiles fetchFiles( _directory, _chain );
+		FetchFiles fetchFiles( _directory, _chain, chainCheckOut );
 		_checkOutProgress.setFetchFiles( fetchFiles );
 		for ( auto & entry : labelsDirList.entries() )
 			if ( _myUIDandGIDcheckout ) {

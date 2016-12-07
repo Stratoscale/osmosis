@@ -13,13 +13,14 @@ namespace Client
 class FetchJointDirlistFromLabels
 {
 public:
-	FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain, bool chainTouch );
+	FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain, bool chainTouch,
+	                             Chain::CheckOut & chainCheckOut );
 
 	DirList joined();
 
 private:
 	const std::vector< std::string >  _labels;
-	Chain::CheckOut                   _checkOut;
+	Chain::CheckOut &                 _checkOut;
 	bool                              _chainTouch;
 
 	DirList getLabelDirList( const std::string & label );

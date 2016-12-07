@@ -9,9 +9,10 @@ namespace Osmosis {
 namespace Client
 {
 
-FetchJointDirlistFromLabels::FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain, bool chainTouch ):
+FetchJointDirlistFromLabels::FetchJointDirlistFromLabels( const std::vector< std::string > & labels, Chain::Chain & chain, bool chainTouch,
+                                                          Chain::CheckOut & chainCheckOut ):
 	_labels( labels ),
-	_checkOut( chain.checkOut() ),
+	_checkOut( chainCheckOut ),
 	_chainTouch( chainTouch )
 {}
 

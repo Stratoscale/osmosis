@@ -11,7 +11,7 @@ namespace Client
 class FetchFiles
 {
 public:
-	FetchFiles( const boost::filesystem::path & directory, Chain::Chain & chain );
+	FetchFiles( const boost::filesystem::path & directory, Chain::Chain & chain, Chain::CheckOut & chainCheckOut );
 
 	~FetchFiles();
 
@@ -35,7 +35,7 @@ public:
 
 private:
 	const boost::filesystem::path  _directory;
-	Chain::CheckOut                _checkOut;
+	Chain::CheckOut &              _checkOut;
 	ObjectStore::Drafts            _drafts;
 	DigestDrafts                   _digestDrafts;
 	ToVerifyTaskQueue              _fetchQueue;
