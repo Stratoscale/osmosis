@@ -10,7 +10,8 @@ CheckOut::CheckOut( std::vector< ObjectStoreInterface * > && objectStores, bool 
 	_putIfMissing( putIfMissing ),
 	_touch( touch ),
 	_connections( objectStores.size() ),
-	_getCount( objectStores.size() )
+	_getCount( objectStores.size() ),
+	_idxOfLastUsedConnection( -1 )
 {
 	for ( auto & count : _getCount )
 		count = 0;
@@ -18,95 +19,194 @@ CheckOut::CheckOut( std::vector< ObjectStoreInterface * > && objectStores, bool 
 	for ( auto objectStore : _objectStores )
 		ASSERT( objectStore != nullptr );
 #endif // DEBUG
+	for ( uint connIdx = 0; connIdx < _connections.size(); ++connIdx )
+		_connectionIdxToGetCountIdx.push_back( connIdx );
 }
 
 std::string CheckOut::getString( const Hash & hash )
 {
 	BACKTRACE_BEGIN
-	for ( unsigned i = 0; i < _connections.size(); ++ i ) {
-		if ( connection( i ).exists( hash ) ) {
-			std::string content = connection( i ).getString( hash );
-			_getCount[ i ] += 1;
-			if ( _putIfMissing ) {
-				for ( int j = i - 1; j >= 0; -- j )
-					connection( j ).putString( content, hash );
-			}
-			return std::move( content );
+	std::string content;
+	const bool doesFileExist = tryForEachConnectionUntilSuccess(
+			[ &hash, &content ] ( ObjectStoreConnectionInterface & connection ) {
+		if ( connection.exists( hash ) ) {
+			content = std::move( connection.getString( hash ) );
+			return true;
+		}
+		return false;
+	} );
+	if ( not doesFileExist )
+		THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
+	_getCount[ _connectionIdxToGetCountIdx[ _idxOfLastUsedConnection ] ] += 1;
+	if ( _putIfMissing ) {
+		const int nrConnectionsToPutIn = _idxOfLastUsedConnection;
+		tryForEachConnection( [ &hash, &content ] ( ObjectStoreConnectionInterface & connection ) {
+			connection.putString( content, hash );
+			return true;
+		},
+		0,
+		nrConnectionsToPutIn );
+	}
+	return content;
+	BACKTRACE_END_VERBOSE( "Hash " << hash );
+}
+
+bool CheckOut::tryForEachConnection(
+	std::function< bool( ObjectStoreConnectionInterface & connection ) > func,
+	int idxOfConnectionToStartFrom,
+	short nrConnectionsToTry,
+	bool removeConnectionOnError,
+	bool stopOnFirstSuccess )
+{
+	BACKTRACE_BEGIN
+	if ( nrConnectionsToTry == TRY_ALL_CONNECTIONS )
+		nrConnectionsToTry = _connections.size();
+	unsigned short connIdx = idxOfConnectionToStartFrom;
+	unsigned short trialCounter = 0;
+	bool isSuccessful = false;
+	while( connIdx < _connections.size() and trialCounter++ < nrConnectionsToTry ) {
+		bool conserveIdxInNextIteration = false;
+		bool hasAnErrorOccurred = false;
+		std::string errorMessage;
+		try {
+			isSuccessful = func( connection( connIdx ) );
+		} catch ( boost::system::system_error & ex ) {
+			errorMessage = ex.what();
+			hasAnErrorOccurred = true;
+		} catch ( LabelFileIsCorrupted & ex ) {
+			errorMessage = ex.what();
+			hasAnErrorOccurred = true;
+		} catch ( Error & ex ) {
+			errorMessage = ex.what();
+			hasAnErrorOccurred = true;
+		}
+		if ( isSuccessful and stopOnFirstSuccess ) {
+			break;
+		} else if ( hasAnErrorOccurred ) {
+			TRACE_WARNING( "Error when using object store " << connIdx << ": " << errorMessage );
+			if ( removeConnectionOnError ) {
+				TRACE_WARNING( "Discarding errornous connection #" << connIdx );
+				removeConnection( connIdx );
+				conserveIdxInNextIteration = true;
+			} else
+				TRACE_WARNING( "Ignoring." );
+		}
+		if ( not conserveIdxInNextIteration ) {
+			++connIdx;
 		}
 	}
-	BACKTRACE_END_VERBOSE( "Hash " << hash );
-	THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
+	return isSuccessful;
+	BACKTRACE_END
+}
+
+bool CheckOut::tryForEachConnectionUntilSuccess(
+	std::function< bool( ObjectStoreConnectionInterface & connection ) > func,
+		int idxOfConnectionToStartFrom )
+{
+	BACKTRACE_BEGIN
+	return tryForEachConnection( func, idxOfConnectionToStartFrom, TRY_ALL_CONNECTIONS, true, true );
+	BACKTRACE_END
 }
 
 void CheckOut::verify( const Hash & hash )
 {
 	BACKTRACE_BEGIN
-	for ( unsigned i = 0; i < _connections.size(); ++ i )
-		connection( i ).verify( hash );
+	tryForEachConnection( [ &hash ] ( ObjectStoreConnectionInterface & connection ) {
+		connection.verify( hash );
+		return true;
+	} );
 	BACKTRACE_END
 }
 
 void CheckOut::getFile( const boost::filesystem::path & path, const Hash & hash )
 {
 	BACKTRACE_BEGIN
-	for ( unsigned i = 0; i < _connections.size(); ++ i ) {
-		if ( connection( i ).exists( hash ) ) {
-			connection( i ).getFile( path, hash );
-			_getCount[ i ] += 1;
-			if ( _putIfMissing ) {
-				for ( int j = i - 1; j >= 0; -- j )
-					connection( j ).putFile( path, hash );
-			}
-			return;
+	const bool doesFileExist = tryForEachConnectionUntilSuccess(
+			[ &hash, &path ] ( ObjectStoreConnectionInterface & connection ) {
+		if ( connection.exists( hash ) ) {
+			connection.getFile( path, hash );
+			return true;
 		}
+		return false;
+	} );
+	if ( not doesFileExist )
+		THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
+	_getCount[ _connectionIdxToGetCountIdx[ _idxOfLastUsedConnection ] ] += 1;
+	if ( _putIfMissing ) {
+		const int nrConnectionsToPutIn = _idxOfLastUsedConnection;
+		tryForEachConnection( [ &hash, &path ] ( ObjectStoreConnectionInterface & connection ) {
+			connection.putFile( path, hash );
+			return true;
+		},
+		0,
+		nrConnectionsToPutIn );
 	}
 	BACKTRACE_END_VERBOSE( "Path " << path << " Hash " << hash );
-	THROW( Error, "The hash '" << hash << "' does not exist in any of the object stores" );
 }
 
 Hash CheckOut::getLabel( const std::string & label )
 {
 	BACKTRACE_BEGIN
-	for ( unsigned i = 0; i < _connections.size(); ++ i ) {
-		bool exists = connection( i ).listLabels( "^" + label + "$" ).size() > 0;
+	Hash hash;
+	const bool doesLabelExist = tryForEachConnectionUntilSuccess(
+			[ &label, &hash ] ( ObjectStoreConnectionInterface & connection ) {
+		bool exists = connection.listLabels( "^" + label + "$" ).size() > 0;
 		if ( exists ) {
-			try {
-				Hash hash = getLabelFromConnection( i, label );
-				return hash;
-			} catch ( LabelFileIsCorrupted& ex ) {
-				TRACE_WARNING( "Label file was corrupted in connection #" << i << "."
-								" Trying next connection..." );
-			}
+			hash = connection.getLabel( label );
+			return true;
 		}
+		return false;
+	} );
+	if ( not doesLabelExist )
+		THROW( Error, "The label '" << label << "' does not exist in any of the object stores" );
+	int objectStoreIndex = _idxOfLastUsedConnection;
+	if ( _putIfMissing ) {
+		std::string content;
+		const bool doesStringExist = tryForEachConnectionUntilSuccess(
+				[ &content, &hash ] ( ObjectStoreConnectionInterface & connection ) {
+			content = connection.getString( hash );
+			return true;
+		},
+		objectStoreIndex );
+		if ( not doesStringExist )
+			THROW( Error, "The label dirlist hash '" << hash << "' does not exist in any of the object "
+			              " stores" );
+		const int nrConnectionsToPutIn = objectStoreIndex;
+		tryForEachConnection( [ &hash, &content, &label ] ( ObjectStoreConnectionInterface & connection ) {
+			if ( not connection.exists( hash ) ) {
+				connection.putString( content, hash );
+			}
+			connection.setLabel( hash, label );
+			return true;
+		},
+		0,
+		nrConnectionsToPutIn );
 	}
+	if ( _touch ) {
+		TRACE_INFO( "Touching chain for label: " << label );
+		const short *connIdxPtr = & _idxOfLastUsedConnection;
+		tryForEachConnection( [ & label, connIdxPtr ]
+		                      ( ObjectStoreConnectionInterface & connection ) {
+			try {
+				connection.getLabel( label );
+			} catch( ... ) {
+			}
+			return true;
+		},
+		objectStoreIndex + 1,
+		TRY_ALL_CONNECTIONS,
+		false,
+		false );
+	}
+	return hash;
 	BACKTRACE_END_VERBOSE( "Label " << label );
-	THROW( Error, "The label '" << label << "' does not exist in any of the object stores" );
 }
 
 const CheckOut::GetCountStats & CheckOut::getCount() const { return _getCount; }
 
-Hash CheckOut::getLabelFromConnection( unsigned objectStoreIndex, const std::string &label )
-{
-	Hash hash = connection( objectStoreIndex ).getLabel( label );
-	if ( _putIfMissing ) {
-		std::string content = connection( objectStoreIndex ).getString( hash );
-		for ( int j = objectStoreIndex - 1; j >= 0; -- j ) {
-			if ( not connection( j ).exists( hash ) )
-				connection( j ).putString( content, hash );
-			connection( j ).setLabel( hash, label );
-		}
-	}
-	if ( _touch ) {
-		TRACE_INFO( "Touching chain for label: " << label );
-		for ( unsigned j = objectStoreIndex + 1; j < _connections.size(); ++ j )
-			try {
-				connection( j ).getLabel( label );
-			} CATCH_ALL_IGNORE( "While touching label on object store " << j << ", ignoring" );
-	}
-	return hash;
-}
 ObjectStoreConnectionInterface & CheckOut::connection( unsigned objectStoreIndex )
 {
+	_idxOfLastUsedConnection = static_cast< short > ( objectStoreIndex );
 	ASSERT( objectStoreIndex < _connections.size() );
 	if ( not _connections[ objectStoreIndex ] ) {
 		ASSERT( objectStoreIndex < _objectStores.size() );
@@ -114,6 +214,15 @@ ObjectStoreConnectionInterface & CheckOut::connection( unsigned objectStoreIndex
 		_connections[ objectStoreIndex ] = std::move( _objectStores[ objectStoreIndex ]->connect() );
 	}
 	return * _connections[ objectStoreIndex ];
+}
+
+void CheckOut::removeConnection( int connIdx )
+{
+	ASSERT( connIdx >= 0 );
+	TRACE_WARNING( "Discarding connection #" << connIdx );
+	_connections.erase( _connections.begin() + connIdx );
+	_objectStores.erase( _objectStores.begin() + connIdx );
+	_connectionIdxToGetCountIdx.erase( _connectionIdxToGetCountIdx.begin() + connIdx );
 }
 
 } // namespace Chain

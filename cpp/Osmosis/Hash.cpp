@@ -30,6 +30,8 @@ Hash::Hash( const char *hex, unsigned length )
 
 Hash::Hash( const std::string & hex ) : Hash( hex.c_str(), hex.size() ) {}
 
+Hash::Hash() {}
+
 boost::filesystem::path Hash::relativeFilename() const
 {
 	char name[ 64 ];

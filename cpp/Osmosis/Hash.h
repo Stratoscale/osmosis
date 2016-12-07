@@ -21,6 +21,8 @@ public:
 
 	Hash( const std::string & hex );
 
+	Hash();
+
 	boost::filesystem::path relativeFilename() const;
 
 	Tongue::HashAlgorithm algorithm() const;

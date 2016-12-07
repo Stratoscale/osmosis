@@ -867,6 +867,28 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.whoHasLabel("yuvu"), [objectStore])
         self.assertEquals(self.client.whoHasLabel("yu"), [])
 
+    def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringListLabelsOp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        badServer = fakeservers.FakeServerCloseAfterListLabelsOp()
+        client = osmosiswrapper.Client(badServer, self.server)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(self.client.readFile("aFile"), "123456")
+        finally:
+            client.clean()
+
+    def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringExistsOp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        badServer = fakeservers.FakeServerCloseAfterExistsOp()
+        client = osmosiswrapper.Client(badServer, self.server)
+        try:
+            print client.checkout("yuvu")
+            self.assertEquals(self.client.readFile("aFile"), "123456")
+        finally:
+            client.clean()
+
 
 if __name__ == '__main__':
     unittest.main()

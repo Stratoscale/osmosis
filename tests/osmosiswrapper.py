@@ -17,7 +17,6 @@ class Client:
         self._remoteObjectStore = "localhost:%d" % server.port()
         self.objectStores = None
         self.useRemoteObjectStoreOnly()
-        self.objectStores = [self._remoteObjectStore]
         self.additionalObjectStoresForCheckout = []
         if server2 is not None:
             self.additionalObjectStoresForCheckout.append("localhost:%d" % server2.port())
