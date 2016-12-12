@@ -4,6 +4,8 @@ import logging
 
 
 class FakeServer(threading.Thread):
+    OPCODE_ACK = 0xAC
+
     def __init__(self):
         self._sock = socket.socket()
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -15,6 +17,9 @@ class FakeServer(threading.Thread):
 
     def port(self):
         return self._sock.getsockname()[1]
+
+    def hostname(self):
+        return "localhost"
 
     def run(self):
         try:
@@ -63,14 +68,8 @@ class FakeServerNotSending(FakeServer):
         print("Rreceived opcode: %d" % (opcode,))
         self._blockForever()
 
-
-class FakeServerNotReceiving(FakeServer):
-    def __init__(self):
-        super(FakeServerNotReceiving, self).__init__()
-
-    def _serve(self, conn, peer):
-        self._handshake(conn)
-        self._blockForever()
+    def _blockForever(self):
+        raw_input()
 
 
 class FakeServerCloseAfterListLabelsOp(FakeServer):

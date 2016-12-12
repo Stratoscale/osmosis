@@ -20,7 +20,7 @@ private:
 	void checkDeadline();
 
 	void handleReceive( const boost::system::error_code ec, std::size_t length,
-	                    boost::system::error_code* out_ec, std::size_t* out_length );
+	                    boost::system::error_code* outEc, std::size_t* outLength );
 
 	void handleSend( const boost::system::error_code ec, std::size_t nrBytesTransferred );
 

@@ -12,13 +12,14 @@ namespace Remote
 class ObjectStore : public ObjectStoreInterface
 {
 public:
-	ObjectStore( const std::string & hostname, unsigned short port );
+	ObjectStore( const std::string & hostname, unsigned short port, unsigned int tcpTimeout );
 
 	std::unique_ptr< ObjectStoreConnectionInterface > connect() override;
 
 private:
 	const std::string     _hostname;
 	const unsigned short  _port;
+	const unsigned int    _tcpTimeout;
 
 	ObjectStore( const ObjectStore & rhs ) = delete;
 	ObjectStore & operator= ( const ObjectStore & rhs ) = delete;

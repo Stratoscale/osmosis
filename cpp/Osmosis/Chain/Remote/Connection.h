@@ -15,7 +15,7 @@ namespace Remote
 class Connection : public ObjectStoreConnectionInterface
 {
 public:
-	Connection( const std::string & hostname, unsigned short port );
+	Connection( const std::string & hostname, unsigned short port, unsigned int tcpTimeout );
 
 	void putString( const std::string & blob, const Hash & hash ) override;
 

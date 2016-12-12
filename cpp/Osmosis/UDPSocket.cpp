@@ -28,7 +28,7 @@ std::size_t UDPSocket::receive( unsigned char * buffer, size_t bufferSize,
         boost::bind( &UDPSocket::handleReceive, this, _1, _2, &ec, &length ) );
     do
         _ioService.run_one();
-    while ( ec == boost::asio::error::would_block );
+    while ( ec == boost::asio::error::would_block && length == 0 );
     return length;
 }
 
@@ -42,9 +42,11 @@ void UDPSocket::checkDeadline()
 }
 
 void UDPSocket::handleReceive( const boost::system::error_code ec, std::size_t length,
-                               boost::system::error_code * out_ec, std::size_t * outLength)
+                               boost::system::error_code * outEc, std::size_t * outLength)
 {
-    *out_ec = ec;
+    ASSERT( outEc != nullptr );
+    ASSERT( outLength != nullptr );
+    *outEc = ec;
     *outLength = length;
 }
 

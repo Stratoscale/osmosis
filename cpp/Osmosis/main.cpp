@@ -47,9 +47,10 @@ void checkIn( const boost::program_options::variables_map & options )
 	BACKTRACE_BEGIN
 	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
 	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a checkin operation" );
 	bool md5 = options.count( "MD5" ) > 0;
@@ -68,11 +69,13 @@ void checkOut( const boost::program_options::variables_map & options )
 	BACKTRACE_BEGIN
 	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
 	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
 	bool putIfMissing = options.count( "putIfMissing" ) > 0;
 	bool chainTouch = options.count( "noChainTouch" ) == 0;
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch );
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch,
+			tcpTimeout );
 	bool md5 = options.count( "MD5" ) > 0;
 	bool removeUnknownFiles = options.count( "removeUnknownFiles" ) > 0;
 	bool myUIDandGIDcheckout = options.count( "myUIDandGIDcheckout" ) > 0;
@@ -106,8 +109,11 @@ void transfer( const boost::program_options::variables_map & options )
 	std::string label = options[ "arg1" ].as< std::string >();
 	bool putIfMissing = options.count( "putIfMissing" ) > 0;
 	bool chainTouch = options.count( "noChainTouch" ) == 0;
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch );
-	auto destination = Osmosis::Chain::factory( options[ "transferDestination" ].as< std::string >() );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch,
+		tcpTimeout );
+	auto destination = Osmosis::Chain::factory( options[ "transferDestination" ].as< std::string >(),
+		tcpTimeout );
 	Osmosis::Client::Transfer instance( label, chain, * destination );
 	instance.go();
 }
@@ -118,7 +124,8 @@ void listLabels( const boost::program_options::variables_map & options )
 	if ( options.count( "arg1" ) > 0 )
 		labelRegex = options[ "arg1" ].as< std::string >();
 	boost::regex testExpression( labelRegex );
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a list operation" );
 
@@ -131,7 +138,8 @@ void listLabels( const boost::program_options::variables_map & options )
 void eraseLabel( const boost::program_options::variables_map & options )
 {
 	std::string label = options[ "arg1" ].as< std::string >();
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a erase operation" );
 	Osmosis::Client::LabelOps instance( chain.single() );
@@ -151,7 +159,8 @@ void renameLabel( const boost::program_options::variables_map & options )
 {
 	std::string currentLabel = options[ "arg1" ].as< std::string >();
 	std::string renameLabelTo = options[ "arg2" ].as< std::string >();
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a rename operation" );
 	Osmosis::Client::LabelOps instance( chain.single() );
@@ -287,7 +296,9 @@ int main( int argc, char * argv [] )
 		  	"<number>M or <number>G for the amount of storage used for label objects before 'leastrecentlyused' starts erasing labels")
 		( "broadcastToLocalhost", "Use this to broadcast to 127.0.0.7" )
 		("timeout", boost::program_options::value< unsigned short >()->default_value( 1000 ),
-			"Timeout in seconds, for the 'whohaslabel' command");
+			"Timeout in seconds, for the 'whohaslabel' command")
+		("tcpTimeout", boost::program_options::value< unsigned int >()->default_value( 7000 ),
+			"Timeout in milliseconds for actions on TCP sockets");
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()

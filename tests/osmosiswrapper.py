@@ -14,13 +14,15 @@ class Client:
         self._server = server
         self._server2 = server2
         self._path = tempfile.mkdtemp()
-        self._remoteObjectStore = "localhost:%d" % server.port()
+        self._remoteObjectStore = "%s:%d" % (server.hostname(), server.port())
         self.objectStores = None
         self.useRemoteObjectStoreOnly()
         self.additionalObjectStoresForCheckout = []
         if server2 is not None:
-            self.additionalObjectStoresForCheckout.append("localhost:%d" % server2.port())
+            connectionString = "%s:%d" % (server2.hostname(), server2.port())
+            self.additionalObjectStoresForCheckout.append(connectionString)
         self.localObjectStorePath = tempfile.mkdtemp()
+        self._tcpTimeout = None
 
     def useLocalObjectStoreOnly(self):
         self.objectStores = [self.localObjectStorePath]
@@ -141,6 +143,9 @@ class Client:
     def setBroadcastServerPort(self, port):
         self._broadcastServerPort = port
 
+    def setTCPTimeout(self, tcpTimeout):
+        self._tcpTimeout = tcpTimeout
+
     def _moreArgs(self, kwargs):
         moreArgs = []
         if kwargs.get('removeUnknownFiles', False):
@@ -180,7 +185,10 @@ class Client:
         objectStores = list(self.objectStores)
         if cmd == "checkout":
             objectStores += self.additionalObjectStoresForCheckout
-        cmd = ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args)
+        cmd = ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd]
+        if self._tcpTimeout is not None:
+            cmd.extend(["--tcpTimeout", str(int(self._tcpTimeout))])
+        cmd.extend(args)
         try:
             return subprocess.check_output(cmd, close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
@@ -271,6 +279,9 @@ class Server:
 
     def port(self):
         return self._port
+
+    def hostname(self):
+        return "localhost"
 
     def fileCount(self, excludeDir=None):
         count = 0

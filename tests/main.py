@@ -889,6 +889,39 @@ class Test(unittest.TestCase):
         finally:
             client.clean()
 
+    def test_ConnectTimeout(self):
+        TIMEOUT_SEC = 0.1
+        badServer = fakeservers.FakeServerConnectTimeout()
+        client = osmosiswrapper.Client(badServer)
+        timeoutInMilliseconds = TIMEOUT_SEC * 1000
+        client.setTCPTimeout(timeoutInMilliseconds)
+        before = time.time()
+        try:
+            client.listLabels("yuvu")
+        except subprocess.CalledProcessError as ex:
+            self.assertIn(ex.message, "Could not connect")
+            after = time.time()
+        else:
+            self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
+        durationInMilliseconds = (after - before) * 1000
+        self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
+
+    def test_ReceiveTimeout(self):
+        TIMEOUT_SEC = 0.01
+        badServer = fakeservers.FakeServerNotSending()
+        client = osmosiswrapper.Client(badServer)
+        timeoutInMilliseconds = TIMEOUT_SEC * 1000
+        client.setTCPTimeout(timeoutInMilliseconds)
+        before = time.time()
+        try:
+            client.listLabels("yuvu")
+        except subprocess.CalledProcessError as ex:
+            self.assertIn("Timeout while reading", ex.output)
+            after = time.time()
+        else:
+            self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
+        durationInMilliseconds = (after - before) * 1000
+        self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
 
 if __name__ == '__main__':
     unittest.main()

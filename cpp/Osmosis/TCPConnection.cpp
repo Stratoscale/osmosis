@@ -8,9 +8,10 @@
 namespace Osmosis
 {
 
-TCPConnection::TCPConnection( const std::string & hostname, unsigned short port ):
+TCPConnection::TCPConnection( const std::string & hostname, unsigned short port, unsigned int tcpTimeout ):
 	_socket( _ioService ),
-	_tcpSocket( _socket )
+	_tcpSocket( _socket, tcpTimeout ),
+	_deadline( _ioService )
 {
 	boost::asio::ip::tcp::resolver resolver( _ioService );
 	boost::asio::ip::tcp::resolver::query query( hostname, std::to_string( port ) );
@@ -18,7 +19,19 @@ TCPConnection::TCPConnection( const std::string & hostname, unsigned short port 
 	if ( first == boost::asio::ip::tcp::resolver::iterator() )
 		THROW( Error, "Unable to resolve the hostname '" << hostname << "'" );
 	boost::asio::ip::tcp::endpoint endpoint( first->endpoint().address(), port );
-	_socket.connect( endpoint );
+	boost::system::error_code ec = boost::asio::error::would_block;
+	_socket.async_connect( endpoint, boost::bind( &TCPConnection::handleConnect, this, _1, &ec ) );
+	_deadline.expires_from_now( boost::posix_time::milliseconds( tcpTimeout ) );
+	_deadline.async_wait( boost::bind( &TCPConnection::checkConnectDeadline, this ) );
+	do
+	    _ioService.run_one();
+	while ( ec == boost::asio::error::would_block );
+	if ( ec or not _socket.is_open() ) {
+	    THROW( Error, "Could not connect to " << hostname << ":" << port << ": " << ec.message() );
+	}
+
+	_deadline.cancel();
+	_socket.non_blocking( true );
 	ASSERT( _socket.is_open() );
 
 	setTCPNoDelay();
@@ -43,6 +56,21 @@ void TCPConnection::setTCPNoDelay()
 {
 	boost::asio::ip::tcp::no_delay option( true );
 	_socket.set_option(option);
+}
+
+void TCPConnection::handleConnect( const boost::system::error_code &ec,
+								   boost::system::error_code * outEc )
+{
+	ASSERT( outEc != nullptr );
+	*outEc = ec;
+}
+
+void TCPConnection::checkConnectDeadline()
+{
+	if ( _deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now() ) {
+		_socket.cancel();
+		_deadline.expires_at( boost::posix_time::pos_infin );
+	}
 }
 
 } // namespace Osmosis
