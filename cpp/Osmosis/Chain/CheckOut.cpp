@@ -1,3 +1,4 @@
+#include <boost/filesystem.hpp>
 #include "Osmosis/Chain/CheckOut.h"
 #include "Osmosis/Debug.h"
 
@@ -77,7 +78,7 @@ bool CheckOut::tryForEachConnection(
 			errorMessage = ex.what();
 			hasAnErrorOccurred = true;
 		} catch ( Error & ex ) {
-			errorMessage = ex.what();
+			errorMessage = ex.backtrace() + ex.what();
 			hasAnErrorOccurred = true;
 		}
 		if ( isSuccessful and stopOnFirstSuccess ) {
@@ -124,6 +125,7 @@ void CheckOut::getFile( const boost::filesystem::path & path, const Hash & hash 
 	const bool doesFileExist = tryForEachConnectionUntilSuccess(
 			[ &hash, &path ] ( ObjectStoreConnectionInterface & connection ) {
 		if ( connection.exists( hash ) ) {
+			boost::filesystem::remove( path );
 			connection.getFile( path, hash );
 			return true;
 		}

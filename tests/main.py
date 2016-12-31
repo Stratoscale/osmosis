@@ -874,7 +874,7 @@ class Test(unittest.TestCase):
         client = osmosiswrapper.Client(badServer, self.server)
         try:
             client.checkout("yuvu")
-            self.assertEquals(self.client.readFile("aFile"), "123456")
+            self.assertEquals(client.readFile("aFile"), "123456")
         finally:
             client.clean()
 
@@ -884,8 +884,20 @@ class Test(unittest.TestCase):
         badServer = fakeservers.FakeServerCloseAfterExistsOp()
         client = osmosiswrapper.Client(badServer, self.server)
         try:
-            print client.checkout("yuvu")
-            self.assertEquals(self.client.readFile("aFile"), "123456")
+            client.checkout("yuvu")
+            self.assertEquals(client.readFile("aFile"), "123456")
+        finally:
+            client.clean()
+
+    def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringGetOp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        badServer = fakeservers.FakeServerCloseAfterGetOp(self.client)
+        client = osmosiswrapper.Client(badServer, self.server)
+        client.setTCPTimeout(1000)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(client.readFile("aFile"), "123456")
         finally:
             client.clean()
 
