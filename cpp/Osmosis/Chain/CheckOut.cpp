@@ -75,7 +75,7 @@ bool CheckOut::tryForEachConnection(
 			errorMessage = ex.what();
 			hasAnErrorOccurred = true;
 		} catch ( LabelFileIsCorrupted & ex ) {
-			errorMessage = ex.what();
+			errorMessage = ex.backtrace() + ex.what();
 			hasAnErrorOccurred = true;
 		} catch ( Error & ex ) {
 			errorMessage = ex.backtrace() + ex.what();
