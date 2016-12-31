@@ -870,7 +870,7 @@ class Test(unittest.TestCase):
     def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringListLabelsOp(self):
         self.client.writeFile("aFile", "123456")
         self.client.checkin("yuvu")
-        badServer = fakeservers.FakeServerCloseAfterListLabelsOp()
+        badServer = fakeservers.FakeServerCloseAfterListLabelsOp(self.client)
         client = osmosiswrapper.Client(badServer, self.server)
         try:
             client.checkout("yuvu")
@@ -881,7 +881,7 @@ class Test(unittest.TestCase):
     def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringExistsOp(self):
         self.client.writeFile("aFile", "123456")
         self.client.checkin("yuvu")
-        badServer = fakeservers.FakeServerCloseAfterExistsOp()
+        badServer = fakeservers.FakeServerCloseAfterExistsOp(self.client)
         client = osmosiswrapper.Client(badServer, self.server)
         try:
             client.checkout("yuvu")

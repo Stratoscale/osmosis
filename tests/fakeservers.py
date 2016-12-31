@@ -8,10 +8,19 @@ import binascii
 import threading
 
 
-class FakeServer(threading.Thread):
-    OPCODE_ACK = 0xAC
+DOES_EXIST_RESPONSE_YES = 1
+DOES_EXIST_RESPONSE_NO = 2
+OPCODE_GET = 1
+OPCODE_DOES_EXIST = 3
+OPCODE_GET_LABEL = 12
+OPCODE_LIST_LABELS = 13
+OPCODE_ACK = 0xAC
+HASH_ALGORITHM_SHA1 = 2
 
+
+class FakeServer(threading.Thread):
     def __init__(self):
+        self._conn = None
         self._sock = socket.socket()
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._sock.bind(('localhost', 0))
@@ -29,122 +38,29 @@ class FakeServer(threading.Thread):
     def run(self):
         try:
             while True:
-                conn, peer = self._sock.accept()
-                self._serve(conn, peer)
+                self._conn, peer = self._sock.accept()
+                self._serve()
         except:
             logging.exception("Fake Server")
 
     def readLog(self):
         return ""
 
-    def _handshake(self, conn):
-        conn.recv(4096)
-        conn.send(chr(self.OPCODE_ACK))
+    def _handshake(self):
+        self._conn.recv(4096)
+        self._conn.send(chr(OPCODE_ACK))
 
 
-class FakeServerHangsUp(FakeServer):
-    def __init__(self):
-        super(FakeServerHangsUp, self).__init__()
-
-    def _serve(self, conn, peer):
-        conn.recv(4096)
-        conn.close()
-
-
-class FakeServerConnectTimeout(FakeServer):
-    def __init__(self):
-        super(FakeServerConnectTimeout, self).__init__()
-
-    def port(self):
-        return 15652
-
-    def hostname(self):
-        return "35.124.99.234"
-
-
-class FakeServerNotSending(FakeServer):
-    def __init__(self):
-        super(FakeServerNotSending, self).__init__()
-
-    def _serve(self, conn, peer):
-        self._handshake(conn)
-        message = conn.recv(4096)
-        opcode = ord(message[0])
-        print("Rreceived opcode: %d" % (opcode,))
-        self._blockForever()
-
-    def _blockForever(self):
-        raw_input()
-
-
-class FakeServerCloseAfterListLabelsOp(FakeServer):
-    def __init__(self):
-        super(FakeServerCloseAfterListLabelsOp, self).__init__()
-
-    def _serve(self, conn, peer):
-        self._handshake(conn)
-        message = conn.recv(4096)
-        opcode = ord(message[0])
-        print("Rreceived opcode: %d" % (opcode,))
-        conn.close()
-
-
-class FakeServerCloseAfterExistsOp(FakeServer):
-    def __init__(self):
-        super(FakeServerCloseAfterExistsOp, self).__init__()
-
-    def _serve(self, conn, peer):
-        self._handshake(conn)
-        message = conn.recv(4096)
-        opcode = ord(message[0])
-        print("Rreceived opcode: %d" % (opcode,))
-        conn.send("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-        conn.send("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-        conn.close()
-
-
-class ChunkHeader(ctypes.Structure):
-    _pack_ = 1
-    _fields_ = [('offset', ctypes.c_size_t),
-                ('bytes', ctypes.c_ushort)]
-
-
-class LabelHeader(ctypes.Structure):
-    _pack_ = 1
-    _fields_ = [('length', ctypes.c_ushort)]
-
-
-class Hash(ctypes.Structure):
-    _pack_ = 1
-    _fields_ = [('hashAlgorithm', ctypes.c_ubyte),
-                ('hash', ctypes.c_ubyte * 20)]
-
-DOES_EXIST_RESPONSE_YES = 1
-DOES_EXIST_RESPONSE_NO = 2
-
-OPCODE_GET = 1
-OPCODE_DOES_EXIST = 3
-OPCODE_GET_LABEL = 12
-OPCODE_LIST_LABELS = 13
-
-HASH_ALGORITHM_SHA1 = 2
-
-
-class FakeServerCloseAfterGetOp(FakeServer):
-
+class FakeServerWithNegotiationLogic(FakeServer):
     def __init__(self, clientOfServerToImitate):
-        super(FakeServerCloseAfterGetOp, self).__init__()
-        self._conn = None
+        super(FakeServerWithNegotiationLogic, self).__init__()
+        self._client = clientOfServerToImitate
         self._handlerMethods = {OPCODE_LIST_LABELS: self._listLabels,
                                 OPCODE_GET_LABEL: self._getLabel,
-                                OPCODE_GET: self._getFile,
                                 OPCODE_DOES_EXIST: self._doesExist}
-        self._client = clientOfServerToImitate
-        self._getFileCounter = 0
 
-    def _serve(self, conn, peer):
-        self._conn = conn
-        self._handshake(self._conn)
+    def _serve(self):
+        self._handshake()
         try:
             while True:
                 message = self._conn.recv(1)
@@ -159,7 +75,7 @@ class FakeServerCloseAfterGetOp(FakeServer):
                 except StopIteration:
                     break
         finally:
-            conn.close()
+            self._conn.close()
 
     def _sendStruct(self, _struct):
         buf = io.BytesIO()
@@ -231,6 +147,55 @@ class FakeServerCloseAfterGetOp(FakeServer):
             content = hashFile.read()
         return content
 
+
+class FakeServerHangsUp(FakeServer):
+    def __init__(self):
+        super(FakeServerHangsUp, self).__init__()
+
+    def _serve(self):
+        self._conn.recv(4096)
+        self._conn.close()
+
+
+class FakeServerConnectTimeout(FakeServer):
+    def __init__(self):
+        super(FakeServerConnectTimeout, self).__init__()
+
+    def port(self):
+        return 15652
+
+    def hostname(self):
+        return "35.124.99.234"
+
+
+class FakeServerNotSending(FakeServer):
+    def __init__(self):
+        super(FakeServerNotSending, self).__init__()
+
+    def _serve(self):
+        self._handshake()
+        message = self._conn.recv(4096)
+        opcode = ord(message[0])
+        self._blockForever()
+
+    def _blockForever(self):
+        raw_input()
+
+
+class FakeServerCloseAfterListLabelsOp(FakeServerWithNegotiationLogic):
+    def __init__(self, clientOfServerToImitate):
+        super(FakeServerCloseAfterListLabelsOp, self).__init__(clientOfServerToImitate)
+
+    def _listLabels(self):
+        raise StopIteration
+
+
+class FakeServerCloseAfterGetOp(FakeServerWithNegotiationLogic):
+    def __init__(self, clientOfServerToImitate):
+        super(FakeServerCloseAfterGetOp, self).__init__(clientOfServerToImitate)
+        self._handlerMethods[OPCODE_GET] = self._getFile
+        self._getFileCounter = 0
+
     def _getFile(self):
         self._getFileCounter += 1
         _hash = self._receiveHash()
@@ -244,3 +209,30 @@ class FakeServerCloseAfterGetOp(FakeServer):
             assert len(halfContent) > 0
             self._sendChunk(offset=0, payload=halfContent)
             raise StopIteration
+
+
+class FakeServerCloseAfterExistsOp(FakeServerWithNegotiationLogic):
+    def __init__(self, clientOfServerToImitate):
+        super(FakeServerCloseAfterExistsOp, self).__init__(clientOfServerToImitate)
+
+    def _doesExist(self):
+        self._conn.send("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+        self._conn.send("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+        raise StopIteration
+
+
+class ChunkHeader(ctypes.Structure):
+    _pack_ = 1
+    _fields_ = [('offset', ctypes.c_size_t),
+                ('bytes', ctypes.c_ushort)]
+
+
+class LabelHeader(ctypes.Structure):
+    _pack_ = 1
+    _fields_ = [('length', ctypes.c_ushort)]
+
+
+class Hash(ctypes.Structure):
+    _pack_ = 1
+    _fields_ = [('hashAlgorithm', ctypes.c_ubyte),
+                ('hash', ctypes.c_ubyte * 20)]
