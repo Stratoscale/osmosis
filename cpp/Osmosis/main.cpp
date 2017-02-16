@@ -1,3 +1,4 @@
+#include <boost/range/iterator_range.hpp>
 #include <boost/program_options.hpp>
 #include "Osmosis/Server/Server.h"
 #include "Osmosis/Server/BroadcastServer.h"
@@ -10,6 +11,7 @@
 #include "Osmosis/ObjectStore/LeastRecentlyUsed.h"
 #include "Osmosis/ObjectStore/Purge.h"
 #include "Osmosis/FilesystemUtils.h"
+#include "Osmosis/Client/Typedefs.h"
 
 std::mutex globalTraceLock;
 
@@ -146,13 +148,54 @@ void eraseLabel( const boost::program_options::variables_map & options )
 	instance.eraseLabel( label );
 }
 
-void purge( const boost::program_options::variables_map & options )
+void purgeDir( unsigned int threadID, boost::filesystem::path  rootPath, Osmosis::Client::PathTaskQueue & tasksQueue )
 {
-	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
 	Osmosis::ObjectStore::Store store( rootPath );
 	Osmosis::ObjectStore::Labels labels( rootPath, store );
 	Osmosis::ObjectStore::Purge purge( store, labels );
-	purge.purge();
+	while ( tasksQueue.size() > 0 ) {
+		boost::filesystem::path dirToPurge = tasksQueue.get();
+		TRACE_INFO("Thread #" << threadID << " handling " << dirToPurge );
+		purge.purge( dirToPurge );
+	}
+	TRACE_INFO("Thread #" << threadID << " finished." );
+}
+
+void purge( const boost::program_options::variables_map & options )
+{
+	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
+	unsigned nrThreads = options[ "nrPurgeThreads" ].as< unsigned >() ;
+
+	std::vector< std::thread > threads;
+	Osmosis::Client::PathTaskQueue purgeTasks( 1 );
+
+	// adding task per dir
+	for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator( rootPath ), {})) {
+			if ( entry.path().string().length() == 31) {
+				TRACE_INFO( "Adding a task for " << entry.path() );
+				purgeTasks.put( std::move( entry ) );
+			}
+	}
+
+
+	// create threads
+	for ( unsigned i = 0; i < nrThreads; ++ i ) {
+		TRACE_INFO("Generating thread " << i << "...");
+
+		threads.push_back( std::thread(
+            purgeDir,
+			i,
+			std::ref( rootPath ),
+			std::ref( purgeTasks )
+			) );
+
+	}
+
+	TRACE_INFO("waiting for purge threads to finish...");
+	for ( auto & i : threads ) {
+		i.join();
+	}
+
 }
 
 void renameLabel( const boost::program_options::variables_map & options )
@@ -298,7 +341,9 @@ int main( int argc, char * argv [] )
 		("timeout", boost::program_options::value< unsigned short >()->default_value( 1000 ),
 			"Timeout in seconds, for the 'whohaslabel' command")
 		("tcpTimeout", boost::program_options::value< unsigned int >()->default_value( 7000 ),
-			"Timeout in milliseconds for actions on TCP sockets");
+			"Timeout in milliseconds for actions on TCP sockets")
+		("nrPurgeThreads", boost::program_options::value< unsigned int >()->default_value( 1 ),
+			"Number of threads dedicated for purge");
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()
