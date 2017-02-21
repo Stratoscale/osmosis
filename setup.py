@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="osmosis",
-    version="1.1.0-beta",
+    version="1.1.0-beta1",
     author="Shlomo Matichin",
     author_email="shlomomatichin@gmail.com",
     description=(
