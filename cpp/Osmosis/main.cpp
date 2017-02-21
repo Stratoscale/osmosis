@@ -340,7 +340,7 @@ int main( int argc, char * argv [] )
 		( "broadcastToLocalhost", "Use this to broadcast to 127.0.0.7" )
 		("timeout", boost::program_options::value< unsigned short >()->default_value( 1000 ),
 			"Timeout in seconds, for the 'whohaslabel' command")
-		("tcpTimeout", boost::program_options::value< unsigned int >()->default_value( 7000 ),
+		("tcpTimeout", boost::program_options::value< unsigned int >()->default_value( 20000 ),
 			"Timeout in milliseconds for actions on TCP sockets")
 		("nrPurgeThreads", boost::program_options::value< unsigned int >()->default_value( 1 ),
 			"Number of threads dedicated for purge");
