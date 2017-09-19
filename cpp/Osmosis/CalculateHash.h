@@ -8,17 +8,17 @@ namespace Osmosis {
 namespace CalculateHash
 {
 
-Hash MD5( const void * buffer, unsigned length );
+Hash MD5( const void * buffer, unsigned long length );
 
 Hash MD5( const boost::filesystem::path & filename );
 
-Hash SHA1( const void * buffer, unsigned length );
+Hash SHA1( const void * buffer, unsigned long length );
 
 Hash SHA1( const boost::filesystem::path & filename );
 
 bool verify( const boost::filesystem::path & filename, const Hash & hash );
 
-bool verify( const void * buffer, unsigned length, const Hash & hash );
+bool verify( const void * buffer, unsigned long length, const Hash & hash );
 
 
 } // namespace CalculateHash
