@@ -1,3 +1,4 @@
 osmosis:
   osmosis:
-    - file://.
+    deps:
+      - file://.
