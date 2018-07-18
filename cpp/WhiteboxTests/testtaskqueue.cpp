@@ -25,7 +25,7 @@ void consumer( list< string > * target )
 			string task = tested.get();
 			target->emplace( target->end(), std::move( task ) );
 		}
-	} catch ( Queue::NoMoreTasksError ) {}
+	} catch ( Queue::NoMoreTasksError &) {}
 }
 
 bool assertFound( list< string > & out, string lookingFor )

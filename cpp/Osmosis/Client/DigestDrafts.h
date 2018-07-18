@@ -50,7 +50,7 @@ private:
 			try {
 				while ( true )
 					work();
-			} catch ( ToVerifyTaskQueue::NoMoreTasksError ) {
+			} catch ( ToVerifyTaskQueue::NoMoreTasksError &) {
 				_digestedTaskQueue.producerDone();
 				TRACE_DEBUG( "DigestThread done" );
 			}
