@@ -59,7 +59,7 @@ private:
 		try {
 			while ( true )
 				work();
-		} catch ( DigestedTaskQueue::NoMoreTasksError ) {
+		} catch ( DigestedTaskQueue::NoMoreTasksError &) {
 			_outputQueue.producerDone();
 			TRACE_DEBUG( "CheckExistingThread done" );
 		}
