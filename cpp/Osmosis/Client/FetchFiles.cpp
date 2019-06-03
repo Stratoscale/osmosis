@@ -8,9 +8,9 @@ namespace Osmosis {
 namespace Client
 {
 
-FetchFiles::FetchFiles( const boost::filesystem::path & directory, Chain::Chain & chain ) :
+FetchFiles::FetchFiles( const boost::filesystem::path & directory, Chain::Chain & chain, Chain::CheckOut & chainCheckOut ) :
 	_directory( directory ),
-	_checkOut( chain.checkOut() ),
+	_checkOut( chainCheckOut ),
 	_drafts( directory ),
 	_fetchQueue( 1 ),
 	_done( false ),

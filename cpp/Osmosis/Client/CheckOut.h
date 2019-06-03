@@ -53,12 +53,12 @@ private:
 		return false;
 	}
 
-	inline bool fileInValidCondition( const boost::filesystem::path entry ) const
+	inline bool isFileInValidCondition( const boost::filesystem::path entry ) const
 	{
 		boost::system::error_code file_error;
-		boost::filesystem::file_status status = boost::filesystem::status(entry, file_error);
+		boost::filesystem::file_status status = boost::filesystem::status( entry, file_error );
 
-		return status != boost::filesystem::file_status(boost::filesystem::status_error);
+		return status != boost::filesystem::file_status( boost::filesystem::status_error );
 	}
 
 	void decideWhatToDo(    FetchFiles &                     fetchFiles,
