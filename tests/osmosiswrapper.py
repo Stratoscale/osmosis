@@ -176,18 +176,24 @@ class Client:
             logging.exception("\n\n\nOutput:\n" + e.output)
             raise
 
+    def _printServerOutput(self):
+        logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
+        if self._server2 is not None:
+            logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
+
     def _run(self, cmd, *args):
         objectStores = list(self.objectStores)
         if cmd == "checkout":
             objectStores += self.additionalObjectStoresForCheckout
-        cmd = ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd] + list(args)
+        cmd = ["build/cpp/osmosis.bin", "--objectStores=" + "+".join(objectStores), cmd]
+        if self._tcpTimeout is not None:
+            cmd.extend(["--tcpTimeout", str(int(self._tcpTimeout))])
+        cmd.extend(args)
         try:
             return subprocess.check_output(cmd, close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             logging.exception("\n\n\nClientOutput:\n" + e.output)
-            logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
-            if self._server2 is not None:
-                logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
+            self._printServerOutput()
             raise
 
     def _failedRun(self, cmd, *args):
@@ -271,6 +277,9 @@ class Server:
 
     def port(self):
         return self._port
+
+    def hostname(self):
+        return "localhost"
 
     def fileCount(self, excludeDir=None):
         count = 0
