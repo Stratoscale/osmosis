@@ -33,8 +33,10 @@ enum class Opcode
 	LIST_LABELS = 13,
 	ERASE_LABEL = 14,
 	RENAME_LABEL = 15,
+	WHO_HAS_LABEL = 16,
 
 	ACK = 0xAC,
+	MAX_OPCODE = ACK + 1
 };
 
 enum class HashAlgorithm 

@@ -3,6 +3,7 @@
 
 #include "Osmosis/TCPSocket.h"
 #include "Osmosis/Tongue.h"
+#include "Common/Debug.h"
 
 namespace Osmosis {
 namespace Stream

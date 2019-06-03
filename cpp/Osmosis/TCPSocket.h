@@ -2,7 +2,6 @@
 #define __OSMOSIS_TCPSOCKET_H__
 
 #include <boost/asio.hpp>
-#include "Common/Debug.h"
 
 namespace Osmosis
 {
@@ -10,20 +9,9 @@ namespace Osmosis
 class TCPSocket
 {
 public:
-	TCPSocket( boost::asio::ip::tcp::socket & socket ) :
-		_socket( socket )
-	{}
+	TCPSocket( boost::asio::ip::tcp::socket & socket, unsigned int timeout );
 
-	void receiveAll( void * data, size_t length )
-	{
-		while ( length > 0 ) {
-			auto buffer = boost::asio::buffer( data, length );
-			size_t received = _socket.receive( buffer );
-			ASSERT( received <= length );
-			length -= received;
-			data = static_cast< unsigned char * >( data ) + received;
-		}
-	}
+	void receiveAll( void * data, size_t length );
 
 	template < class Struct >
 	Struct receiveAll()
@@ -33,16 +21,7 @@ public:
 		return result;
 	}
 
-	void sendAll( const void * data, size_t length )
-	{
-		while ( length > 0 ) {
-			auto buffer = boost::asio::buffer( data, length );
-			size_t sent = _socket.send( buffer );
-			ASSERT( sent <= length );
-			length -= sent;
-			data = static_cast< const unsigned char * >( data ) + sent;
-		}
-	}
+	void sendAll( const void * data, size_t length );
 
 	template < class Struct >
 	void sendAll( const Struct & data )
@@ -59,12 +38,17 @@ public:
 		sendAll( buffer, sizeof( buffer ) );
 	}
 
-	void close() {
-		_socket.close();
-	}
+	void close();
 
 private:
 	boost::asio::ip::tcp::socket & _socket;
+	boost::asio::deadline_timer    _deadline;
+	unsigned int _timeout;
+
+	void handleIO( const boost::system::error_code& ec, std::size_t size,
+	               boost::system::error_code * outEc, size_t * outSize );
+
+	void checkDeadline( boost::system::error_code *outEc );
 
 	TCPSocket( const TCPSocket & rhs ) = delete;
 	TCPSocket & operator= ( const TCPSocket & rhs ) = delete;

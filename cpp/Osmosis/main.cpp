@@ -1,13 +1,17 @@
+#include <boost/range/iterator_range.hpp>
 #include <boost/program_options.hpp>
 #include "Osmosis/Server/Server.h"
+#include "Osmosis/Server/BroadcastServer.h"
 #include "Osmosis/Client/CheckIn.h"
 #include "Osmosis/Client/CheckOut.h"
 #include "Osmosis/Client/Transfer.h"
 #include "Osmosis/Client/LabelOps.h"
+#include "Osmosis/Client/WhoHasLabel.h"
 #include "Osmosis/ObjectStore/LabelLogIterator.h"
 #include "Osmosis/ObjectStore/LeastRecentlyUsed.h"
 #include "Osmosis/ObjectStore/Purge.h"
 #include "Osmosis/FilesystemUtils.h"
+#include "Osmosis/Client/Typedefs.h"
 
 std::mutex globalTraceLock;
 
@@ -17,11 +21,18 @@ void server( const boost::program_options::variables_map & options )
 	unsigned short port = options[ "serverTCPPort" ].as< unsigned short >();
 	boost::asio::ip::tcp::endpoint endpoint( boost::asio::ip::tcp::v4(), port );
 
-	Osmosis::ObjectStore::Store store( rootPath );
-	Osmosis::ObjectStore::Drafts drafts( rootPath );
-	Osmosis::ObjectStore::Labels labels( rootPath, store );
-	Osmosis::Server::Server server( rootPath, endpoint, store, drafts, labels );
-	server.run();
+	boost::asio::io_service ioService;
+	Osmosis::Server::Server server( rootPath, endpoint, ioService );
+	ioService.run();
+}
+
+void broadcastServer( const boost::program_options::variables_map & options )
+{
+	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
+	unsigned short port = options[ "serverUDPPort" ].as< unsigned short >();
+	boost::asio::io_service ioService;
+	Osmosis::Server::BroadcastServer server( ioService, rootPath, port );
+	ioService.run();
 }
 
 boost::filesystem::path stripTrailingSlash( boost::filesystem::path path )
@@ -38,9 +49,10 @@ void checkIn( const boost::program_options::variables_map & options )
 	BACKTRACE_BEGIN
 	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
 	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a checkin operation" );
 	bool md5 = options.count( "MD5" ) > 0;
@@ -59,11 +71,13 @@ void checkOut( const boost::program_options::variables_map & options )
 	BACKTRACE_BEGIN
 	boost::filesystem::path reportFile = options[ "reportFile" ].as< std::string >();
 	unsigned reportIntervalSeconds = options[ "reportIntervalSeconds" ].as< unsigned >();
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
 	bool putIfMissing = options.count( "putIfMissing" ) > 0;
 	bool chainTouch = options.count( "noChainTouch" ) == 0;
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch );
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch,
+			tcpTimeout );
 	bool md5 = options.count( "MD5" ) > 0;
 	bool removeUnknownFiles = options.count( "removeUnknownFiles" ) > 0;
 	bool myUIDandGIDcheckout = options.count( "myUIDandGIDcheckout" ) > 0;
@@ -97,8 +111,11 @@ void transfer( const boost::program_options::variables_map & options )
 	std::string label = options[ "arg1" ].as< std::string >();
 	bool putIfMissing = options.count( "putIfMissing" ) > 0;
 	bool chainTouch = options.count( "noChainTouch" ) == 0;
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch );
-	auto destination = Osmosis::Chain::factory( options[ "transferDestination" ].as< std::string >() );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), putIfMissing, chainTouch,
+		tcpTimeout );
+	auto destination = Osmosis::Chain::factory( options[ "transferDestination" ].as< std::string >(),
+		tcpTimeout );
 	Osmosis::Client::Transfer instance( label, chain, * destination );
 	instance.go();
 }
@@ -109,7 +126,8 @@ void listLabels( const boost::program_options::variables_map & options )
 	if ( options.count( "arg1" ) > 0 )
 		labelRegex = options[ "arg1" ].as< std::string >();
 	boost::regex testExpression( labelRegex );
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a list operation" );
 
@@ -122,27 +140,71 @@ void listLabels( const boost::program_options::variables_map & options )
 void eraseLabel( const boost::program_options::variables_map & options )
 {
 	std::string label = options[ "arg1" ].as< std::string >();
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a erase operation" );
 	Osmosis::Client::LabelOps instance( chain.single() );
 	instance.eraseLabel( label );
 }
 
-void purge( const boost::program_options::variables_map & options )
+void purgeDir( unsigned int threadID, boost::filesystem::path  rootPath, Osmosis::Client::PathTaskQueue & tasksQueue )
 {
-	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
 	Osmosis::ObjectStore::Store store( rootPath );
 	Osmosis::ObjectStore::Labels labels( rootPath, store );
 	Osmosis::ObjectStore::Purge purge( store, labels );
-	purge.purge();
+	while ( tasksQueue.size() > 0 ) {
+		boost::filesystem::path dirToPurge = tasksQueue.get();
+		TRACE_INFO("Thread #" << threadID << " handling " << dirToPurge );
+		purge.purge( dirToPurge );
+	}
+	TRACE_INFO("Thread #" << threadID << " finished." );
+}
+
+void purge( const boost::program_options::variables_map & options )
+{
+	boost::filesystem::path rootPath( options[ "objectStoreRootPath" ].as< std::string >() );
+	unsigned nrThreads = options[ "nrPurgeThreads" ].as< unsigned >() ;
+
+	std::vector< std::thread > threads;
+	Osmosis::Client::PathTaskQueue purgeTasks( 1 );
+
+	// adding task per dir
+	for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator( rootPath ), {})) {
+		if ( entry.path().string().length() == 31) {
+			TRACE_INFO( "Adding a task for " << entry.path() );
+			boost::filesystem::path entryPath( entry.path() );
+			purgeTasks.put( std::move( entryPath ) );
+		}
+	}
+
+
+	// create threads
+	for ( unsigned i = 0; i < nrThreads; ++ i ) {
+		TRACE_INFO("Generating thread " << i << "...");
+
+		threads.push_back( std::thread(
+            purgeDir,
+			i,
+			std::ref( rootPath ),
+			std::ref( purgeTasks )
+			) );
+
+	}
+
+	TRACE_INFO("waiting for purge threads to finish...");
+	for ( auto & i : threads ) {
+		i.join();
+	}
+
 }
 
 void renameLabel( const boost::program_options::variables_map & options )
 {
 	std::string currentLabel = options[ "arg1" ].as< std::string >();
 	std::string renameLabelTo = options[ "arg2" ].as< std::string >();
-	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false );
+	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
+	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a rename operation" );
 	Osmosis::Client::LabelOps instance( chain.single() );
@@ -203,13 +265,27 @@ void testHash( const boost::program_options::variables_map & options )
 	std::cout << hash << std::endl;
 }
 
+void whoHasLabel( const boost::program_options::variables_map & options )
+{
+	if ( options.count( "arg1" ) == 0 )
+		THROW( Error, "Label must be supplied as first argument" );
+	const std::string label = options[ "arg1" ].as< std::string >();
+	const unsigned short timeout = options[ "timeout" ].as< unsigned short >();
+	unsigned short serverUDPPort = options[ "serverUDPPort" ].as< unsigned short >();
+	bool broadcastToLocalhost = options.count( "broadcastToLocalhost" ) > 0;
+	Osmosis::Client::WhoHasLabel instance( label, timeout, serverUDPPort, broadcastToLocalhost );
+	std::list< std::string > result = std::move( instance.go() );
+	for ( auto & i : result )
+		std::cout << i << std::endl;
+}
+
 void usage( const boost::program_options::options_description & optionsDescription )
 {
 	std::cout << "osmosis.bin <command> [workDir] [label] [options]" << std::endl;
 	std::cout << std::endl;
 	std::cout << "  command:  can be 'server', 'checkin', 'checkout', 'transfer', " << std::endl;
 	std::cout << "            'listlabels', 'eraselabel', 'renamelabel', 'purge', " << std::endl;
-	std::cout << "            'labellog' or 'leastrecentlyused'" << std::endl;
+	std::cout << "            'labellog' or 'leastrecentlyused', 'broadcastserver" << std::endl;
 	std::cout << "  workDir:  must be present if command is 'checkin' or 'checkout'" << std::endl;
 	std::cout << "            workDir is the path to check in from or check out to" << std::endl;
 	std::cout << "  label:    must be present if command is 'checkin', 'checkout' or" << std::endl;
@@ -238,6 +314,8 @@ int main( int argc, char * argv [] )
 			"Path where osmosis will store objects. relevant for 'server', 'purge', 'labellog' and 'leastrecentlyused' commands" )
 		("serverTCPPort", boost::program_options::value< unsigned short >()->default_value( 1010 ),
 			"the TCP port to bind to, if command is 'server'")
+		("serverUDPPort", boost::program_options::value< unsigned short >()->default_value( 2020 ),
+			"the UDP port to bind to, if command is 'broadcastserver'")
 		( "objectStores", boost::program_options::value< std::string >()->default_value( "127.0.0.1:1010" ),
 			"the object store to act againt. May be a '+' seperated list for 'checkout' command" )
 		( "MD5", "use MD5, not SHA1 for hash in 'checkin' operation" )
@@ -259,7 +337,14 @@ int main( int argc, char * argv [] )
 		( "keep", boost::program_options::value< std::string >()->default_value( "keepforever|bootstrap" ),
 		  	"regular expression for labels to never erase. Only relevant under 'leastrecentlyused' command" )
 		( "maximumDiskUsage", boost::program_options::value< std::string >(),
-		  	"<number>M or <number>G for the amount of storage used for label objects before 'leastrecentlyused' starts erasing labels");
+		  	"<number>M or <number>G for the amount of storage used for label objects before 'leastrecentlyused' starts erasing labels")
+		( "broadcastToLocalhost", "Use this to broadcast to 127.0.0.7" )
+		("timeout", boost::program_options::value< unsigned short >()->default_value( 1000 ),
+			"Timeout in seconds, for the 'whohaslabel' command")
+		("tcpTimeout", boost::program_options::value< unsigned int >()->default_value( 20000 ),
+			"Timeout in milliseconds for actions on TCP sockets")
+		("nrPurgeThreads", boost::program_options::value< unsigned int >()->default_value( 1 ),
+			"Number of threads dedicated for purge");
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()
@@ -322,6 +407,10 @@ int main( int argc, char * argv [] )
 			leastRecentlyUsed( options );
 		else if ( command == "testhash" )
 			testHash( options );
+		else if ( command == "broadcastserver" )
+			broadcastServer( options );
+		else if ( command == "whohaslabel" )
+			whoHasLabel( options );
 		else {
 			TRACE_ERROR( "Unknown command '" << command << "'" );
 			usage( optionsDescription );

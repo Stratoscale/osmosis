@@ -24,7 +24,7 @@ Thread::Thread( boost::filesystem::path  rootPath,
 	_drafts( drafts ),
 	_labels( labels ),
 	_boostSocket( _ioService ),
-	_socket( _boostSocket ),
+	_socket( _boostSocket, 15000 ),
 	_tcpNoDelay( false )
 {}
 
@@ -38,6 +38,7 @@ void Thread::run()
 {
 	BACKTRACE_BEGIN
 	ASSERT( _boostSocket.is_open() );
+	_boostSocket.non_blocking( true );
 	TRACE_INFO( "Connected to " << _boostSocket.remote_endpoint() << ", starting server thread" );
 	setTCPNoDelay( true );
 	setTCPKeepalive( true );
