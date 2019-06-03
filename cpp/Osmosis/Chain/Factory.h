@@ -9,7 +9,7 @@ namespace Osmosis {
 namespace Chain
 {
 
-std::unique_ptr< ObjectStoreInterface > factory( const std::string & location );
+std::unique_ptr< ObjectStoreInterface > factory( const std::string & location, unsigned int tcpTimeout );
 
 } // namespace Chain
 } // namespace Osmosis

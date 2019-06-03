@@ -11,8 +11,8 @@ namespace Chain {
 namespace Remote
 {
 
-Connection::Connection( const std::string & hostname, unsigned short port ) :
-	_connection( hostname, port ),
+Connection::Connection( const std::string & hostname, unsigned short port, unsigned int tcpTimeout ) :
+	_connection( hostname, port, tcpTimeout ),
 	_labelOps( _connection.socket() )
 {}
 

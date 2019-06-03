@@ -7,14 +7,16 @@ namespace Chain {
 namespace Remote
 {
 
-ObjectStore::ObjectStore( const std::string & hostname, unsigned short port ):
+ObjectStore::ObjectStore( const std::string & hostname, unsigned short port, unsigned int tcpTimeout ):
 	_hostname( hostname ),
-	_port( port )
+	_port( port ),
+	_tcpTimeout( tcpTimeout )
 {}
 
 std::unique_ptr< ObjectStoreConnectionInterface > ObjectStore::connect()
 {
-	return std::unique_ptr< ObjectStoreConnectionInterface >( new Connection( _hostname, _port ) );
+	return std::unique_ptr< ObjectStoreConnectionInterface >( new Connection( _hostname, _port,
+		_tcpTimeout) );
 }
 
 } // namespace Remote

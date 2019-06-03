@@ -11,14 +11,15 @@ namespace Chain
 class Chain
 {
 public:
-	Chain( const std::string & objectStoresArgument, bool putIfMissing, bool chainTouch ):
+	Chain( const std::string & objectStoresArgument, bool putIfMissing, bool chainTouch,
+		   unsigned int tcpTimeout ):
 		_putIfMissing( putIfMissing ),
 		_chainTouch( chainTouch )
 	{
 		std::vector< std::string > locations;
 		boost::split( locations, objectStoresArgument, boost::is_any_of( "+" ) );
 		for ( auto & location : locations )
-			_objectStores.push_back( std::move( factory( location ) ) );
+			_objectStores.push_back( std::move( factory( location, tcpTimeout ) ) );
 	}
 
 	unsigned count() const
