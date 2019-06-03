@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 import unittest
 import osmosiswrapper
 import os
@@ -19,11 +20,14 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.server = osmosiswrapper.Server()
         self.client = osmosiswrapper.Client(self.server)
-        self.localObjectStore = tempfile.mkdtemp()
+        self.broadcastServer = osmosiswrapper.BroadcastServer(rootPath=self.server.path)
+        self.client.setBroadcastServerPort(port=self.broadcastServer.port())
 
     def tearDown(self):
         self.client.clean()
         self.server.exit()
+        if self.broadcastServer is not None:
+            self.broadcastServer.exit()
 
     def test_ZeroFiles(self):
         self.client.checkin("yuvu")
@@ -854,5 +858,84 @@ class Test(unittest.TestCase):
         self.assertEquals(self.client.readFile("aFile"), "123456")
         self.assertFalse(os.path.exists('a'))
 
+    def test_WhoHasLabel(self):
+        self.broadcastServer.start()
+        self.assertEquals(self.client.whoHasLabel("yuvu"), [])
+        self.assertEquals(self.client.whoHasLabel("yu"), [])
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        objectStore = "127.0.0.1:%(port)s" % dict(port=self.broadcastServer.port())
+        self.assertEquals(self.client.whoHasLabel("yuvu"), [objectStore])
+        self.assertEquals(self.client.whoHasLabel("yu"), [])
+
+    def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringListLabelsOp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        badServer = fakeservers.FakeServerCloseAfterListLabelsOp(self.client)
+        client = osmosiswrapper.Client(badServer, self.server)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(client.readFile("aFile"), "123456")
+        finally:
+            client.clean()
+
+    def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringExistsOp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        badServer = fakeservers.FakeServerCloseAfterExistsOp(self.client)
+        client = osmosiswrapper.Client(badServer, self.server)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(client.readFile("aFile"), "123456")
+        finally:
+            client.clean()
+
+    def test_CheckoutContinuesWhenOneOfTheObjectStoresFailsDuringGetOp(self):
+        self.client.writeFile("aFile", "123456")
+        self.client.checkin("yuvu")
+        badServer = fakeservers.FakeServerCloseAfterGetOp(self.client)
+        client = osmosiswrapper.Client(badServer, self.server)
+        client.setTCPTimeout(1000)
+        try:
+            client.checkout("yuvu")
+            self.assertEquals(client.readFile("aFile"), "123456")
+        finally:
+            client.clean()
+
+    def test_ConnectTimeout(self):
+        TIMEOUT_SEC = 0.1
+        badServer = fakeservers.FakeServerConnectTimeout()
+        client = osmosiswrapper.Client(badServer)
+        timeoutInMilliseconds = TIMEOUT_SEC * 1000
+        client.setTCPTimeout(timeoutInMilliseconds)
+        before = time.time()
+        try:
+            client.listLabels("yuvu")
+        except subprocess.CalledProcessError as ex:
+            self.assertIn(ex.message, "Could not connect")
+            after = time.time()
+        else:
+            self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
+        durationInMilliseconds = (after - before) * 1000
+        self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
+
+    def test_ReceiveTimeout(self):
+        TIMEOUT_SEC = 0.01
+        badServer = fakeservers.FakeServerNotSending()
+        client = osmosiswrapper.Client(badServer)
+        timeoutInMilliseconds = TIMEOUT_SEC * 1000
+        client.setTCPTimeout(timeoutInMilliseconds)
+        before = time.time()
+        try:
+            client.listLabels("yuvu")
+        except subprocess.CalledProcessError as ex:
+            self.assertIn("Timeout while reading", ex.output)
+            after = time.time()
+        else:
+            self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
+        durationInMilliseconds = (after - before) * 1000
+        self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
+    """
+
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

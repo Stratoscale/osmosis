@@ -6,6 +6,7 @@ import logging
 import os
 import time
 import signal
+import socket
 
 
 class Client:
@@ -13,14 +14,15 @@ class Client:
         self._server = server
         self._server2 = server2
         self._path = tempfile.mkdtemp()
-        self._remoteObjectStore = "localhost:%d" % server.port()
+        self._remoteObjectStore = "%s:%d" % (server.hostname(), server.port())
         self.objectStores = None
         self.useRemoteObjectStoreOnly()
-        self.objectStores = [self._remoteObjectStore]
         self.additionalObjectStoresForCheckout = []
         if server2 is not None:
-            self.additionalObjectStoresForCheckout.append("localhost:%d" % server2.port())
+            connectionString = "%s:%d" % (server2.hostname(), server2.port())
+            self.additionalObjectStoresForCheckout.append(connectionString)
         self.localObjectStorePath = tempfile.mkdtemp()
+        self._tcpTimeout = None
 
     def useLocalObjectStoreOnly(self):
         self.objectStores = [self.localObjectStorePath]
@@ -72,9 +74,7 @@ class Client:
         popen.stdout.close()
         if result != 0:
             logging.error("\n\n\nClientOutput:\n" + output)
-            logging.error("\n\n\nServerOutput:\n" + self._server.readLog())
-            if self._server2 is not None:
-                logging.error("\n\n\nServer2Output:\n" + self._server2.readLog())
+            self._printServerOutput()
             raise Exception("checkoutUsingDelayedLabel failed")
         return output
 
@@ -105,6 +105,13 @@ class Client:
             raise Exception("Hashes not equal:\n" + hash1 + "\n" + hash2)
         return hash1
 
+    def whoHasLabel(self, label, timeout=30):
+        return self._run("whohaslabel",
+                         label,
+                         "--broadcastToLocalhost",
+                         * self._moreArgs(dict(timeout=timeout,
+                                               serverUDPPort=self._broadcastServerPort))).splitlines()
+
     def createAPathLargerThanPATH_MAX(self, maxAllowedPathSize):
         maxAllowedPathSize += 100
         origPath = os.getcwd()
@@ -133,6 +140,12 @@ class Client:
         finally:
             os.chdir(origPath)
 
+    def setBroadcastServerPort(self, port):
+        self._broadcastServerPort = port
+
+    def setTCPTimeout(self, tcpTimeout):
+        self._tcpTimeout = tcpTimeout
+
     def _moreArgs(self, kwargs):
         moreArgs = []
         if kwargs.get('removeUnknownFiles', False):
@@ -149,6 +162,10 @@ class Client:
             moreArgs.append("--ignore=" + kwargs['ignore'])
         if 'reportFile' in kwargs:
             moreArgs.append("--reportFile=" + kwargs['reportFile'])
+        if 'timeout' in kwargs:
+            moreArgs.append("--timeout=" + str(kwargs['timeout']))
+        if 'serverUDPPort' in kwargs:
+            moreArgs.append("--serverUDPPort=" + str(kwargs['serverUDPPort']))
         return moreArgs
 
     def _runAny(self, *args):
