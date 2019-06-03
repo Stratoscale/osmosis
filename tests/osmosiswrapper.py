@@ -206,6 +206,8 @@ class Client:
                 close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             return e.output
+        except KeyboardInterrupt:
+            self._printServerOutput()
         else:
             raise Exception("running with args '%s' should have failed" % (args, ))
 
