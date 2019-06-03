@@ -29,9 +29,10 @@ public:
 		boost::filesystem::path draft = _drafts.allocateFilename();
 		Stream::WriteFile write( draft.string().c_str() );
 		size_t offset = 0;
+		static const unsigned long max_length = 4096;
 		do {
 			ASSERT( blob.size() >= offset );
-			unsigned length = std::min( 4096, static_cast< int >( blob.size() - offset ) );
+			unsigned length = std::min( max_length, static_cast< unsigned long >( blob.size() - offset ) );
 			write.write( offset, blob.c_str() + offset, length );
 			offset += length;
 		} while ( offset < blob.size() );

@@ -27,13 +27,33 @@ public:
 	const GetCountStats & getCount() const;
 
 private:
-	const std::vector< ObjectStoreInterface * >                       _objectStores;
+	std::vector< ObjectStoreInterface * >                             _objectStores;
 	const bool                                                        _putIfMissing;
 	const bool                                                        _touch;
 	std::vector< std::unique_ptr< ObjectStoreConnectionInterface > >  _connections;
 	GetCountStats                                                     _getCount;
+	short                                                             _idxOfLastUsedConnection;
+	std::vector< int >                                                _connectionIdxToGetCountIdx;
+	enum {
+		TRY_ALL_CONNECTIONS = -1
+	};
 
 	Hash getLabelFromConnection( unsigned objectStoreIndex, const std::string &label );
+
+	Hash tryGetLabel( const std::string & label );
+
+	void removeConnection( int connIdx );
+
+	bool tryForEachConnection(
+		std::function< bool( ObjectStoreConnectionInterface & connection ) > func,
+		int idxOfConnectionToStartFrom=0,
+		short nrConnectionsToTry=TRY_ALL_CONNECTIONS,
+		bool removeConnectionOnError=true,
+		bool stopOnFirstSuccess=false );
+
+	bool tryForEachConnectionUntilSuccess(
+		std::function< bool( ObjectStoreConnectionInterface & connection ) > func,
+		int idxOfConnectionToStartFrom=0 );
 
 	ObjectStoreConnectionInterface & connection( unsigned objectStoreIndex );
 
