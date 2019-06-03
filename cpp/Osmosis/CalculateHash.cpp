@@ -6,7 +6,7 @@ namespace Osmosis {
 namespace CalculateHash
 {
 
-Hash MD5( const void * buffer, unsigned length )
+Hash MD5( const void * buffer, unsigned long length )
 {
 	MD5_CTX context;
 	int result = MD5_Init( & context );
@@ -51,7 +51,7 @@ Hash MD5( const boost::filesystem::path & filename )
 	return raw;
 }
 
-Hash SHA1( const void * buffer, unsigned length )
+Hash SHA1( const void * buffer, unsigned long length )
 {
 	Tongue::Hash raw;
 	SHA_CTX context;
@@ -109,7 +109,7 @@ bool verify( const boost::filesystem::path & filename, const Hash & hash )
 	}
 }
 
-bool verify( const void * buffer, unsigned length, const Hash & hash )
+bool verify( const void * buffer, unsigned long length, const Hash & hash )
 {
 	if ( hash.algorithm() == Tongue::HashAlgorithm::MD5 ) {
 		Hash calculated = MD5( buffer, length );
