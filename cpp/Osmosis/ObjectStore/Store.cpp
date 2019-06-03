@@ -68,6 +68,12 @@ ObjectsIterator Store::list() const
 	return std::move( iterator );
 }
 
+ObjectsIterator Store::list( boost::filesystem::path rootPath ) const
+{
+	ObjectsIterator iterator( rootPath );
+	return std::move( iterator );
+}
+
 boost::filesystem::path Store::absoluteFilename( const Hash & hash ) const
 {
 	return _rootPath / hash.relativeFilename();
