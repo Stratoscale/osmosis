@@ -25,7 +25,7 @@ function verify_reqs_and_set_vars(){
         exit 2
     fi
 
-    if [ "$SSL_VERSION" != "1.1.1" ] && [ "$SSL_VERSION" = "1.0.1f" ]
+    if [ "$SSL_VERSION" != "1.1.1" ] && [ "$SSL_VERSION" != "1.0.1f" ]
     then
         echo "ERROR - not openssl 1.1.1 or 1.0.1f"
         exit 3
