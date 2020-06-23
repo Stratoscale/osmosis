@@ -40,7 +40,7 @@ class FakeServer(threading.Thread):
             while True:
                 self._conn, peer = self._sock.accept()
                 self._serve()
-        except:
+        except Exception as ex:
             logging.exception("Fake Server")
 
     def readLog(self):

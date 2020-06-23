@@ -510,7 +510,7 @@ class Test(unittest.TestCase):
                 self.assertEquals(client.readFile("firstFile"), "123456")
             finally:
                 client.clean()
-        except:
+        except Exception:
             logging.error("Destination server log:\n%(log)s", dict(log=server.readLog()))
             raise
         finally:
@@ -598,7 +598,7 @@ class Test(unittest.TestCase):
         try:
             self.client.transfer("yuvu", server)
             self.client.transfer("yuv", server)
-        except:
+        except Exception:
             logging.error("Destination server log:\n%(log)s", dict(log=server.readLog()))
             raise
         finally:
@@ -685,7 +685,7 @@ class Test(unittest.TestCase):
         try:
             self.client.transfer("yuvu", server)
             self.client.transfer("yuvu2", server)
-        except:
+        except Exception:
             logging.error("Destination server log:\n%(log)s", dict(log=server.readLog()))
             raise
         finally:
@@ -934,6 +934,7 @@ class Test(unittest.TestCase):
             self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
         durationInMilliseconds = (after - before) * 1000
         self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
+
 
 if __name__ == '__main__':
     unittest.main()

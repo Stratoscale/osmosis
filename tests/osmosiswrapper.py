@@ -344,7 +344,7 @@ class Server:
         try:
             s.connect(tcpEndpoint)
             return True
-        except:
+        except Exception:
             return False
         finally:
             s.close()
@@ -396,7 +396,7 @@ class BroadcastServer:
         try:
             sock.sendto("\xFF\xFF", (address, port))
             return True
-        except:
+        except Exception:
             return False
         finally:
             sock.close()

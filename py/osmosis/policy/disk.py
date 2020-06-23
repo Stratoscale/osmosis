@@ -8,6 +8,6 @@ def dfPercent(location):
     try:
         line = " ".join(output.split("\n")[1:])
         return int(re.split(r"\s+", line)[4].strip("%"))
-    except:
+    except Exception:
         logging.exception("Unable to parse DF output:\n%(output)s", dict(output=output))
         raise
