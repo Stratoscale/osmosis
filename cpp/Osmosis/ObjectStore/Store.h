@@ -25,8 +25,6 @@ public:
 
 	ObjectsIterator list() const;
 
-	ObjectsIterator list( boost::filesystem::path rootDir ) const;
-
 private:
 	boost::filesystem::path _rootPath;
 
