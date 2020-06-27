@@ -529,13 +529,16 @@ class Test(unittest.TestCase):
         self.client.writeFile("aFile", "123456")
         self.client.checkin("yuvu")
         serverNear = osmosiswrapper.Server()
-        client = osmosiswrapper.Client(serverNear, self.server)
-        client.checkout("yuvu", putIfMissing=True)
-        serverNear.injectMalformedObject("123456", "defective")
-        os.unlink(os.path.join(client.path(), "aFile"))
-        client.checkout("yuvu", putIfMissing=True)
-        self.assertEquals(client.fileCount(), 1)
-        self.assertEquals(client.readFile("aFile"), "123456")
+        try:
+            client = osmosiswrapper.Client(serverNear, self.server)
+            client.checkout("yuvu", putIfMissing=True)
+            serverNear.injectMalformedObject("123456", "defective")
+            os.unlink(os.path.join(client.path(), "aFile"))
+            client.checkout("yuvu", putIfMissing=True)
+            self.assertEquals(client.fileCount(), 1)
+            self.assertEquals(client.readFile("aFile"), "123456")
+        finally:
+            serverNear.exit()
 
     def test_CheckOut_AFileOverANonEmptyDirectory(self):
         self.client.writeFile("aFile", "123")
@@ -907,33 +910,40 @@ class Test(unittest.TestCase):
         client = osmosiswrapper.Client(badServer)
         timeoutInMilliseconds = TIMEOUT_SEC * 1000
         client.setTCPTimeout(timeoutInMilliseconds)
-        before = time.time()
         try:
             client.listLabels("yuvu")
         except subprocess.CalledProcessError as ex:
             self.assertIn(ex.message, "Could not connect")
-            after = time.time()
         else:
             self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
-        durationInMilliseconds = (after - before) * 1000
-        self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
+        self.assertLess(client.lastCommandDuration, TIMEOUT_SEC + 0.03)
 
     def test_ReceiveTimeout(self):
-        TIMEOUT_SEC = 0.01
+        TIMEOUT_SEC = 1
         badServer = fakeservers.FakeServerNotSending()
         client = osmosiswrapper.Client(badServer)
         timeoutInMilliseconds = TIMEOUT_SEC * 1000
         client.setTCPTimeout(timeoutInMilliseconds)
-        before = time.time()
         try:
             client.listLabels("yuvu")
         except subprocess.CalledProcessError as ex:
             self.assertIn("Timeout while reading", ex.output)
-            after = time.time()
         else:
             self.assertFalse(True, "Did not timeout when connecting to non-existing objectstore")
-        durationInMilliseconds = (after - before) * 1000
-        self.assertLess(durationInMilliseconds, timeoutInMilliseconds + 30)
+        self.assertLess(client.lastCommandDuration, TIMEOUT_SEC + 0.1)
+
+    def test_FollowSymlinksInCheckIn(self):
+        pathOfLinkToFollow = os.path.join(self.client.path(), "aLink")
+        os.symlink(os.path.realpath(__file__), pathOfLinkToFollow)
+        self.client.checkin("yuvu", followSymlinks=True)
+        os.unlink(pathOfLinkToFollow)
+        os.symlink("/notit", pathOfLinkToFollow)
+        self.client.checkout("yuvu")
+        self.assertFalse(os.path.islink(pathOfLinkToFollow))
+        self.assertEquals(self.client.fileCount(), 1)
+        with open(__file__) as thisFile:
+            thisFileContents = thisFile.read()
+        self.assertEquals(self.client.readFile("aLink"), thisFileContents)
 
 
 if __name__ == '__main__':

@@ -13,10 +13,11 @@ CheckIn::CheckIn(        const boost::filesystem::path &  directory,
 		Chain::ObjectStoreInterface &    objectStore,
 		bool                             md5,
 		const boost::filesystem::path &  progressReport,
-		unsigned                         progressReportIntervalSeconds ) :
+		unsigned                         progressReportIntervalSeconds,
+		bool                             followSymlinks ) :
 	_label( label ),
 	_md5( md5 ),
-	_digestDirectory( directory, md5, _ignores ),
+	_digestDirectory( directory, md5, _ignores, followSymlinks ),
 	_putConnection( objectStore.connect() ),
 	_putQueue( CHECK_EXISTING_THREADS ),
 	_checkInProgress( progressReport, _digestDirectory, _putQueue, progressReportIntervalSeconds )

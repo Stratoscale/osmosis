@@ -16,11 +16,13 @@ class DigestDirectory
 public:
 	DigestDirectory(        const boost::filesystem::path &  directory,
 				bool                             md5,
-				const Ignores &                  ignores ) :
+				const Ignores &                  ignores,
+				bool                             followSymlinks ) :
 		_directory( directory ),
 		_ignores( ignores ),
 		_toDigestTaskQueue( 1 ),
-		_digestedQueue( digestionThreads() )
+		_digestedQueue( digestionThreads() ),
+		_followSymlinks( followSymlinks )
 	{
 		for ( unsigned i = 0; i < digestionThreads(); ++ i )
 			_threads.push_back( std::thread(
@@ -61,6 +63,7 @@ private:
 	PathTaskQueue                  _toDigestTaskQueue;
 	DigestedTaskQueue              _digestedQueue;
 	std::vector< std::thread >     _threads;
+	bool                           _followSymlinks;
 
 	void threadEntryPoint()
 	{
@@ -95,12 +98,15 @@ private:
 				i.no_push();
 				continue;
 			}
+			if ( status.isSymlink() and _followSymlinks ) {
+			    status = FileStatus( status.symlink() );
+			}
 			boost::filesystem::path relative = path.string().substr( prefixLength );
 			{
 				std::lock_guard< std::mutex > lock( _dirListMutex );
 				_dirList.add( relative, status );
 			}
-			if ( status.syncContent() )
+			if ( status.syncContent( _followSymlinks ) )
 				_toDigestTaskQueue.put( std::move( relative ) );
 		}
 		_toDigestTaskQueue.producerDone();

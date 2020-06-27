@@ -50,6 +50,7 @@ void checkIn( const boost::program_options::variables_map & options )
 	const unsigned int tcpTimeout = options[ "tcpTimeout" ].as< unsigned int >();
 	boost::filesystem::path workDir = stripTrailingSlash( options[ "arg1" ].as< std::string >() );
 	std::string label = options[ "arg2" ].as< std::string >();
+	bool followSymlinks = options.count( "followSymlinks" ) > 0;
 	Osmosis::Chain::Chain chain( options[ "objectStores" ].as< std::string >(), false, false, tcpTimeout );
 	if ( chain.count() > 1 )
 		THROW( Error, "--objectStores must contain one object store in a checkin operation" );
@@ -59,7 +60,8 @@ void checkIn( const boost::program_options::variables_map & options )
 	if ( boost::filesystem::exists( draftsPath ) )
 		THROW( Error, "workDir must not contain " << draftsPath );
 
-	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5, reportFile, reportIntervalSeconds );
+	Osmosis::Client::CheckIn instance( workDir, label, chain.single(), md5, reportFile,
+                                       reportIntervalSeconds, followSymlinks );
 	instance.go();
 	BACKTRACE_END
 }
@@ -298,7 +300,9 @@ int main( int argc, char * argv [] )
 		("timeout", boost::program_options::value< unsigned short >()->default_value( 1000 ),
 			"Timeout in seconds, for the 'whohaslabel' command")
 		("tcpTimeout", boost::program_options::value< unsigned int >()->default_value( 7000 ),
-			"Timeout in milliseconds for actions on TCP sockets");
+			"Timeout in milliseconds for actions on TCP sockets")
+		( "followSymlinks", "Follow symlinks (use the poinetd file instead of the symlink file) in checkin");
+
 
 	boost::program_options::options_description positionalDescription( "positionals" );
 	positionalDescription.add_options()

@@ -23,6 +23,7 @@ class Client:
             self.additionalObjectStoresForCheckout.append(connectionString)
         self.localObjectStorePath = tempfile.mkdtemp()
         self._tcpTimeout = None
+        self.lastCommandDuration = None
 
     def useLocalObjectStoreOnly(self):
         self.objectStores = [self.localObjectStorePath]
@@ -148,24 +149,15 @@ class Client:
 
     def _moreArgs(self, kwargs):
         moreArgs = []
-        if kwargs.get('removeUnknownFiles', False):
-            moreArgs.append("--removeUnknownFiles")
-        if kwargs.get('md5', False):
-            moreArgs.append("--MD5")
-        if kwargs.get('myUIDandGIDcheckout', False):
-            moreArgs.append("--myUIDandGIDcheckout")
-        if kwargs.get('putIfMissing', False):
-            moreArgs.append("--putIfMissing")
-        if kwargs.get('noChainTouch', False):
-            moreArgs.append("--noChainTouch")
-        if 'ignore' in kwargs:
-            moreArgs.append("--ignore=" + kwargs['ignore'])
-        if 'reportFile' in kwargs:
-            moreArgs.append("--reportFile=" + kwargs['reportFile'])
-        if 'timeout' in kwargs:
-            moreArgs.append("--timeout=" + str(kwargs['timeout']))
-        if 'serverUDPPort' in kwargs:
-            moreArgs.append("--serverUDPPort=" + str(kwargs['serverUDPPort']))
+        booleanFlags = ['removeUnknownFiles', 'MD5', 'myUIDandGIDcheckout', 'putIfMissing', 'noChainTouch',
+                        'followSymlinks']
+        for flag in booleanFlags:
+            if kwargs.get(flag, False):
+                moreArgs.append("--{}".format(flag))
+        valueFlags = ['ignore', 'reportFile', 'timeout', 'serverUDPPort']
+        for flag in valueFlags:
+            if flag in kwargs:
+                moreArgs.append("--{}={}".format(flag, kwargs[flag]))
         return moreArgs
 
     def _runAny(self, *args):
@@ -189,12 +181,16 @@ class Client:
         if self._tcpTimeout is not None:
             cmd.extend(["--tcpTimeout", str(int(self._tcpTimeout))])
         cmd.extend(args)
+        start = time.time()
         try:
             return subprocess.check_output(cmd, close_fds=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
+            self.lastCommandDuration = time.time() - start
             logging.exception("\n\n\nClientOutput:\n" + e.output)
             self._printServerOutput()
             raise
+        else:
+            self.lastCommandDuration = time.time() - start
 
     def _failedRun(self, cmd, *args):
         objectStores = list(self.objectStores)

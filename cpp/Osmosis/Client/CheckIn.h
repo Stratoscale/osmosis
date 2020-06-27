@@ -18,7 +18,8 @@ public:
 			Chain::ObjectStoreInterface &    objectStore,
 			bool                             md5,
 			const boost::filesystem::path &  progressReport,
-			unsigned                         progressReportIntervalSeconds );
+			unsigned                         progressReportIntervalSeconds,
+			bool                             followSymlinks );
 
 	~CheckIn();
 
