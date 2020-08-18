@@ -1,4 +1,17 @@
-from ubuntu:16.04
+FROM ubuntu:18.04 AS builder
+
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && \
+    apt-get -y install build-essential libboost-all-dev libssl-dev python-pip && \
+    pip install pep8
+
+ADD . /osmosis
+WORKDIR /osmosis
+RUN make build -j4
+
+FROM ubuntu:18.04
+
+COPY --from=builder /osmosis/build/cpp/osmosis.bin /usr/local/bin/
 
 RUN apt-get update && apt-get install -y python3-pip\
                                          ipython3\
@@ -7,8 +20,6 @@ RUN apt-get update && apt-get install -y python3-pip\
                                          libssl-dev
 
 RUN pip3 install --upgrade pip && pip3 install ipython
-
-COPY build/cpp/osmosis.bin /usr/local/bin/
 
 RUN mkdir /data
 
