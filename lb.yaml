@@ -1,7 +1,7 @@
 osmosis:
   osmosis:
     build:
-        - make -f Makefile.lb build osmosis_server_docker
+        - make -f Makefile.lb osmosis_server_docker
     install:
         - make -f Makefile.lb install
     deps:
