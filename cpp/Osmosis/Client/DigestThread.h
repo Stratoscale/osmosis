@@ -58,7 +58,7 @@ private:
 		try {
 			while ( true )
 				work();
-		} catch ( PathTaskQueue::NoMoreTasksError ) {
+		} catch ( PathTaskQueue::NoMoreTasksError& ) {
 			_outputQueue.producerDone();
 			TRACE_DEBUG( "DigestThread done" );
 		}
