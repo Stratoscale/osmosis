@@ -44,7 +44,7 @@ std::string Connection::getString( const Hash & hash )
 	std::string blob = transfer.data();
 	if ( not CalculateHash::verify( blob.c_str(), blob.size(), hash ) )
 		THROW( Error, "Blob hash did not match contents: " << hash << " (size: " << blob.size() << ")" );
-	return std::move( blob );
+	return blob;
 	BACKTRACE_END_VERBOSE( "Hash " << hash );
 }
 

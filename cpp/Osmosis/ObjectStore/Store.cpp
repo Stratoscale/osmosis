@@ -65,7 +65,7 @@ void Store::erase( const Hash & hash )
 ObjectsIterator Store::list() const
 {
 	ObjectsIterator iterator( _rootPath );
-	return std::move( iterator );
+	return iterator;
 }
 
 boost::filesystem::path Store::absoluteFilename( const Hash & hash ) const

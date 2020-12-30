@@ -58,7 +58,7 @@ std::list< std::string > LabelOps::list( const std::string regex )
 		std::string label( reinterpret_cast< const char * >( incoming.buffer() ), incoming.bufferLength() );
 		result.push_back( std::move( label ) );
 	}
-	return std::move( result );
+	return result;
 	BACKTRACE_END_VERBOSE( "Regex " << regex );
 }
 

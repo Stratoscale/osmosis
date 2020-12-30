@@ -31,7 +31,7 @@ std::string CheckOut::getString( const Hash & hash )
 				for ( int j = i - 1; j >= 0; -- j )
 					connection( j ).putString( content, hash );
 			}
-			return std::move( content );
+			return content;
 		}
 	}
 	BACKTRACE_END_VERBOSE( "Hash " << hash );
