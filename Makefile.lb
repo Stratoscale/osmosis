@@ -21,8 +21,10 @@ install_dir:
 install: build install_dir
 	$(Q)cp -f build/cpp/osmosis.bin $(MY_COMPONENT_PATH)/$(OSMOSIS_INSTALL_DIR)/
 
-osmosis_server_docker:
+build-in-docker:
 	$(Q)docker build -t $(OSMOSIS_DOCKER) -f Dockerfile.osmosis_ser .
+
+osmosis_server_docker: build-in-docker
 	$(Q)docker tag  $(OSMOSIS_DOCKER) $(DOCKER_REGISTRY)/osmosis_server:candidate
 	$(Q)docker push $(DOCKER_REGISTRY)/osmosis_server:candidate
 

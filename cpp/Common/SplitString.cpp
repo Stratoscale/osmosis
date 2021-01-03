@@ -31,7 +31,7 @@ std::string SplitString::asString() const
 		result = _data.substr( _start );
 	else
 		result = _data.substr( _start, _end - _start );
-	return std::move( result );
+	return result;
 }
 
 const char * SplitString::asCharPtr() const

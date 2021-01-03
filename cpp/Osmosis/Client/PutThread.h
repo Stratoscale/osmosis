@@ -41,7 +41,7 @@ private:
 		try {
 			while ( true )
 				work();
-		} catch ( DigestedTaskQueue::NoMoreTasksError ) {
+		} catch ( DigestedTaskQueue::NoMoreTasksError& ) {
 			TRACE_DEBUG( "PutThread done" );
 		}
 	}
