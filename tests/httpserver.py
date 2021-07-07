@@ -37,7 +37,7 @@ class HttpServer:
             try:
                 sock.connect((self.hostname(), self._port))
                 return
-            except:
+            except Exception:
                 pass
             finally:
                 sock.close()

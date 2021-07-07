@@ -41,10 +41,10 @@ const boost::filesystem::path FileStatus::symlink() const
 	return _symlink;
 }
 
-bool FileStatus::syncContent() const
+bool FileStatus::syncContent( bool followSymlinks ) const
 {
 	if ( isDirectory() or isCharacter() or isBlock() or
-			isFIFO() or isSymlink() or isSocket() )
+	     isFIFO() or isSocket() or ( isSymlink() and not followSymlinks ) )
 		return false;
 	ASSERT( isRegular() );
 	return true;

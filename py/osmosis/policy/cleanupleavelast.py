@@ -33,6 +33,7 @@ class CleanupLeaveLast:
         if removed:
             objectStore.purge()
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     from osmosis import objectstore

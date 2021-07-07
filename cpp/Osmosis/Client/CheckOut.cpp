@@ -28,7 +28,7 @@ CheckOut::CheckOut(       const boost::filesystem::path &  directory,
 	_removeUnknownFiles( removeUnknownFiles ),
 	_myUIDandGIDcheckout( myUIDandGIDcheckout ),
 	_ignores( ignores ),
-	_digestDirectory( directory, md5, ignores ),
+	_digestDirectory( directory, md5, ignores, false ),
 	_checkOutProgress( progressReport, _digestDirectory, progressReportIntervalSeconds ),
 	_chainTouch( chainTouch )
 {}

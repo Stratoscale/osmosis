@@ -23,7 +23,7 @@ public:
 
 	const boost::filesystem::path symlink() const;
 
-	bool syncContent() const;
+	bool syncContent( bool followSymlinks = false ) const;
 
 	bool isRegular() const;
 	bool isDirectory() const;

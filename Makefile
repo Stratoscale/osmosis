@@ -24,7 +24,7 @@ unittest: build
 	build/cpp/testtaskqueue.bin
 
 check_convention:
-	pep8 py tests --max-line-length=109
+	pycodestyle py tests --max-line-length=109
 
 .PHONY: install_binary
 install_binary:
