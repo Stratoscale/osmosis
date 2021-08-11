@@ -24,4 +24,8 @@ RUN mkdir /data
 
 VOLUME ["/data"]
 
+RUN mkdir /scripts
+
+COPY scripts/purge_osmosis.sh /scripts/
+
 CMD ["sh" ,"-c", "/usr/local/bin/osmosis.bin server --objectStoreRootPath /data"]
