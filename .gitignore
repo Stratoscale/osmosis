@@ -10,3 +10,4 @@ osmosis.egg-info
 .cproject
 .idea
 CMakeLists.txt
+.vscode

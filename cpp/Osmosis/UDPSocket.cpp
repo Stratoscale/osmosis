@@ -25,7 +25,7 @@ std::size_t UDPSocket::receive( unsigned char * buffer, size_t bufferSize,
     ec = boost::asio::error::would_block;
     std::size_t length = 0;
     _socket.async_receive_from( boost::asio::buffer( buffer, bufferSize ), remoteEndpoint,
-        boost::bind( &UDPSocket::handleReceive, this, _1, _2, &ec, &length ) );
+        boost::bind( &UDPSocket::handleReceive, this, boost::placeholders::_1, boost::placeholders::_2, &ec, &length ) );
     do
         _ioService.run_one();
     while ( ec == boost::asio::error::would_block && length == 0 );

@@ -20,7 +20,7 @@ TCPConnection::TCPConnection( const std::string & hostname, unsigned short port,
 		THROW( Error, "Unable to resolve the hostname '" << hostname << "'" );
 	boost::asio::ip::tcp::endpoint endpoint( first->endpoint().address(), port );
 	boost::system::error_code ec = boost::asio::error::would_block;
-	_socket.async_connect( endpoint, boost::bind( &TCPConnection::handleConnect, this, _1, &ec ) );
+	_socket.async_connect( endpoint, boost::bind( &TCPConnection::handleConnect, this, boost::placeholders::_1, &ec ) );
 	_deadline.expires_from_now( boost::posix_time::milliseconds( tcpTimeout ) );
 	_deadline.async_wait( boost::bind( &TCPConnection::checkConnectDeadline, this ) );
 	do

@@ -7,13 +7,13 @@ namespace Osmosis
 
 TCPSocket::TCPSocket( boost::asio::ip::tcp::socket & socket, unsigned int timeout ) :
     _socket( socket ),
-    _deadline( _socket.get_io_service() ),
+    _deadline(((boost::asio::io_context&)(_socket).get_executor().context())),
     _timeout( timeout )
 {}
 
 void TCPSocket::receiveAll( void * data, size_t length )
 {
-    boost::asio::io_service & ioService = _socket.get_io_service();
+    boost::asio::io_service & ioService = ((boost::asio::io_context&)(_socket).get_executor().context());
     while ( length > 0 ) {
         auto buffer = boost::asio::buffer( data, length );
         size_t received = 0;
@@ -22,7 +22,7 @@ void TCPSocket::receiveAll( void * data, size_t length )
         _deadline.expires_from_now( boost::posix_time::milliseconds( _timeout ) );
         _deadline.async_wait( boost::bind( &TCPSocket::checkDeadline, this, &ec ) );
         _socket.async_receive( buffer, boost::bind( &TCPSocket::handleIO,
-                                                    this, _1, _2, &ec, &received ) );
+                                                    this, boost::placeholders::_1, boost::placeholders::_2, &ec, &received ) );
         do {
             const auto nrHandlersRan = ioService.run_one();
             if ( 0 == nrHandlersRan )
@@ -46,7 +46,7 @@ void TCPSocket::receiveAll( void * data, size_t length )
 
 void TCPSocket::sendAll( const void * data, size_t length )
 {
-    boost::asio::io_service & ioService = _socket.get_io_service();
+    boost::asio::io_service & ioService = ((boost::asio::io_context&)(_socket).get_executor().context());
     while ( length > 0 ) {
         auto buffer = boost::asio::buffer( data, length );
         size_t sent = 0;
@@ -56,7 +56,7 @@ void TCPSocket::sendAll( const void * data, size_t length )
         _deadline.async_wait( boost::bind( &TCPSocket::checkDeadline, this, &ec ) );
         _socket.async_send( buffer,
                             boost::bind( &TCPSocket::handleIO,
-                                        this, _1, _2, &ec, &sent
+                                        this, boost::placeholders::_1, boost::placeholders::_2, &ec, &sent
                             ) );
         do {
             const auto nrHandlersRan = ioService.run_one();

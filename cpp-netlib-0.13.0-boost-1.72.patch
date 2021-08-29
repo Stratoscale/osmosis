@@ -1,0 +1,116 @@
+diff -Naur a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_base.hpp b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_base.hpp
+--- a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_base.hpp	2020-05-01 14:57:30.849388928 +0200
++++ b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_base.hpp	2020-05-01 14:59:44.140381583 +0200
+@@ -17,6 +17,12 @@
+ #include <boost/network/protocol/http/traits/resolver_policy.hpp>
+ #include <boost/network/traits/string.hpp>
+ 
++#if BOOST_VERSION >= 107000
++#define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
++#else
++#define GET_IO_SERVICE(s) ((s).get_io_service())
++#endif
++
+ namespace boost {
+ namespace network {
+ namespace http {
+@@ -59,7 +65,7 @@
+         async_connection;
+     typedef typename delegate_factory<Tag>::type delegate_factory_type;
+     auto delegate = delegate_factory_type::new_connection_delegate(
+-        resolver.get_io_service(), https, always_verify_peer,
++        GET_IO_SERVICE(resolver), https, always_verify_peer,
+         certificate_filename, verify_path, certificate_file, private_key_file,
+         ciphers, sni_hostname, ssl_options);
+     auto temp = std::make_shared<async_connection>(
+diff -Naur a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_normal.hpp b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_normal.hpp
+--- a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_normal.hpp	2020-05-01 14:57:30.849388928 +0200
++++ b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/async_normal.hpp	2020-05-01 14:59:20.893382864 +0200
+@@ -33,6 +33,12 @@
+ #include <boost/range/iterator_range.hpp>
+ #include <boost/throw_exception.hpp>
+ 
++#if BOOST_VERSION >= 107000
++#define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
++#else
++#define GET_IO_SERVICE(s) ((s).get_io_service())
++#endif
++
+ namespace boost {
+ namespace network {
+ namespace http {
+@@ -154,12 +160,12 @@
+                         connection_delegate_ptr delegate)
+       : timeout_(timeout),
+         remove_chunk_markers_(remove_chunk_markers),
+-        timer_(resolver.get_io_service()),
++        timer_(GET_IO_SERVICE(resolver)),
+         is_timedout_(false),
+         follow_redirect_(follow_redirect),
+         resolver_(resolver),
+         resolve_(std::move(resolve)),
+-        request_strand_(resolver.get_io_service()),
++        request_strand_(GET_IO_SERVICE(resolver)),
+         delegate_(std::move(delegate)) {}
+ 
+   // This is the main entry point for the connection/request pipeline.
+diff -Naur a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_normal.hpp b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_normal.hpp
+--- a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_normal.hpp	2020-05-01 14:57:30.849388928 +0200
++++ b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_normal.hpp	2020-05-01 14:59:01.005383960 +0200
+@@ -17,6 +17,12 @@
+ #include <boost/network/protocol/http/traits/resolver_policy.hpp>
+ #include <boost/network/traits/string.hpp>
+ 
++#if BOOST_VERSION >= 107000
++#define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
++#else
++#define GET_IO_SERVICE(s) ((s).get_io_service())
++#endif
++
+ namespace boost {
+ namespace network {
+ namespace http {
+@@ -49,10 +55,10 @@
+                        int timeout)
+       : connection_base(),
+         timeout_(timeout),
+-        timer_(resolver.get_io_service()),
++        timer_(GET_IO_SERVICE(resolver)),
+         resolver_(resolver),
+         resolve_(std::move(resolve)),
+-        socket_(resolver.get_io_service()) {}
++        socket_(GET_IO_SERVICE(resolver)) {}
+ 
+   void init_socket(string_type const& hostname, string_type const& port) {
+     connection_base::init_socket(socket_, resolver_, hostname, port, resolve_);
+diff -Naur a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_ssl.hpp b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_ssl.hpp
+--- a/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_ssl.hpp	2020-05-01 14:57:30.849388928 +0200
++++ b/cpp-netlib-0.13.0-final/boost/network/protocol/http/client/connection/sync_ssl.hpp	2020-05-01 14:58:30.389385647 +0200
+@@ -17,6 +17,12 @@
+ #include <boost/network/protocol/http/request.hpp>
+ #include <boost/network/protocol/http/traits/resolver_policy.hpp>
+ 
++#if BOOST_VERSION >= 107000
++#define GET_IO_SERVICE(s) ((boost::asio::io_context&)(s).get_executor().context())
++#else
++#define GET_IO_SERVICE(s) ((s).get_io_service())
++#endif
++
+ namespace boost {
+ namespace network {
+ namespace http {
+@@ -60,11 +66,11 @@
+       long ssl_options = 0)
+       : connection_base(),
+         timeout_(timeout),
+-        timer_(resolver.get_io_service()),
++        timer_(GET_IO_SERVICE(resolver)),
+         resolver_(resolver),
+         resolve_(std::move(resolve)),
+-        context_(resolver.get_io_service(), boost::asio::ssl::context::sslv23_client),
+-        socket_(resolver.get_io_service(), context_) {
++        context_(GET_IO_SERVICE(resolver), boost::asio::ssl::context::sslv23_client),
++        socket_(GET_IO_SERVICE(resolver), context_) {
+     if (ciphers) {
+       ::SSL_CTX_set_cipher_list(context_.native_handle(), ciphers->c_str());
+     }
