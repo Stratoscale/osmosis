@@ -70,4 +70,4 @@ dist/osmosis-1.0.linux-x86_64.tar.gz:
 	mv py/osmosis.egg-info ./
 
 prepareForCleanBuild:
-	sudo yum install boost-static gcc-c++ --assumeyes
+	sudo yum install --assumeyes $$(cat rpm-requirements.txt)

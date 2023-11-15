@@ -1,0 +1,4 @@
+make
+openssl-devel
+boost-static
+gcc-c++
