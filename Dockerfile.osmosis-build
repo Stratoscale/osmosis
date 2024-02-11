@@ -1,0 +1,8 @@
+FROM centos:7.6.1810
+RUN yum makecache
+COPY rpm-requirements.txt /root/rpm-requirements.txt
+RUN yum install --assumeyes $(cat /root/rpm-requirements.txt)
+RUN curl 'https://bootstrap.pypa.io/pip/2.7/get-pip.py' | python
+COPY dev-requirements.txt /root/dev-requirements.txt
+RUN python -m pip install -r /root/dev-requirements.txt
+RUN rm -f /root/dev-requirements.txt /root/rpm-requirements.txt

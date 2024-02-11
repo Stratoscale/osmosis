@@ -7,7 +7,7 @@ all:
 clean:
 	rm -fr build dist osmosis.egg-info
 
-.PHONY: build
+.PHONY: build egg install_binary
 build: build/cpp-netlib-0.11.1-final/.unpacked
 	$(MAKE) -f build.Makefile
 
@@ -16,7 +16,6 @@ build/cpp-netlib-0.11.1-final/.unpacked: cpp-netlib-0.11.1-final.tar.gz
 	tar -xf $< -C build
 	touch $@
 
-.PHONY: egg
 egg: dist/osmosis-1.0.linux-x86_64.tar.gz
 
 unittest: build
@@ -26,7 +25,6 @@ unittest: build
 check_convention:
 	python -m pep8 py tests --max-line-length=109
 
-.PHONY: install_binary
 install_binary:
 	sudo cp -f build/cpp/osmosis.bin /usr/bin/osmosis
 
@@ -66,5 +64,12 @@ dist/osmosis-1.0.linux-x86_64.tar.gz: setup.py py/*/*.py
 
 prepareForCleanBuild: centos_cpp_deps
 
-centos_cpp_deps:
-	sudo yum install boost-static gcc-c++ --assumeyes
+centos_cpp_deps: rpm-requirements.txt
+	sudo yum install --assumeyes $$(cat $<)
+
+venv:
+	virtualenv venv
+	source venv/bin/activate \
+		&& pip install -r dev-requirements.txt \
+		&& deactivate
+	@echo "Run 'source venv/bin/activate' to activate the virtual environment"
