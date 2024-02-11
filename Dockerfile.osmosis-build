@@ -1,4 +1,4 @@
-FROM centos:7.6.1810
+FROM centos:7
 RUN yum makecache
 COPY rpm-requirements.txt /root/rpm-requirements.txt
 RUN yum install --assumeyes $(cat /root/rpm-requirements.txt)
