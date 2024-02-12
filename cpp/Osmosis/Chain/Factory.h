@@ -3,7 +3,7 @@
 
 #include "Osmosis/Chain/Remote/ObjectStore.h"
 #include "Osmosis/Chain/Local/ObjectStore.h"
-#include "Osmosis/Chain/Http/ObjectStore.h"
+// #include "Osmosis/Chain/Http/ObjectStore.h"
 
 namespace Osmosis {
 namespace Chain

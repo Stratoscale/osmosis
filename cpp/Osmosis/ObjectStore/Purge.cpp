@@ -73,7 +73,7 @@ std::list< std::string > Purge::listLabels()
 	std::list< std::string > labels;
 	for ( auto i = _labels.list( "" ); not i.done(); i.next() )
 		labels.push_back( * i );
-	return std::move( labels );
+	return labels;
 	BACKTRACE_END
 }
 

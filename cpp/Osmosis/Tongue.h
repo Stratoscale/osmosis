@@ -43,6 +43,7 @@ enum class HashAlgorithm
 {
 	MD5 = 1,
 	SHA1 = 2,
+	SHA256 = 3,
 };
 
 enum class IsExists
@@ -59,7 +60,8 @@ struct Header
 struct Hash
 {
 	unsigned char hashAlgorithm;
-	unsigned char hash[ 20 ];
+	// unsigned char hash[ 20 ];
+	unsigned char hash[ 32 ];
 } __attribute__((packed));
 
 struct Label

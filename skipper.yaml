@@ -1,0 +1,7 @@
+registry: rackattack-nas.dc1:5000
+# build-container-image: osmosis-build-fedora
+# build-container-image: osmosis-build-rocky8
+build-container-image: osmosis-build-ubuntu16 # YES
+# build-container-image: osmosis-build-ubuntu18 # YES
+# build-container-image: osmosis-build-ubuntu20
+# build-container-image: osmosis-build # YES

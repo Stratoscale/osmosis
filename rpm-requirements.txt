@@ -1,0 +1,6 @@
+make
+openssl-devel
+boost-static
+gcc-c++
+python2
+which

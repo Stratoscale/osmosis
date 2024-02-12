@@ -1,0 +1,9 @@
+FROM fedora
+RUN dnf makecache
+COPY fedora-requirements.txt /root/rpm-requirements.txt
+# RUN dnf install --assumeyes $(cat /root/rpm-requirements.txt)
+# RUN curl 'https://bootstrap.pypa.io/pip/2.7/get-pip.py' | python2
+# RUN ln -sf $(which python2) /usr/bin/python
+# COPY dev-requirements.txt /root/dev-requirements.txt
+# RUN python -m pip install -r /root/dev-requirements.txt
+# RUN rm -f /root/dev-requirements.txt /root/rpm-requirements.txt

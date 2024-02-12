@@ -70,7 +70,7 @@ public:
 			Task result( std::move( _tasks.front() ) );
 			_tasks.pop();
 			_getCount += 1;
-			return std::move( result );
+			return result;
 		}
 		if ( _producers == 0 )
 			THROW( NoMoreTasksError, "No More Tasks" );

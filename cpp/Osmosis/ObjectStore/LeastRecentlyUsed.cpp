@@ -63,7 +63,7 @@ std::list< Hash > LeastRecentlyUsed::newObjectsInLabel( const std::string & labe
 		if ( _keptHashes.find( * hash ) == _keptHashes.end() )
 			result.emplace_back( * hash );
 	}
-	return std::move( result );
+	return result;
 	BACKTRACE_END_VERBOSE( "Label " << label );
 }
 

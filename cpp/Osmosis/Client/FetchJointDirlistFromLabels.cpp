@@ -44,7 +44,7 @@ DirList FetchJointDirlistFromLabels::joined()
 			}
 		}
 	}
-	return std::move( result );
+	return result;
 	BACKTRACE_END
 }
 
@@ -54,7 +54,7 @@ DirList FetchJointDirlistFromLabels::getLabelDirList( const std::string & label 
 	std::istringstream dirListTextStream( std::move( getLabelDirListText( label ) ) );
 	DirList labelDirList;
 	dirListTextStream >> labelDirList;
-	return std::move( labelDirList );
+	return labelDirList;
 	BACKTRACE_END
 }
 
@@ -66,7 +66,7 @@ std::string FetchJointDirlistFromLabels::getLabelDirListText( const std::string 
 	if ( not CalculateHash::verify( dirListText.c_str(), dirListText.size(), hash ) )
 		THROW( Error, "Dir list hash did not match contents" );
 	TRACE_DEBUG( "Transferred dirList '" << label << "'" );
-	return std::move( dirListText );
+	return dirListText;
 	BACKTRACE_END
 }
 
