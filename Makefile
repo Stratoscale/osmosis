@@ -1,3 +1,5 @@
+# NETLIB = cpp-netlib-0.12.0-final
+NETLIB = cpp-netlib-0.13.0-final
 all: 
 	$(MAKE) clean
 	$(MAKE) build unittest check_convention CONFIGURATION=DEBUG
@@ -7,14 +9,19 @@ all:
 clean:
 	rm -fr build dist osmosis.egg-info
 
-.PHONY: build egg install_binary
-build: build/cpp-netlib-0.11.1-final/.unpacked
+.PHONY: build egg install_binary osmosis-cli
+build: build/$(NETLIB)/.unpacked
 	$(MAKE) -f build.Makefile
 
-build/cpp-netlib-0.11.1-final/.unpacked: cpp-netlib-0.11.1-final.tar.gz
+build/$(NETLIB)/.unpacked: build/$(NETLIB)
+
+build/$(NETLIB):build/cpp-netlib-$(NETLIB)
+	mv $< $@
+	touch $@/.unpacked
+
+build/cpp-netlib-$(NETLIB): $(NETLIB).tar.gz
 	mkdir -p build
 	tar -xf $< -C build
-	touch $@
 
 egg: dist/osmosis-1.0.linux-x86_64.tar.gz
 
@@ -73,3 +80,10 @@ venv:
 		&& pip install -r dev-requirements.txt \
 		&& deactivate
 	@echo "Run 'source venv/bin/activate' to activate the virtual environment"
+
+testo:
+	./build/cpp/osmosis.bin listlabels --objectStores osmosis.dc1.strato:1010 base
+
+osmosis-cli:
+	skipper make
+	skipper build osmosis-cli

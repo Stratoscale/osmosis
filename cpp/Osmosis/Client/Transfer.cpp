@@ -78,7 +78,7 @@ DirList Transfer::fetchDirList( const Hash & labelHash, Chain::CheckOut & checkO
 	std::istringstream dirListTextStream( std::move( dirListText ) );
 	DirList labelDirList;
 	dirListTextStream >> labelDirList;
-	return std::move( labelDirList );
+	return labelDirList;
 	BACKTRACE_END
 }
 

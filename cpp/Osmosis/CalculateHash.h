@@ -20,6 +20,9 @@ bool verify( const boost::filesystem::path & filename, const Hash & hash );
 
 bool verify( const void * buffer, unsigned long length, const Hash & hash );
 
+typedef Hash (*hashHandler)( const void * buffer, unsigned long length);
+
+
 
 } // namespace CalculateHash
 } // namespace Osmosis

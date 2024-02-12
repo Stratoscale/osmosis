@@ -121,7 +121,7 @@ void Labels::rename( const std::string & from, const std::string & to )
 LabelsIterator Labels::list( const std::string & regex ) const
 {
 	LabelsIterator iterator( _labelsPath, regex );
-	return std::move( iterator );
+	return iterator;
 }
 
 void Labels::flushLog()

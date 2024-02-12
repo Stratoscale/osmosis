@@ -1,0 +1,13 @@
+FROM ubuntu:20.04
+RUN apt-get update
+COPY apt-requirements.txt /root/apt-requirements.txt
+RUN DEBIAN_FRONTEND=noninteractive apt-get install --yes $(cat /root/apt-requirements.txt)
+RUN ln -sf $(which python2.7) /usr/bin/python
+RUN curl 'https://bootstrap.pypa.io/pip/2.7/get-pip.py' | python
+COPY dev-requirements.txt /root/dev-requirements.txt
+RUN python -m pip install -r /root/dev-requirements.txt
+RUN rm -f /root/dev-requirements.txt /root/apt-requirements.txt
+# USER root
+# RUN curl -o /root/boost.deb 'http://ftp.de.debian.org/debian/pool/main/b/boost-defaults/libboost-all-dev_1.83.0.2_amd64.deb'
+# RUN apt-get install /root/boost.deb
+# RUN rm -f /root/boost.deb

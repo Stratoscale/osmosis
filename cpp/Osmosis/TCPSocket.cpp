@@ -7,13 +7,13 @@ namespace Osmosis
 
 TCPSocket::TCPSocket( boost::asio::ip::tcp::socket & socket, unsigned int timeout ) :
     _socket( socket ),
-    _deadline( _socket.get_io_service() ),
+    _deadline((boost::asio::io_context&)( _socket).get_executor().context()),
     _timeout( timeout )
 {}
 
 void TCPSocket::receiveAll( void * data, size_t length )
 {
-    boost::asio::io_service & ioService = _socket.get_io_service();
+    boost::asio::io_service & ioService = (boost::asio::io_context&)( _socket).get_executor().context();
     while ( length > 0 ) {
         auto buffer = boost::asio::buffer( data, length );
         size_t received = 0;
@@ -46,7 +46,7 @@ void TCPSocket::receiveAll( void * data, size_t length )
 
 void TCPSocket::sendAll( const void * data, size_t length )
 {
-    boost::asio::io_service & ioService = _socket.get_io_service();
+    boost::asio::io_service & ioService = (boost::asio::io_context&)( _socket).get_executor().context();
     while ( length > 0 ) {
         auto buffer = boost::asio::buffer( data, length );
         size_t sent = 0;

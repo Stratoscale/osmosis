@@ -1,6 +1,6 @@
 make
 openssl-devel
-boost-static
+boost-devel
 gcc-c++
 python2
 which

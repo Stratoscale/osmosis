@@ -121,6 +121,7 @@ bool verify( const void * buffer, unsigned long length, const Hash & hash )
 	}
 }
 
+calcHash _verify( const Tongue::HashAlgorithm & algorithm, )
 
 } // namespace CalculateHash
 } // namespace Osmosis

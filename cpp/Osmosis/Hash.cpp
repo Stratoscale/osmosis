@@ -13,7 +13,8 @@ Hash::Hash( const struct Tongue::Hash & raw ) :
 	_raw( raw )
 {
 	ASSERT( _raw.hashAlgorithm == static_cast< unsigned >( Tongue::HashAlgorithm::MD5 ) or
-			_raw.hashAlgorithm == static_cast< unsigned >( Tongue::HashAlgorithm::SHA1 ) );
+			_raw.hashAlgorithm == static_cast< unsigned >( Tongue::HashAlgorithm::SHA1 ) or 
+			_raw.hashAlgorithm == static_cast< unsigned >( Tongue::HashAlgorithm::SHA256 ) );
 }
 
 Hash::Hash( const char *hex, unsigned length )
