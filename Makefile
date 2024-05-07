@@ -1,3 +1,4 @@
+NETLIB = cpp-netlib-0.11.1-final
 all: 
 	$(MAKE) clean
 	$(MAKE) build unittest check_convention CONFIGURATION=DEBUG
@@ -7,16 +8,15 @@ all:
 clean:
 	rm -fr build dist osmosis.egg-info
 
-.PHONY: build
-build: build/cpp-netlib-0.11.1-final/.unpacked
+.PHONY: build egg install_binary osmosis-cli
+build: build/$(NETLIB)/.unpacked
 	$(MAKE) -f build.Makefile
 
-build/cpp-netlib-0.11.1-final/.unpacked: cpp-netlib-0.11.1-final.tar.gz
+build/$(NETLIB)/.unpacked: $(NETLIB).tar.gz
 	mkdir build > /dev/null 2> /dev/null || true
 	tar -xf $< -C build
 	touch $@
 
-.PHONY: egg
 egg: dist/osmosis-1.0.linux-x86_64.tar.gz
 
 unittest: build
@@ -24,9 +24,8 @@ unittest: build
 	build/cpp/testtaskqueue.bin
 
 check_convention:
-	pep8 py tests --max-line-length=109
+	python -m pep8 py tests --max-line-length=109
 
-.PHONY: install_binary
 install_binary:
 	sudo cp -f build/cpp/osmosis.bin /usr/bin/osmosis
 
@@ -59,15 +58,21 @@ uninstall:
 	sudo rm -f /usr/lib/systemd/system/osmosis.service /etc/init/osmosis.conf
 	echo "CONSIDER ERASING /var/lib/osmosis"
 
-dist/osmosis-1.0.linux-x86_64.tar.gz:
-	cd py; python ../setup.py build
-	cd py; python ../setup.py bdist
-	cd py; python ../setup.py bdist_egg
-	rm -fr dict osmosis.egg-info build/pybuild
-	mv py/dist ./
-	-mkdir build
-	mv py/build build/pybuild
-	mv py/osmosis.egg-info ./
+dist/osmosis-1.0.linux-x86_64.tar.gz: setup.py py/*/*.py
+	python setup.py build
+	python setup.py bdist
+	python setup.py bdist_egg
 
-prepareForCleanBuild:
-	sudo yum install boost-static gcc-c++ --assumeyes
+venv:
+	virtualenv venv
+	source venv/bin/activate \
+		&& pip install -r dev-requirements.txt \
+		&& deactivate
+	@echo "Run 'source venv/bin/activate' to activate the virtual environment"
+
+testo:
+	./build/cpp/osmosis.bin listlabels --objectStores osmosis.dc1.strato:1010 base
+
+osmosis-cli:
+	skipper make
+	skipper build osmosis-cli
