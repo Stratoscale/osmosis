@@ -1,0 +1,5 @@
+build-essential
+libboost-all-dev
+libssl-dev
+curl
+python2.7
