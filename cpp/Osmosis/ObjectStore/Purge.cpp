@@ -11,10 +11,10 @@ Purge::Purge( Store & store, Labels & labels ):
 	_labels( labels )
 {}
 
-void Purge::purge( boost::filesystem::path & dirToPurge )
+void Purge::purge()
 {
 	BACKTRACE_BEGIN
-	startWithAllObjects( dirToPurge );
+	startWithAllObjects();
 	size_t before = _staleHashes.size();
 	TRACE_INFO( "Found " << before << " objects" );
 	takeOutAllLabels();
@@ -26,10 +26,10 @@ void Purge::purge( boost::filesystem::path & dirToPurge )
 	BACKTRACE_END
 }
 
-void Purge::startWithAllObjects( boost::filesystem::path & dirToPurge )
+void Purge::startWithAllObjects()
 {
 	BACKTRACE_BEGIN
-	for ( auto i = _store.list( dirToPurge ); not i.done(); i.next() )
+	for ( auto i = _store.list(); not i.done(); i.next() )
 		_staleHashes.emplace( * i );
 	BACKTRACE_END
 }
